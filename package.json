@@ -34,6 +34,6 @@
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown",
     "*.{ts,tsx}": "npm run tsc",
-    "*.{ts,js,tsx,jsx,mdx,mjs,cjs}": "npm run lint"
+    "*.{ts,js,tsx,jsx,mdx}": "npm run lint"
   }
 }
