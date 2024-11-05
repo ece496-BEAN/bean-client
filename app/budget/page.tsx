@@ -4,8 +4,8 @@
 //   return <LoginPage />
 // }
 
-import { MainPage } from "@/components/home-page"
+import { BudgetPage } from "@/components/budget-page"
 
 export default function Page() {
-  return <MainPage />
+  return <BudgetPage />
 }

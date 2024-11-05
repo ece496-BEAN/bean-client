@@ -4,8 +4,8 @@
 //   return <LoginPage />
 // }
 
-import { MainPage } from "@/components/home-page"
+import { RecentTransactionsPage } from "@/components/recent-transactions-page"
 
 export default function Page() {
-  return <MainPage />
+  return <RecentTransactionsPage />
 }
