@@ -4,8 +4,8 @@
 //   return <LoginPage />
 // }
 
-import { MainPage } from "@/components/home-page"
+import { SettingPage } from "@/components/settings-page"
 
 export default function Page() {
-  return <MainPage />
+  return <SettingPage />
 }
