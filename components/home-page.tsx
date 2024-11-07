@@ -11,6 +11,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
+import LineChart from "@/components/LineChart"; // Import the new LineChart component
+import ParentSize from "@visx/responsive/lib/components/ParentSize"; // Import ParentSize
 
 interface RingChartProps {
   percentage: number;
@@ -116,6 +118,24 @@ export function MainPage() {
 
       <main className="flex-grow p-4 overflow-y-auto">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Line Chart */}
+          <Card className="bg-white shadow-lg col-span-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold text-gray-700">
+                Spending Over Time
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="w-full h-64">
+                <ParentSize>
+                  {({ width, height }) => (
+                    <LineChart width={width} height={height} />
+                  )}
+                </ParentSize>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Spending Summary */}
           <Card
             className="col-span-full bg-white shadow-lg"
