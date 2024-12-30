@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Home, PieChart, Camera, DollarSign, Settings } from "lucide-react";
+import {
+  Home,
+  PieChart,
+  Camera,
+  DollarSign,
+  Settings,
+  BarChart,
+} from "lucide-react"; // Import BarChart icon
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -91,6 +98,16 @@ export const NavigationBar: React.FC = () => {
             onClick={() => router.push("/transactions")}
           >
             <DollarSign className="w-6 h-6" />
+          </Button>
+        </li>
+        <li>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-gray-600 hover:text-indigo-600"
+            onClick={() => router.push("/savings-graph")} // Add new button for savings graph
+          >
+            <BarChart className="w-6 h-6" />
           </Button>
         </li>
         <li>
