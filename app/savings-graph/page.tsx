@@ -32,7 +32,24 @@ const SavingsGraphPage = () => {
       try {
         const response = await fetch("/api/user-data");
         const data = await response.json();
-        setSavingsData(data);
+        // The first set of data points is the user's savings over time; that is, [revenue - expenses].
+        const savingsData: { date: Date; value: number }[] = [];
+
+        for (const dateEntry of data) {
+          for (const date in dateEntry) {
+            let dailyValue = 0;
+            for (const transaction of dateEntry[date]) {
+              if (transaction.transaction_type === "credit") {
+                dailyValue += transaction.amount;
+              } else if (transaction.transaction_type === "debit") {
+                dailyValue -= transaction.amount;
+              }
+            }
+            savingsData.push({ date: new Date(date), value: dailyValue });
+          }
+        }
+
+        setSavingsData(savingsData);
       } catch (error) {
         console.error("Failed to fetch savings data:", error);
       }

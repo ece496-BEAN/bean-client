@@ -9,12 +9,13 @@ import {
 } from "@visx/tooltip";
 import { WithTooltipProvidedProps } from "@visx/tooltip/lib/enhancers/withTooltip";
 import { localPoint } from "@visx/event";
-import { curveMonotoneX } from "@visx/curve";
+import { curveBasis, curveMonotoneX, curveNatural } from "@visx/curve";
 import { LinearGradient } from "@visx/gradient";
-import { max, extent, bisector } from "d3-array";
+import { max, extent, bisector, min } from "d3-array";
 import { timeFormat } from "d3-time-format";
 import { EventType } from "@visx/event/lib/types";
 import { AxisLeft, AxisBottom, AxisTop, AxisRight } from "@visx/axis";
+import { Threshold } from "@visx/threshold";
 import { Group } from "@visx/group";
 
 // Define constants for styling
@@ -30,7 +31,7 @@ const tooltipStyles = {
 };
 
 // Axis styling constants
-const axisColor = "#fff";
+const axisColor = "#0";
 const axisHorizTickLabelProps = {
   textAnchor: "middle" as const,
   fontFamily: "Arial",
@@ -47,19 +48,33 @@ const axisVertTickLabelProps = {
 // Format date for tooltip
 const formatDate = timeFormat("%b %d, '%y");
 
-// Accessor functions for data
-const getDate = (d: { date: Date; value: number }): Date => new Date(d.date);
-const getValue = (d: { date: Date; value: number }): number => d.value;
-const bisectDate = bisector<{ date: Date; value: number }, Date>(
-  (d) => new Date(d.date),
-).left;
+// Define Datum interface
+interface Datum {
+  date: Date;
+  value: number;
+}
 
 // Define the props for the LineChart component
 interface LineChartProps {
   width: number;
   height: number;
   margin?: { top: number; right: number; bottom: number; left: number };
-  data: { date: Date; value: number }[];
+  data: Datum[];
+}
+
+interface TooltipData extends Datum {}
+
+// Accessor functions for data
+const getDate = (d: Datum): Date => new Date(d.date);
+const getValue = (d: Datum): number => d.value;
+const bisectDate = bisector<Datum, Date>((d) => new Date(d.date)).left;
+
+// Define the props for the LineChart component
+interface LineChartProps {
+  width: number;
+  height: number;
+  margin?: { top: number; right: number; bottom: number; left: number };
+  data: Datum[];
 }
 
 interface TooltipData {
@@ -67,57 +82,14 @@ interface TooltipData {
   value: number;
 }
 
-// Extracted Tooltip Components
-const TooltipLine: React.FC<{
-  tooltipLeft: number;
-  margin: { top: number; right: number; bottom: number; left: number };
-  innerHeight: number;
-}> = ({ tooltipLeft, margin, innerHeight }) => (
-  <Line
-    from={{ x: tooltipLeft, y: margin.top }}
-    to={{ x: tooltipLeft, y: innerHeight + margin.top }}
-    stroke={accentColorDark}
-    strokeWidth={2}
-    pointerEvents="none"
-    strokeDasharray="5,2"
-  />
-);
-
-const TooltipCircle = ({
-  tooltipLeft,
-  tooltipTop,
-}: {
-  tooltipLeft: number;
-  tooltipTop: number;
-}) => (
-  <>
-    <circle
-      cx={tooltipLeft}
-      cy={tooltipTop + 1}
-      r={4}
-      fill="black"
-      fillOpacity={0.1}
-      stroke="black"
-      strokeOpacity={0.1}
-      strokeWidth={2}
-      pointerEvents="none"
-    />
-    <circle
-      cx={tooltipLeft}
-      cy={tooltipTop}
-      r={4}
-      fill={accentColorDark}
-      stroke="white"
-      strokeWidth={2}
-      pointerEvents="none"
-    />
-  </>
-);
-
-const LineChart: React.FC<LineChartProps & WithTooltipProvidedProps<any>> = ({
+// const defaultMargin = { top: 0, right: 0, bottom: 0, left: 0};
+const defaultMargin = { top: 5, right: 10, bottom: 25, left: 40 };
+const LineChart: React.FC<
+  LineChartProps & WithTooltipProvidedProps<TooltipData>
+> = ({
   width,
   height,
-  margin = { top: 0, right: 0, bottom: 0, left: 0 },
+  margin = defaultMargin,
   showTooltip,
   hideTooltip,
   tooltipData,
@@ -143,7 +115,10 @@ const LineChart: React.FC<LineChartProps & WithTooltipProvidedProps<any>> = ({
     () =>
       scaleLinear({
         range: [innerHeight, 0],
-        domain: [0, (max(data, getValue) || 0) + innerHeight / 3],
+        domain: [
+          (min(data, getValue) || 0) - innerHeight / 3,
+          (max(data, getValue) || 0) + innerHeight / 3,
+        ],
         nice: true,
       }),
     [innerHeight, data],
@@ -153,7 +128,8 @@ const LineChart: React.FC<LineChartProps & WithTooltipProvidedProps<any>> = ({
   const handleTooltip = useCallback(
     (event: Element | EventType) => {
       const { x } = localPoint(event) || { x: 0 };
-      const x0 = xScale.invert(x);
+      const x_ = x - margin.left;
+      const x0 = xScale.invert(x_);
       const index = bisectDate(data, x0, 1);
       const d0 = data[index - 1];
       const d1 = data[index];
@@ -167,7 +143,7 @@ const LineChart: React.FC<LineChartProps & WithTooltipProvidedProps<any>> = ({
       }
       showTooltip({
         tooltipData: d,
-        tooltipLeft: x,
+        tooltipLeft: x_,
         tooltipTop: yScale(getValue(d)),
       });
     },
@@ -186,7 +162,7 @@ const LineChart: React.FC<LineChartProps & WithTooltipProvidedProps<any>> = ({
           fill="url(#area-background-gradient)"
           rx={14}
         />
-        <LinearGradient
+        {/* <LinearGradient
           id="area-background-gradient"
           from={background}
           to={background2}
@@ -196,10 +172,29 @@ const LineChart: React.FC<LineChartProps & WithTooltipProvidedProps<any>> = ({
           from={accentColor}
           to={accentColor}
           toOpacity={0.1}
-        />
+        /> */}
         <Group left={margin.left} top={margin.top}>
+          {/* Threshold chart (area chart where only the area between y=f(x) and y=0 are shaded instead of everything below y=f(x) as in an AreaChart) */}
+          <Threshold<Datum>
+            id="threshold"
+            data={data}
+            clipAboveTo={0}
+            clipBelowTo={innerHeight}
+            x={(d) => xScale(getDate(d)) ?? 0}
+            y0={(d) => yScale(getValue(d)) ?? 0}
+            y1={(_) => yScale(0) ?? 0}
+            belowAreaProps={{
+              fill: "violet",
+              fillOpacity: 0.4,
+            }}
+            aboveAreaProps={{
+              fill: "green",
+              fillOpacity: 0.4,
+            }}
+            curve={curveNatural}
+          />
           {/* Area chart */}
-          <AreaClosed
+          {/* <AreaClosed
             data={data}
             x={(d) => xScale(getDate(d)) ?? 0}
             y={(d) => yScale(getValue(d)) ?? 0}
@@ -208,7 +203,7 @@ const LineChart: React.FC<LineChartProps & WithTooltipProvidedProps<any>> = ({
             stroke="url(#area-gradient)"
             fill="url(#area-gradient)"
             curve={curveMonotoneX}
-          />
+          /> */}
           {/* Tooltip interaction area */}
           <Bar
             x={0}
@@ -225,33 +220,52 @@ const LineChart: React.FC<LineChartProps & WithTooltipProvidedProps<any>> = ({
           {/* Tooltip elements */}
           {tooltipData && (
             <g>
-              <TooltipLine
-                tooltipLeft={tooltipLeft}
-                margin={margin}
-                innerHeight={innerHeight}
+              <Line
+                from={{ x: tooltipLeft, y: margin.top }}
+                to={{ x: tooltipLeft, y: innerHeight + margin.top }}
+                stroke={accentColorDark}
+                strokeWidth={2}
+                pointerEvents="none"
+                strokeDasharray="5,2"
               />
-              <TooltipCircle
-                tooltipLeft={tooltipLeft}
-                tooltipTop={tooltipTop}
+              <circle
+                cx={tooltipLeft}
+                cy={tooltipTop + 1}
+                r={4}
+                fill="black"
+                fillOpacity={0.1}
+                stroke="black"
+                strokeOpacity={0.1}
+                strokeWidth={2}
+                pointerEvents="none"
+              />
+              <circle
+                cx={tooltipLeft}
+                cy={tooltipTop}
+                r={4}
+                fill={accentColorDark}
+                stroke="white"
+                strokeWidth={2}
+                pointerEvents="none"
               />
             </g>
           )}
           {/* Axes */}
-          <AxisTop
+          <AxisBottom
             top={innerHeight}
             scale={xScale}
             numTicks={width > 520 ? 10 : 5}
-            stroke={axisColor}
-            tickStroke={axisColor}
-            tickLabelProps={axisHorizTickLabelProps}
+            // stroke={axisColor}
+            // tickStroke={axisColor}
+            // tickLabelProps={axisHorizTickLabelProps}
           />
-          <AxisRight
-            left={0}
+          <AxisLeft
+            // left={0}
             scale={yScale}
             numTicks={5}
-            stroke={axisColor}
-            tickStroke={axisColor}
-            tickLabelProps={axisVertTickLabelProps}
+            // stroke={axisColor}
+            // tickStroke={axisColor}
+            // tickLabelProps={axisVertTickLabelProps}
           />
         </Group>
       </svg>
