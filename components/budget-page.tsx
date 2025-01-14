@@ -1,72 +1,58 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
-import { Bell, Camera, DollarSign, Home, PieChart, Settings, Sparkles, TrendingUp, TrendingDown, Calendar, X, Edit2, Save, PlusCircle } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-
+import { DollarSign, Sparkles, X, Edit2, Save, PlusCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useBudgetContext } from "../contexts/BudgetContext";
 
 export function BudgetPage() {
   const router = useRouter();
+  const {
+    categories,
+    isEditMode,
+    addCategory,
+    removeCategory,
+    updateAmount,
+    setIsEditMode,
+    newCategory,
+    newAmount,
+    setNewCategory,
+    setNewAmount,
+  } = useBudgetContext();
+  const [aiSuggestion, setAiSuggestion] = useState("");
 
-  const [categories, setCategories] = useState([
-    { name: 'Housing', amount: 1200, color: '#4CAF50' },
-    { name: 'Food', amount: 500, color: '#FFC107' },
-    { name: 'Transportation', amount: 300, color: '#2196F3' },
-    { name: 'Entertainment', amount: 200, color: '#9C27B0' },
-    { name: 'Miscellaneous', amount: 150, color: '#FF5722' }
-  ])
-  const [newCategory, setNewCategory] = useState('')
-  const [newAmount, setNewAmount] = useState('')
-  const [aiSuggestion, setAiSuggestion] = useState('')
-  const [isEditMode, setIsEditMode] = useState(false)
-
-  const totalBudget = categories.reduce((sum, category) => sum + category.amount, 0)
-
-  const addCategory = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newCategory.trim() !== '' && newAmount.trim() !== '') {
-      setCategories([...categories, {
-        name: newCategory.trim(),
-        amount: parseFloat(newAmount),
-        color: `#${Math.floor(Math.random() * 16777215).toString(16)}`
-      }])
-      setNewCategory('')
-      setNewAmount('')
-    }
-  }
-
-  const removeCategory = (index: number) => {
-    setCategories(categories.filter((_, i) => i !== index))
-  }
-
-  const updateAmount = (index: number, amount: string) => {
-    const updatedCategories = [...categories]
-    updatedCategories[index].amount = parseFloat(amount) || 0
-    setCategories(updatedCategories)
-  }
+  const totalBudget = categories.reduce(
+    (sum, category) => sum + category.amount,
+    0,
+  );
 
   useEffect(() => {
-    const highestCategory = categories.reduce((max, category) => category.amount > max.amount ? category : max, categories[0])
+    const highestCategory = categories.reduce(
+      (max, category) => (category.amount > max.amount ? category : max),
+      categories[0],
+    );
 
-    let suggestion = `Your total budget is $${totalBudget}. `
+    let suggestion = `Your total budget is $${totalBudget}. `;
 
     if (highestCategory.amount > totalBudget * 0.5) {
-      suggestion += `You're allocating a large portion (${Math.round(highestCategory.amount / totalBudget * 100)}%) to ${highestCategory.name}. Consider balancing your budget more evenly. `
+      suggestion += `You're allocating a large portion (${Math.round((highestCategory.amount / totalBudget) * 100)}%) to ${highestCategory.name}. Consider balancing your budget more evenly. `;
     }
 
-    if (categories.some(category => category.amount === 0)) {
-      suggestion += "Some categories have $0 allocated. Make sure to budget for all your expenses. "
+    if (categories.some((category) => category.amount === 0)) {
+      suggestion +=
+        "Some categories have $0 allocated. Make sure to budget for all your expenses. ";
     }
 
-    suggestion += "Remember the 50/30/20 rule: Try to allocate 50% for needs, 30% for wants, and 20% for savings and debt repayment."
+    suggestion +=
+      "Remember the 50/30/20 rule: Try to allocate 50% for needs, 30% for wants, and 20% for savings and debt repayment.";
 
-    setAiSuggestion(suggestion)
-  }, [categories, totalBudget])
+    setAiSuggestion(suggestion);
+  }, [categories, totalBudget]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -77,8 +63,12 @@ export function BudgetPage() {
           variant="outline"
           className="bg-white text-purple-700 hover:bg-purple-100"
         >
-          {isEditMode ? <Save className="w-4 h-4 mr-2" /> : <Edit2 className="w-4 h-4 mr-2" />}
-          {isEditMode ? 'Save' : 'Edit'}
+          {isEditMode ? (
+            <Save className="w-4 h-4 mr-2" />
+          ) : (
+            <Edit2 className="w-4 h-4 mr-2" />
+          )}
+          {isEditMode ? "Save" : "Edit"}
         </Button>
       </header>
 
@@ -87,12 +77,18 @@ export function BudgetPage() {
           {/* Budget Summary */}
           <Card className="col-span-full bg-white shadow-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold text-gray-700">Total Budget</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-700">
+                Total Budget
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-500">Monthly Allocation</span>
-                <span className="text-2xl font-bold text-indigo-600">${totalBudget.toFixed(2)}</span>
+                <span className="text-sm font-medium text-gray-500">
+                  Monthly Allocation
+                </span>
+                <span className="text-2xl font-bold text-indigo-600">
+                  ${totalBudget.toFixed(2)}
+                </span>
               </div>
               <Progress value={100} className="h-2 mb-1" />
             </CardContent>
@@ -101,7 +97,9 @@ export function BudgetPage() {
           {/* Budget Categories */}
           <Card className="bg-white shadow-lg md:col-span-2 lg:row-span-2">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold text-gray-700">Budget Categories</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-700">
+                Budget Categories
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
@@ -111,7 +109,7 @@ export function BudgetPage() {
                       className="absolute inset-0 rounded-lg opacity-20"
                       style={{
                         width: `${(category.amount / totalBudget) * 100}%`,
-                        backgroundColor: category.color
+                        backgroundColor: category.color,
                       }}
                     ></div>
                     <div className="flex items-center justify-between p-2 rounded-lg relative z-10">
@@ -120,7 +118,9 @@ export function BudgetPage() {
                           className="w-4 h-4 rounded-full mr-3"
                           style={{ backgroundColor: category.color }}
                         ></div>
-                        <span className="font-medium text-gray-700">{category.name}</span>
+                        <span className="font-medium text-gray-700">
+                          {category.name}
+                        </span>
                       </div>
                       <div className="flex items-center">
                         <div className="flex items-center mr-2">
@@ -129,15 +129,23 @@ export function BudgetPage() {
                             <Input
                               type="number"
                               value={category.amount}
-                              onChange={(e) => updateAmount(index, e.target.value)}
+                              onChange={(e) =>
+                                updateAmount(index, e.target.value)
+                              }
                               className="w-20 text-right"
                             />
                           ) : (
-                            <span className="w-20 text-right">{category.amount.toFixed(2)}</span>
+                            <span className="w-20 text-right">
+                              {category.amount.toFixed(2)}
+                            </span>
                           )}
                         </div>
                         {isEditMode && (
-                          <Button variant="ghost" size="icon" onClick={() => removeCategory(index)}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeCategory(index)}
+                          >
                             <X className="w-4 h-4 text-gray-500" />
                           </Button>
                         )}
@@ -149,7 +157,10 @@ export function BudgetPage() {
 
               {/* Add Category Form */}
               {isEditMode && (
-                <form onSubmit={addCategory} className="mt-4 flex items-center space-x-2">
+                <form
+                  onSubmit={addCategory}
+                  className="mt-4 flex items-center space-x-2"
+                >
                   <Input
                     type="text"
                     value={newCategory}
@@ -187,5 +198,5 @@ export function BudgetPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

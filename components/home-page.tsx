@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Bell,
   Sparkles,
@@ -11,6 +11,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
+import LineChart from "@/components/LineChart"; // Import the new LineChart component
+import ParentSize from "@visx/responsive/lib/components/ParentSize"; // Import ParentSize
 
 interface RingChartProps {
   percentage: number;
@@ -108,6 +110,24 @@ export function MainPage() {
     "You might save on transportation by using public transit twice a week.",
   ];
 
+  const [savingsData, setSavingsData] = useState<
+    { date: Date; value: number }[]
+  >([]);
+
+  useEffect(() => {
+    async function fetchSavingsData() {
+      try {
+        const response = await fetch("/api/user-data");
+        const data = await response.json();
+        setSavingsData(data);
+      } catch (error) {
+        console.error("Failed to fetch savings data:", error);
+      }
+    }
+
+    fetchSavingsData();
+  }, []);
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
@@ -116,6 +136,28 @@ export function MainPage() {
 
       <main className="flex-grow p-4 overflow-y-auto">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Savings Graph */}
+          <Card className="bg-white shadow-lg col-span-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold text-gray-700">
+                Savings Graph
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="w-full h-64">
+                <ParentSize>
+                  {({ width, height }) => (
+                    <LineChart
+                      width={width}
+                      height={height}
+                      data={savingsData}
+                    />
+                  )}
+                </ParentSize>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Spending Summary */}
           <Card
             className="col-span-full bg-white shadow-lg"
