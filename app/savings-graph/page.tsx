@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, Settings, X } from "lucide-react";
-import { useBudgetContext } from "@/components/BudgetContext";
+import { useBudgetContext } from "@/contexts/BudgetContext";
 
 const SavingsGraphPage = () => {
   const [savingsData, setSavingsData] = useState<

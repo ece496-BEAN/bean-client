@@ -1,7 +1,8 @@
 import "./globals.css"; // Keep your global styles
 import { Metadata } from "next"; // Keep metadata if needed
 import NavigationBar from "@/components/NavigationBar"; // Import your NavigationBar component
-import { BudgetProvider } from "@/components/BudgetContext";
+import { BudgetProvider } from "@/contexts/BudgetContext";
+import { PlaidProvider } from "@/contexts/PlaidContext";
 
 export const metadata = {
   title: "My Awesome App",
@@ -22,7 +23,9 @@ export default function RootLayout({
       <body>
         <NavigationBar /> {/* Add your navigation bar */}
         <main>
-          <BudgetProvider>{children}</BudgetProvider>
+          <PlaidProvider>
+            <BudgetProvider>{children}</BudgetProvider>
+          </PlaidProvider>
         </main>{" "}
         {/* Render page-specific content */}
       </body>
