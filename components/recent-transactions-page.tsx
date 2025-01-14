@@ -30,13 +30,12 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
+import { usePlaidContext } from "@/contexts/PlaidContext";
 
 const userId = "user123"; // Replace with an actual user ID
 
 export function RecentTransactionsPage() {
   const router = useRouter();
-  const [linkToken, setLinkToken] = useState<string | null>(null);
-  const [isAccessTokenReady, setIsAccessTokenReady] = useState(false); // New state variable
   const [transactions, setTransactions] = useState([
     {
       id: 1,
@@ -119,37 +118,25 @@ export function RecentTransactionsPage() {
     0,
   );
 
-  // Fetch the link token on component mount
+  const {
+    fetchTransactions,
+    transactions: plaidTransactions,
+    linkSuccess,
+  } = usePlaidContext();
+
+  // Fetch transactions when link is successful
   useEffect(() => {
-    const createLinkToken = async () => {
-      const response = await fetch("/api/plaid/create_link_token", {
-        method: "POST",
-      });
-      const data = await response.json();
-      setLinkToken(data.link_token);
-    };
-
-    createLinkToken();
-  }, []);
-
-  // Fetch transactions after Plaid Link success
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      const response = await fetch(`/api/plaid/transactions?userId=${userId}`);
-      const data = await response.json();
-      console.log("Transactions:", data);
-      if (data.error) {
-        console.error("Error fetching transactions:", data.error);
-      } else {
-        // Update transactions state
-        setTransactions(data.latest_transactions);
-      }
-    };
-
-    if (isAccessTokenReady) {
+    if (linkSuccess) {
       fetchTransactions();
     }
-  }, [isAccessTokenReady]);
+  }, [fetchTransactions, linkSuccess]);
+
+  // Update transactions state with fetched transactions from context
+  useEffect(() => {
+    if (plaidTransactions.length > 0) {
+      setTransactions(transactions.concat(plaidTransactions));
+    }
+  }, [plaidTransactions]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -216,13 +203,7 @@ export function RecentTransactionsPage() {
 
         {/* Add Plaid Link Button */}
         <div className="mb-6">
-          {linkToken && (
-            <PlaidLinkButton
-              linkToken={linkToken}
-              userId={userId}
-              onAccessTokenReady={() => setIsAccessTokenReady(true)}
-            />
-          )}
+          <PlaidLinkButton />
         </div>
 
         <Card className="bg-white shadow-lg">

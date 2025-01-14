@@ -1,42 +1,19 @@
-// In components/PlaidLinkButton.tsx
+// components/PlaidLinkButton.tsx
 "use client";
 
 import { usePlaidLink } from "react-plaid-link";
+import { usePlaidContext } from "@/contexts/PlaidContext";
+import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
-interface PlaidLinkButtonProps {
-  linkToken: string;
-  userId: string;
-  onAccessTokenReady: () => void; // Add new prop
-}
+const PlaidLinkButton = () => {
+  const { linkToken, exchangePublicToken, generateLinkToken, userId } =
+    usePlaidContext();
 
-const PlaidLinkButton: React.FC<PlaidLinkButtonProps> = ({
-  linkToken,
-  userId,
-  onAccessTokenReady,
-}) => {
-  // Add onAccessTokenReady to props
   const onSuccess = async (public_token: string, metadata: any) => {
-    // Exchange the public_token for an access_token
-    const response = await fetch("/api/plaid/set_access_token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ public_token, userId }),
-    });
-
-    const data = await response.json();
-
-    if (data.error) {
-      console.error("Error exchanging public token:", data.error);
-    } else {
-      // Handle successful exchange (e.g., fetch transactions)
-      console.log(
-        "Public token exchanged for item_id, which has been logged to the console",
-      );
-      console.log("item_id: ", data.item_id);
-      onAccessTokenReady(); // Signal that access_token is ready
-    }
+    console.log("PlaidLink onSuccess called"); // Debugging log
+    await exchangePublicToken(public_token);
+    // Fetch transactions after successful exchange
   };
 
   const config = {
@@ -44,12 +21,27 @@ const PlaidLinkButton: React.FC<PlaidLinkButtonProps> = ({
     onSuccess,
   };
 
-  const { open, ready } = usePlaidLink(config);
+  const { open, ready, error } = usePlaidLink(config);
+
+  // Debugging logs for 'ready' and 'error' states
+  useEffect(() => {
+    console.log("PlaidLink ready state:", ready);
+    if (error) {
+      console.error("PlaidLink error:", error);
+    }
+  }, [ready, error]);
+
+  // Automatically generate link token when the component mounts
+  useEffect(() => {
+    if (!linkToken && userId) {
+      generateLinkToken(userId);
+    }
+  }, [linkToken, generateLinkToken, userId]);
 
   return (
-    <button onClick={() => open()} disabled={!ready}>
+    <Button onClick={() => open()} disabled={!ready}>
       Connect a bank account
-    </button>
+    </Button>
   );
 };
 

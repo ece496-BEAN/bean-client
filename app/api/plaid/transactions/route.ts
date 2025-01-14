@@ -1,10 +1,15 @@
-import { plaidClient, getAccessToken, DEV_USER_ID } from "@/lib/plaid";
 import { NextResponse, NextRequest } from "next/server";
 import {
   RemovedTransaction,
   Transaction,
   TransactionsSyncRequest,
 } from "plaid";
+import { getAccessToken, plaidClient } from "../lib/plaid-server";
+import { DEV_USER_ID } from "@/lib/plaid";
+import {
+  mapPlaidToBeanTransactionCategory,
+  PlaidPrimaryTransactionCategory,
+} from "@/lib/data-mapping";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -12,10 +17,13 @@ export async function GET(req: NextRequest) {
   try {
     // Get the userId from the request, e.g., from query parameters
     const userId = req.nextUrl.searchParams.get("userId") || DEV_USER_ID;
+    console.log(`Fetching transactions for user ${userId}`);
     const tokenData = getAccessToken(userId);
 
     if (!tokenData) {
-      return NextResponse.json({ error: "Access token not found for user" });
+      return NextResponse.json({
+        error: `Access token not found for user ${userId}`,
+      });
     }
 
     let { accessToken: ACCESS_TOKEN } = tokenData;
@@ -53,13 +61,26 @@ export async function GET(req: NextRequest) {
       hasMore = data.has_more;
     }
 
-    const compareTxnsByDateAscending = (a: Transaction, b: Transaction) =>
-      new Date(a.date).getTime() - new Date(b.date).getTime();
-    // Return the 8 most recent transactions
-    const recently_added = [...added]
-      .sort(compareTxnsByDateAscending)
-      .slice(-8);
-    return NextResponse.json({ latest_transactions: recently_added });
+    // Convert the Plaid transaction type to our internal format
+    const processed_transactions = added.map((txn: Transaction) => ({
+      id: txn.transaction_id,
+      description: txn.name,
+      amount: txn.amount,
+      date: txn.date,
+      category: mapPlaidToBeanTransactionCategory(
+        PlaidPrimaryTransactionCategory[
+          (txn.personal_finance_category
+            ?.primary as keyof typeof PlaidPrimaryTransactionCategory) ??
+            PlaidPrimaryTransactionCategory.OTHER
+        ],
+      ),
+    }));
+
+    // const compareTxnsByDateAscending = (a: Transaction, b: Transaction) =>
+    //   new Date(a.date).getTime() - new Date(b.date).getTime();
+    // const sorted_by_date = [...added]
+    //   .sort(compareTxnsByDateAscending);
+    return NextResponse.json({ transactions: processed_transactions });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Failed to fetch transactions" });

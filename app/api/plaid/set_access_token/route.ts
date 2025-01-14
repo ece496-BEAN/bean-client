@@ -1,6 +1,6 @@
-// app/api/plaid/set_access_token/route.ts
-import { DEV_USER_ID, plaidClient, setAccessToken } from "@/lib/plaid";
+import { DEV_USER_ID } from "@/lib/plaid";
 import { NextResponse, NextRequest } from "next/server";
+import { plaidClient, setAccessToken } from "../lib/plaid-server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
 
     // Store the access_token and item_id in memory
     setAccessToken(userId, ACCESS_TOKEN, ITEM_ID);
+    console.log(`Access token set for user ${userId}`);
 
     return NextResponse.json({
       // the 'access_token' is a private token, DO NOT pass this token to the frontend in your production environment
