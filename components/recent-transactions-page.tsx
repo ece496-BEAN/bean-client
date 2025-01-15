@@ -1,6 +1,7 @@
+// RecentTransactionsPage.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,93 +31,21 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
+import { useTransactions } from "@/contexts/TransactionsContext";
 import { usePlaidContext } from "@/contexts/PlaidContext";
-
-const userId = "user123"; // Replace with an actual user ID
 
 export function RecentTransactionsPage() {
   const router = useRouter();
-  const [transactions, setTransactions] = useState([
-    {
-      id: 1,
-      description: "Grocery Store",
-      amount: -75.5,
-      date: "2023-06-15",
-      category: "Food",
-    },
-    {
-      id: 2,
-      description: "Monthly Salary",
-      amount: 3000,
-      date: "2023-06-01",
-      category: "Income",
-    },
-    {
-      id: 3,
-      description: "Restaurant Dinner",
-      amount: -45.0,
-      date: "2023-06-10",
-      category: "Food",
-    },
-    {
-      id: 4,
-      description: "Utility Bill",
-      amount: -120.0,
-      date: "2023-06-05",
-      category: "Utilities",
-    },
-    {
-      id: 5,
-      description: "Online Shopping",
-      amount: -89.99,
-      date: "2023-06-08",
-      category: "Shopping",
-    },
-    {
-      id: 6,
-      description: "Freelance Work",
-      amount: 500,
-      date: "2023-06-12",
-      category: "Income",
-    },
-    {
-      id: 7,
-      description: "Gas Station",
-      amount: -40.0,
-      date: "2023-06-14",
-      category: "Transportation",
-    },
-    {
-      id: 8,
-      description: "Movie Tickets",
-      amount: -30.0,
-      date: "2023-06-17",
-      category: "Entertainment",
-    },
-  ]);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-
-  const filteredTransactions = transactions.filter(
-    (transaction) =>
-      transaction.description
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) &&
-      (categoryFilter === "All" || transaction.category === categoryFilter),
-  );
-
-  const totalIncome = filteredTransactions.reduce(
-    (sum, transaction) =>
-      transaction.amount > 0 ? sum + transaction.amount : sum,
-    0,
-  );
-
-  const totalExpenses = filteredTransactions.reduce(
-    (sum, transaction) =>
-      transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum,
-    0,
-  );
+  const {
+    filteredTransactions,
+    searchTerm,
+    categoryFilter,
+    totalIncome,
+    totalExpenses,
+    setSearchTerm,
+    setCategoryFilter,
+    addTransactions,
+  } = useTransactions();
 
   const {
     fetchTransactions,
@@ -134,7 +63,7 @@ export function RecentTransactionsPage() {
   // Update transactions state with fetched transactions from context
   useEffect(() => {
     if (plaidTransactions.length > 0) {
-      setTransactions(transactions.concat(plaidTransactions));
+      addTransactions(plaidTransactions);
     }
   }, [plaidTransactions]);
 
