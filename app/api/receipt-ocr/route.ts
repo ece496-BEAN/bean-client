@@ -4,6 +4,7 @@ import {
   GoogleGenerativeAI,
   SchemaType,
 } from "@google/generative-ai";
+import { Transaction } from "@/contexts/TransactionsContext";
 // schema stuff based on the tutorial here: https://ai.google.dev/gemini-api/docs/structured-output?lang=web
 
 const apiKey = process.env.GOOGLE_AI_STUDIO_KEY;
@@ -176,8 +177,32 @@ export async function POST(request: Request) {
       `~~~~~~~~~~~ DEBUG results for file ${displayName} ~~~~~~~~~~~~\n ${result.response.text()}`,
     );
 
-    return NextResponse.json(result.response.text());
-    // components/recent-transactions match this format. array of objects
+    // Process the result into an array of Transaction objects
+    const receiptData = JSON.parse(result.response.text());
+
+    const transactions: Transaction[] = receiptData.items.map(
+      (item: any, index: number) => ({
+        id: index,
+        description: item.user_friendly_name || item.name,
+        amount: -item.price, // Assuming all items are expenses
+        date: receiptData.transaction_info.date_time,
+        category:
+          item.category.charAt(0).toUpperCase() + item.category.slice(1), // Capitalize category
+      }),
+    );
+
+    // Add a transaction for the tax, if any
+    if (receiptData.totals.tax) {
+      transactions.push({
+        id: transactions.length,
+        description: "Sales Tax",
+        amount: -receiptData.totals.tax,
+        date: receiptData.transaction_info.date_time,
+        category: "Tax",
+      });
+    }
+
+    return NextResponse.json(transactions);
   } catch (error) {
     console.error("Error processing request:", error);
     const errorMessage =

@@ -12,12 +12,14 @@ import {
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useTransactions } from "@/contexts/TransactionsContext";
 
 export const NavigationBar: React.FC = () => {
   const router = useRouter();
   const [image, setImage] = useState<string | null>("");
   const [loading, setLoading] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { addTransactions } = useTransactions();
 
   // Handles the image upload process
   const handleImageUpload = async (
@@ -40,6 +42,7 @@ export const NavigationBar: React.FC = () => {
 
       const data = await response.json();
       console.log(data);
+      addTransactions(data);
 
       setLoading(false); // Reset loading state
 
