@@ -29,9 +29,22 @@ import {
   Search,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
+import { useTransactions } from "@/contexts/TransactionsContext";
+import { usePlaidContext } from "@/contexts/PlaidContext";
 
 export function RecentTransactionsPage() {
   const router = useRouter();
+  const {
+    filteredTransactions,
+    searchTerm,
+    categoryFilter,
+    totalIncome,
+    totalExpenses,
+    setSearchTerm,
+    setCategoryFilter,
+    addTransactions,
+  } = useTransactions();
 
   const [transactions, setTransactions] = useState([
     {
@@ -115,6 +128,26 @@ export function RecentTransactionsPage() {
     0,
   );
 
+  const {
+    fetchTransactions,
+    transactions: plaidTransactions,
+    linkSuccess,
+  } = usePlaidContext();
+
+  // Fetch transactions when link is successful
+  useEffect(() => {
+    if (linkSuccess) {
+      fetchTransactions();
+    }
+  }, [fetchTransactions, linkSuccess]);
+
+  // Update transactions state with fetched transactions from context
+  useEffect(() => {
+    if (plaidTransactions.length > 0) {
+      addTransactions(plaidTransactions);
+    }
+  }, [plaidTransactions]);
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
@@ -176,6 +209,11 @@ export function RecentTransactionsPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Add Plaid Link Button */}
+        <div className="mb-6">
+          <PlaidLinkButton />
         </div>
 
         <Card className="bg-white shadow-lg">
