@@ -213,11 +213,11 @@ export function ExpenseChart() {
     const dataPoint: Record<string, string | number> = { month: entry.month };
     let total = 0;
 
-    // selectedCategories.forEach((category) => {
-    //   const categoryValue = entry[category as keyof typeof entry] as number;
-    //   total += categoryValue;
-    //   dataPoint[category] = categoryValue;
-    // });
+    selectedCategories.forEach((category) => {
+      const categoryValue = entry[category as keyof typeof entry] as number;
+      total += categoryValue;
+      dataPoint[category] = categoryValue;
+    });
 
     dataPoint["Total"] = total;
     return dataPoint;
