@@ -1,31 +1,34 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react'
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import React, { useState } from "react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Handle login logic here
-    console.log('Login attempted with:', { email, password })
-  }
+    console.log("Login attempted with:", { email, password });
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <header className="bg-black text-white p-4">
         <h1 className="text-2xl font-bold">Login</h1>
       </header>
-      
+
       <main className="flex-grow flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-8">
-          <form onSubmit={handleLogin} className="bg-white shadow-md rounded-lg p-8 space-y-6">
+          <form
+            onSubmit={handleLogin}
+            className="bg-white shadow-md rounded-lg p-8 space-y-6"
+          >
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -59,7 +62,11 @@ export function LoginPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -68,10 +75,14 @@ export function LoginPage() {
             </Button>
           </form>
           <div className="text-center space-y-2">
-            <a href="#" className="text-sm text-primary hover:underline">Forgot password?</a>
+            <a href="#" className="text-sm text-primary hover:underline">
+              Forgot password?
+            </a>
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
-              <a href="#" className="text-primary hover:underline">Sign up</a>
+              <a href="#" className="text-primary hover:underline">
+                Sign up
+              </a>
             </p>
           </div>
         </div>
@@ -81,5 +92,5 @@ export function LoginPage() {
         © 2023 Budget App. All rights reserved.
       </footer>
     </div>
-  )
+  );
 }
