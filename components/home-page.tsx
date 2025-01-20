@@ -152,7 +152,7 @@ export function MainPage() {
           {/* Spending Summary */}
           <Card
             className="col-span-full bg-white shadow-lg"
-            onClick={() => router.push("/budget-page")}
+            onClick={() => router.push("/budget")}
           >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold text-gray-700">
@@ -182,7 +182,7 @@ export function MainPage() {
           {/* Spending Categories */}
           <Card
             className="bg-white shadow-lg lg:row-span-2"
-            onClick={() => router.push("/budget-page")}
+            onClick={() => router.push("/budget")}
           >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-semibold text-gray-700">
