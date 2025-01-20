@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useBudgetContext } from "@/components/BudgetContext";
+import { useBudgetContext } from "@/contexts/BudgetContext";
 import LineChart from "@/components/LineChart";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 

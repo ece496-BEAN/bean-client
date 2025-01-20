@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,20 +13,11 @@ import {
 } from "@/components/ui/select";
 
 import {
-  Bell,
-  Camera,
-  DollarSign,
-  Home,
-  PieChart,
-  Settings,
-  Sparkles,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
   ArrowDownIcon,
   ArrowUpIcon,
-  Filter,
   Search,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
@@ -45,88 +36,6 @@ export function RecentTransactionsPage() {
     setCategoryFilter,
     addTransactions,
   } = useTransactions();
-
-  const [transactions, setTransactions] = useState([
-    {
-      id: 1,
-      description: "Grocery Store",
-      amount: -75.5,
-      date: "2023-06-15",
-      category: "Food",
-    },
-    {
-      id: 2,
-      description: "Monthly Salary",
-      amount: 3000,
-      date: "2023-06-01",
-      category: "Income",
-    },
-    {
-      id: 3,
-      description: "Restaurant Dinner",
-      amount: -45.0,
-      date: "2023-06-10",
-      category: "Food",
-    },
-    {
-      id: 4,
-      description: "Utility Bill",
-      amount: -120.0,
-      date: "2023-06-05",
-      category: "Utilities",
-    },
-    {
-      id: 5,
-      description: "Online Shopping",
-      amount: -89.99,
-      date: "2023-06-08",
-      category: "Shopping",
-    },
-    {
-      id: 6,
-      description: "Freelance Work",
-      amount: 500,
-      date: "2023-06-12",
-      category: "Income",
-    },
-    {
-      id: 7,
-      description: "Gas Station",
-      amount: -40.0,
-      date: "2023-06-14",
-      category: "Transportation",
-    },
-    {
-      id: 8,
-      description: "Movie Tickets",
-      amount: -30.0,
-      date: "2023-06-17",
-      category: "Entertainment",
-    },
-  ]);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-
-  const filteredTransactions = transactions.filter(
-    (transaction) =>
-      transaction.description
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) &&
-      (categoryFilter === "All" || transaction.category === categoryFilter),
-  );
-
-  const totalIncome = filteredTransactions.reduce(
-    (sum, transaction) =>
-      transaction.amount > 0 ? sum + transaction.amount : sum,
-    0,
-  );
-
-  const totalExpenses = filteredTransactions.reduce(
-    (sum, transaction) =>
-      transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum,
-    0,
-  );
 
   const {
     fetchTransactions,
@@ -202,7 +111,11 @@ export function RecentTransactionsPage() {
                   <TrendingDown className="w-5 h-5 mr-2 text-red-500" />
                 )}
                 <span
-                  className={`text-2xl font-bold ${totalIncome - totalExpenses >= 0 ? "text-green-600" : "text-red-600"}`}
+                  className={`text-2xl font-bold ${
+                    totalIncome - totalExpenses >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
                 >
                   ${Math.abs(totalIncome - totalExpenses).toFixed(2)}
                 </span>
@@ -234,7 +147,10 @@ export function RecentTransactionsPage() {
                   className="pl-8"
                 />
               </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <Select
+                value={categoryFilter}
+                onValueChange={(value) => setCategoryFilter(value)}
+              >
                 <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
@@ -258,7 +174,9 @@ export function RecentTransactionsPage() {
                 >
                   <div className="flex items-center">
                     <div
-                      className={`p-2 rounded-full mr-3 ${transaction.amount >= 0 ? "bg-green-100" : "bg-red-100"}`}
+                      className={`p-2 rounded-full mr-3 ${
+                        transaction.amount >= 0 ? "bg-green-100" : "bg-red-100"
+                      }`}
                     >
                       {transaction.amount >= 0 ? (
                         <TrendingUp className="w-4 h-4 text-green-600" />
@@ -276,7 +194,11 @@ export function RecentTransactionsPage() {
                     </div>
                   </div>
                   <span
-                    className={`font-semibold ${transaction.amount >= 0 ? "text-green-600" : "text-red-600"}`}
+                    className={`font-semibold ${
+                      transaction.amount >= 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
                   >
                     {transaction.amount >= 0 ? "+" : "-"}$
                     {Math.abs(transaction.amount).toFixed(2)}
