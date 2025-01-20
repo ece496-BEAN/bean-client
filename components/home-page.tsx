@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Bell,
   Sparkles,
@@ -11,6 +11,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
+import LineChart from "@/components/LineChart"; // Import the new LineChart component
+import ParentSize from "@visx/responsive/lib/components/ParentSize"; // Import ParentSize
+import { useTransactions } from "@/contexts/TransactionsContext";
 
 interface RingChartProps {
   percentage: number;
@@ -74,17 +77,7 @@ interface Notification {
 
 export function MainPage() {
   const router = useRouter();
-  const recentTransactions: Transaction[] = [
-    { id: 1, description: "Grocery Store", amount: -75.5, date: "2023-06-15" },
-    { id: 2, description: "Monthly Salary", amount: 3000, date: "2023-06-01" },
-    {
-      id: 3,
-      description: "Restaurant Dinner",
-      amount: -45.0,
-      date: "2023-06-10",
-    },
-    { id: 4, description: "Utility Bill", amount: -120.0, date: "2023-06-05" },
-  ];
+  const { transactions } = useTransactions();
 
   const totalSpending = 2500;
   const monthlyBudget = 3000;
@@ -108,6 +101,24 @@ export function MainPage() {
     "You might save on transportation by using public transit twice a week.",
   ];
 
+  const [savingsData, setSavingsData] = useState<
+    { date: Date; value: number }[]
+  >([]);
+
+  useEffect(() => {
+    async function fetchSavingsData() {
+      try {
+        const response = await fetch("/api/user-data");
+        const data = await response.json();
+        setSavingsData(data);
+      } catch (error) {
+        console.error("Failed to fetch savings data:", error);
+      }
+    }
+
+    fetchSavingsData();
+  }, []);
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
@@ -116,6 +127,28 @@ export function MainPage() {
 
       <main className="flex-grow p-4 overflow-y-auto">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Savings Graph */}
+          <Card className="bg-white shadow-lg col-span-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold text-gray-700">
+                Savings Graph
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="w-full h-64">
+                <ParentSize>
+                  {({ width, height }) => (
+                    <LineChart
+                      width={width}
+                      height={height}
+                      data={savingsData}
+                    />
+                  )}
+                </ParentSize>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Spending Summary */}
           <Card
             className="col-span-full bg-white shadow-lg"
@@ -185,38 +218,44 @@ export function MainPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
-                {recentTransactions.map((transaction) => (
-                  <li
-                    key={transaction.id}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center">
-                      <div
-                        className={`p-2 rounded-full mr-3 ${transaction.amount >= 0 ? "bg-green-100" : "bg-red-100"}`}
-                      >
-                        {transaction.amount >= 0 ? (
-                          <TrendingUp className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <TrendingDown className="w-4 h-4 text-red-600" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-700">
-                          {transaction.description}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {transaction.date}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={`font-semibold ${transaction.amount >= 0 ? "text-green-600" : "text-red-600"}`}
+                {transactions
+                  .sort(
+                    (a, b) =>
+                      new Date(b.date).getTime() - new Date(a.date).getTime(),
+                  )
+                  .slice(0, 5)
+                  .map((transaction) => (
+                    <li
+                      key={transaction.id}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
                     >
-                      {transaction.amount >= 0 ? "+" : "-"}$
-                      {Math.abs(transaction.amount).toFixed(2)}
-                    </span>
-                  </li>
-                ))}
+                      <div className="flex items-center">
+                        <div
+                          className={`p-2 rounded-full mr-3 ${transaction.amount >= 0 ? "bg-green-100" : "bg-red-100"}`}
+                        >
+                          {transaction.amount >= 0 ? (
+                            <TrendingUp className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <TrendingDown className="w-4 h-4 text-red-600" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-700">
+                            {transaction.description}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {transaction.date}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={`font-semibold ${transaction.amount >= 0 ? "text-green-600" : "text-red-600"}`}
+                      >
+                        {transaction.amount >= 0 ? "+" : "-"}$
+                        {Math.abs(transaction.amount).toFixed(2)}
+                      </span>
+                    </li>
+                  ))}
               </ul>
             </CardContent>
           </Card>

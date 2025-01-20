@@ -35,6 +35,10 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { LucideProps } from "lucide-react";
+import { useRouter } from "next/navigation";
+import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
+import { useTransactions } from "@/contexts/TransactionsContext";
+import { usePlaidContext } from "@/contexts/PlaidContext";
 
 // Define the possible categories
 type TransactionCategory =
@@ -286,10 +290,16 @@ export function RecentTransactionsPage() {
               <CardTitle className="text-lg font-semibold text-gray-700">
                 Total Income
               </CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-700">
+                Total Income
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
                 <ArrowUpIcon className="w-5 h-5 mr-2 text-green-500" />
+                <span className="text-2xl font-bold text-green-600">
+                  ${totalIncome.toFixed(2)}
+                </span>
                 <span className="text-2xl font-bold text-green-600">
                   ${totalIncome.toFixed(2)}
                 </span>
@@ -302,10 +312,16 @@ export function RecentTransactionsPage() {
               <CardTitle className="text-lg font-semibold text-gray-700">
                 Total Expenses
               </CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-700">
+                Total Expenses
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
                 <ArrowDownIcon className="w-5 h-5 mr-2 text-red-500" />
+                <span className="text-2xl font-bold text-red-600">
+                  ${totalExpenses.toFixed(2)}
+                </span>
                 <span className="text-2xl font-bold text-red-600">
                   ${totalExpenses.toFixed(2)}
                 </span>
@@ -315,6 +331,9 @@ export function RecentTransactionsPage() {
 
           <Card className="bg-white shadow-lg">
             <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold text-gray-700">
+                Net Balance
+              </CardTitle>
               <CardTitle className="text-lg font-semibold text-gray-700">
                 Net Balance
               </CardTitle>
@@ -336,6 +355,11 @@ export function RecentTransactionsPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Add Plaid Link Button */}
+        <div className="mb-6">
+          <PlaidLinkButton />
         </div>
 
         <Card className="bg-white shadow-lg">
