@@ -1,11 +1,25 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { Bell, Moon, Sun, User, Lock, CreditCard, HelpCircle } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import React from "react";
+import {
+  Bell,
+  Moon,
+  Sun,
+  User,
+  Lock,
+  CreditCard,
+  HelpCircle,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function SettingPage() {
   return (
@@ -25,12 +39,20 @@ export function SettingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Edit Profile</span>
-                <Button variant="outline" size="sm">Edit</Button>
+                <span className="text-sm font-medium text-gray-700">
+                  Edit Profile
+                </span>
+                <Button variant="outline" size="sm">
+                  Edit
+                </Button>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Change Password</span>
-                <Button variant="outline" size="sm">Change</Button>
+                <span className="text-sm font-medium text-gray-700">
+                  Change Password
+                </span>
+                <Button variant="outline" size="sm">
+                  Change
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -44,11 +66,15 @@ export function SettingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Push Notifications</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Push Notifications
+                </span>
                 <Switch />
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Email Notifications</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Email Notifications
+                </span>
                 <Switch />
               </div>
             </CardContent>
@@ -63,11 +89,15 @@ export function SettingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Dark Mode</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Dark Mode
+                </span>
                 <Switch />
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Color Theme</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Color Theme
+                </span>
                 <Select defaultValue="default">
                   <SelectTrigger className="w-[120px]">
                     <SelectValue placeholder="Select theme" />
@@ -92,11 +122,15 @@ export function SettingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Two-Factor Authentication</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Two-Factor Authentication
+                </span>
                 <Switch />
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Data Sharing</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Data Sharing
+                </span>
                 <Switch />
               </div>
             </CardContent>
@@ -111,18 +145,26 @@ export function SettingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Manage Payment Methods</span>
-                <Button variant="outline" size="sm">Manage</Button>
+                <span className="text-sm font-medium text-gray-700">
+                  Manage Payment Methods
+                </span>
+                <Button variant="outline" size="sm">
+                  Manage
+                </Button>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Default Payment Method</span>
+                <span className="text-sm font-medium text-gray-700">
+                  Default Payment Method
+                </span>
                 <Select defaultValue="visa">
                   <SelectTrigger className="w-[120px]">
                     <SelectValue placeholder="Select card" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="visa">Visa (...1234)</SelectItem>
-                    <SelectItem value="mastercard">Mastercard (...5678)</SelectItem>
+                    <SelectItem value="mastercard">
+                      Mastercard (...5678)
+                    </SelectItem>
                     <SelectItem value="paypal">PayPal</SelectItem>
                   </SelectContent>
                 </Select>
@@ -140,24 +182,38 @@ export function SettingPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-700">FAQs</span>
-                <Button variant="outline" size="sm">View</Button>
+                <Button variant="outline" size="sm">
+                  View
+                </Button>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Contact Support</span>
-                <Button variant="outline" size="sm">Contact</Button>
+                <span className="text-sm font-medium text-gray-700">
+                  Contact Support
+                </span>
+                <Button variant="outline" size="sm">
+                  Contact
+                </Button>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Privacy Policy</span>
-                <Button variant="outline" size="sm">View</Button>
+                <span className="text-sm font-medium text-gray-700">
+                  Privacy Policy
+                </span>
+                <Button variant="outline" size="sm">
+                  View
+                </Button>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Terms of Service</span>
-                <Button variant="outline" size="sm">View</Button>
+                <span className="text-sm font-medium text-gray-700">
+                  Terms of Service
+                </span>
+                <Button variant="outline" size="sm">
+                  View
+                </Button>
               </div>
             </CardContent>
           </Card>
         </div>
       </main>
     </div>
-  )
+  );
 }

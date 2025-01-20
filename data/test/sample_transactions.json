@@ -16,7 +16,7 @@
         "category": "Balance",
         "subcategory": "Starting Balance",
         "source": "Previous Period",
-        "amount": 165.0,
+        "amount": 500.0,
         "payment_method": "N/A",
         "account": "BMO Savings",
         "transaction_type": "credit"
@@ -26,7 +26,7 @@
         "category": "Balance",
         "subcategory": "Starting Balance",
         "source": "Previous Period",
-        "amount": -228.32,
+        "amount": -100.0,
         "payment_method": "N/A",
         "account": "BMO CC",
         "transaction_type": "debit"
@@ -36,7 +36,7 @@
         "category": "Balance",
         "subcategory": "Starting Balance",
         "source": "Previous Period",
-        "amount": -111.43,
+        "amount": -50.0,
         "payment_method": "N/A",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -46,7 +46,7 @@
         "category": "Balance",
         "subcategory": "Starting Balance",
         "source": "Previous Period",
-        "amount": 500.0,
+        "amount": 200.0,
         "payment_method": "N/A",
         "account": "Cash on Hand",
         "transaction_type": "credit"
@@ -90,7 +90,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 34.98,
+        "amount": 50.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -132,7 +132,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 135.41,
+        "amount": 70.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -170,7 +170,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 112.18,
+        "amount": 60.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -198,7 +198,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 36.67,
+        "amount": 45.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -212,7 +212,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 76.94,
+        "amount": 55.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -240,7 +240,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 35.81,
+        "amount": 40.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -302,7 +302,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 125.34,
+        "amount": 65.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -316,7 +316,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 47.23,
+        "amount": 55.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -378,7 +378,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 24.32,
+        "amount": 60.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -406,7 +406,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 136.46,
+        "amount": 65.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -420,7 +420,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 152.24,
+        "amount": 70.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -448,7 +448,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 125.53,
+        "amount": 75.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -496,7 +496,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 185.83,
+        "amount": 80.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -524,7 +524,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 54.78,
+        "amount": 60.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -552,7 +552,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 39.12,
+        "amount": 55.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -604,7 +604,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 171.79,
+        "amount": 75.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -618,7 +618,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 38.58,
+        "amount": 60.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -646,7 +646,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 27.99,
+        "amount": 50.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -660,7 +660,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 77.71,
+        "amount": 65.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -722,7 +722,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 192.91,
+        "amount": 70.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -736,7 +736,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 101.92,
+        "amount": 60.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -764,7 +764,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 46.58,
+        "amount": 55.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -778,7 +778,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 69.99,
+        "amount": 60.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -816,7 +816,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 44.51,
+        "amount": 50.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -850,7 +850,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 33.12,
+        "amount": 55.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -878,7 +878,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 185.82,
+        "amount": 75.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -892,7 +892,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 130.52,
+        "amount": 65.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"
@@ -920,7 +920,7 @@
         "category": "Expense",
         "subcategory": "Groceries",
         "source": "Superstore",
-        "amount": 73.77,
+        "amount": 60.0,
         "payment_method": "Debit Card",
         "account": "Amazon CC",
         "transaction_type": "debit"

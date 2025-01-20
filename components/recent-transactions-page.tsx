@@ -290,16 +290,10 @@ export function RecentTransactionsPage() {
               <CardTitle className="text-lg font-semibold text-gray-700">
                 Total Income
               </CardTitle>
-              <CardTitle className="text-lg font-semibold text-gray-700">
-                Total Income
-              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center">
                 <ArrowUpIcon className="w-5 h-5 mr-2 text-green-500" />
-                <span className="text-2xl font-bold text-green-600">
-                  ${totalIncome.toFixed(2)}
-                </span>
                 <span className="text-2xl font-bold text-green-600">
                   ${totalIncome.toFixed(2)}
                 </span>
@@ -309,9 +303,6 @@ export function RecentTransactionsPage() {
 
           <Card className="bg-white shadow-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold text-gray-700">
-                Total Expenses
-              </CardTitle>
               <CardTitle className="text-lg font-semibold text-gray-700">
                 Total Expenses
               </CardTitle>
@@ -322,18 +313,12 @@ export function RecentTransactionsPage() {
                 <span className="text-2xl font-bold text-red-600">
                   ${totalExpenses.toFixed(2)}
                 </span>
-                <span className="text-2xl font-bold text-red-600">
-                  ${totalExpenses.toFixed(2)}
-                </span>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white shadow-lg">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold text-gray-700">
-                Net Balance
-              </CardTitle>
               <CardTitle className="text-lg font-semibold text-gray-700">
                 Net Balance
               </CardTitle>
