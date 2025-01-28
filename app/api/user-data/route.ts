@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { getSession } from "@/auth";
 
 export async function GET() {
+  const session = await getSession();
+  console.log("session email", session?.user?.email);
   const filePath = path.join(
     process.cwd(),
     "data/test/sample_transactions.json",
