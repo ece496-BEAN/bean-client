@@ -61,7 +61,7 @@ export const NavigationBar: React.FC = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-white shadow-lg">
+    <nav className="fixed bottom-0 left-0 w-full bg-white shadow-lg z-50">
       <ul className="flex justify-around items-center h-16">
         <li>
           <Button

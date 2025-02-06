@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import NavigationBar from "@/components/NavigationBar";
 import { PlaidProvider } from "@/contexts/PlaidContext";
 import { BudgetProvider } from "@/contexts/BudgetContext";
-import { TransactionsProvider } from "@/contexts/TransactionsContext";
 import { ReactNode } from "react";
 
 function LayoutClient({ children }: { children: ReactNode }) {
