@@ -1,13 +1,12 @@
-import "./globals.css"; // Keep your global styles
-import { Metadata } from "next"; // Keep metadata if needed
-import NavigationBar from "@/components/NavigationBar"; // Import your NavigationBar component
-import { BudgetProvider } from "@/contexts/BudgetContext";
-import { PlaidProvider } from "@/contexts/PlaidContext";
+// app/layout.tsx
+import "./globals.css";
+import { Metadata } from "next";
 import { TransactionsProvider } from "@/contexts/TransactionsContext";
+import LayoutClient from "@/components/LayoutClient"; // Import LayoutClient
 
-export const metadata = {
-  title: "My Awesome App",
-  description: "This is my awesome app",
+export const metadata: Metadata = {
+  title: "My Awesome App" as string,
+  description: "This is my awesome app" as string,
 };
 
 export default function RootLayout({
@@ -18,18 +17,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>{metadata.title}</title>
-        <meta name="description" content={metadata.description} />
+        <title>{String(metadata.title ?? "Default Title")}</title>
+        <meta
+          name="description"
+          content={metadata.description ?? "Default Description"}
+        />
       </head>
       <body>
         <TransactionsProvider>
-          <NavigationBar /> {/* Add your navigation bar */}
-          <main>
-            <PlaidProvider>
-              <BudgetProvider>{children}</BudgetProvider>
-            </PlaidProvider>
-          </main>{" "}
-          {/* Render page-specific content */}
+          {/* Client Component is rendered here */}
+          <LayoutClient>{children}</LayoutClient>
         </TransactionsProvider>
       </body>
     </html>
