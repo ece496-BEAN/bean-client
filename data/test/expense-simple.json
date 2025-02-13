@@ -10,6 +10,11 @@
     "date": "2025-01-01T00:00:00"
   },
   {
+    "amount": -1000,
+    "category": "ffod",
+    "date": "2025-02-01T00:00:00"
+  },
+  {
     "amount": -100,
     "category": "restaurants",
     "date": "2025-01-01T00:00:00"

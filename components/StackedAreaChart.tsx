@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { AreaStack, Bar, Line } from "@visx/shape";
 import { scaleTime, scaleLinear, scaleOrdinal } from "@visx/scale";
-import { CumulativeStackedDataPoint } from "./expense-chart";
+import { StackedDataPoint } from "./expense-chart";
 import { SeriesPoint } from "@visx/shape/lib/types";
 import { AxisBottom, AxisLeft } from "@visx/axis";
 import { Group } from "@visx/group";
@@ -13,18 +13,18 @@ import { max, extent, bisector } from "@visx/vendor/d3-array";
 export type StackedAreasProps = {
   width: number;
   height: number;
-  data: CumulativeStackedDataPoint[];
+  data: StackedDataPoint[];
   margin?: { top: number; right: number; bottom: number; left: number };
 };
 
-const getDate = (d: CumulativeStackedDataPoint) => new Date(d.date).valueOf();
-const keys = (data: CumulativeStackedDataPoint[]) =>
+const getDate = (d: StackedDataPoint) => new Date(d.date).valueOf();
+const keys = (data: StackedDataPoint[]) =>
   data[0].categories.map((e) => e.category) as string[];
-const getY0 = (d: SeriesPoint<CumulativeStackedDataPoint>) => d[0];
-const getY1 = (d: SeriesPoint<CumulativeStackedDataPoint>) => {
+const getY0 = (d: SeriesPoint<StackedDataPoint>) => d[0];
+const getY1 = (d: SeriesPoint<StackedDataPoint>) => {
   return d[1];
 };
-const bisectDate = bisector<CumulativeStackedDataPoint, Date>(
+const bisectDate = bisector<StackedDataPoint, Date>(
   (d) => new Date(d.date),
 ).left;
 
@@ -35,7 +35,7 @@ export default function StackedAreaChart({
   margin = { top: 20, right: 20, bottom: 50, left: 20 },
 }: StackedAreasProps) {
   const { tooltipData, tooltipLeft, tooltipTop, showTooltip, hideTooltip } =
-    useTooltip<CumulativeStackedDataPoint>();
+    useTooltip<StackedDataPoint>();
 
   // bounds
   const innerWidth = width - margin.left - margin.right;
@@ -88,7 +88,9 @@ export default function StackedAreaChart({
       showTooltip({
         tooltipData: d,
         tooltipLeft: x,
-        tooltipTop: yScale(d.categories.reduce((sum, e) => sum + e.value, 0)),
+        tooltipTop: yScale(
+          d?.categories?.reduce((sum, e) => sum + e.value, 0) ?? 0,
+        ),
       });
     },
     [showTooltip, xScale, yScale],
@@ -100,7 +102,7 @@ export default function StackedAreaChart({
     <div style={{ position: "relative" }}>
       <svg width={width} height={height}>
         <Group left={margin.left} top={margin.top}>
-          <AreaStack<CumulativeStackedDataPoint>
+          <AreaStack<StackedDataPoint>
             data={data}
             keys={data.length != 0 ? keys(data) : []}
             value={(d, key) =>

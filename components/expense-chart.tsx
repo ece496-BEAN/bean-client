@@ -26,24 +26,29 @@ import { useBudgetContext } from "@/contexts/BudgetContext";
 import LineChart from "@/components/LineChart";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import StackedAreaChart from "./StackedAreaChart";
+import * as d3 from "d3";
 
 export type ChartTransaction = {
-  date: string;
+  date: Date;
   amount: number;
   category: string;
 };
-export interface CumulativeStackedDataPoint {
-  date: string;
-  categories: { category: string; value: number }[];
+
+export interface CategoryValue {
+  category: string;
+  value: number;
+}
+
+export interface StackedDataPoint {
+  date: Date;
+  categories: CategoryValue[];
 }
 
 export function ExpenseChart() {
   // const [selectedCategories, setSelectedCategories] = useState<
   //   (keyof (typeof mockExpenseData)[0])[]
   // >(expenseCategories.slice(0, 5) as (keyof (typeof mockExpenseData)[0])[]);
-  const [savingsData, setSavingsData] = useState<CumulativeStackedDataPoint[]>(
-    [],
-  );
+  const [savingsData, setSavingsData] = useState<StackedDataPoint[]>([]);
   // const [selectedTimeframe, setSelectedTimeframe] =
   //   useState<string>("PAST_MONTH");
   // const { categories, removeCategory, isEditMode, updateAmount } =
@@ -53,66 +58,77 @@ export function ExpenseChart() {
     async function fetchSavingsData() {
       try {
         const response = await fetch("/api/user-data/expenses");
-        const transactions: ChartTransaction[] = await response.json();
-        // Create a sorted copy of the transactions (assuming ISO date strings, so lexicographical sort works)
-        const sortedTransactions = transactions
-          .slice()
-          .sort((a, b) => a.date.localeCompare(b.date));
 
-        // Group transactions by date.
-        const transactionsByDate: Map<string, ChartTransaction[]> = new Map();
-        for (const tx of sortedTransactions) {
-          if (!transactionsByDate.has(tx.date)) {
-            transactionsByDate.set(tx.date, []);
-          }
-          transactionsByDate.get(tx.date)!.push(tx);
+        type RawData = {
+          date: string;
+          amount: number;
+          // ISO 8601 date-time string
+          category: string;
+        };
+
+        const rawData: RawData[] = await response.json();
+
+        const transactions2: ChartTransaction[] = rawData
+          .map((tx) => ({
+            ...tx,
+            date: d3.isoParse(tx.date) as Date,
+          }))
+          .sort((a, b) => d3.ascending(a.date, b.date));
+
+        const categories: string[] = Array.from(
+          new Set(transactions2.map((tx) => tx.category)),
+        );
+
+        // Group transactions first by week, then by category, summing the amounts if
+        // there is multiple of the same category in the same week
+        const rawGroupedTransactionsByWeek = d3.rollup(
+          transactions2,
+          (v) => d3.sum(v, (d) => d.amount),
+          (d) => d3.timeWeek(d.date),
+          (d) => d.category,
+        );
+
+        const groupedTransactionsByWeek: StackedDataPoint[] = Array.from(
+          rawGroupedTransactionsByWeek.entries(),
+        )
+          .map(([date, categoryMap]): StackedDataPoint => {
+            return {
+              date: date as Date,
+              categories: Array.from(
+                categoryMap,
+                ([category, value]): CategoryValue => ({
+                  category,
+                  value: value,
+                }),
+              ),
+            };
+          })
+          .sort((a: StackedDataPoint, b: StackedDataPoint) =>
+            d3.ascending(a.date, b.date),
+          );
+
+        const groupedCumulativeTransactionsByWeek: StackedDataPoint[] = [];
+        let cumulativeSums: { [key: string]: number } = categories
+          .map((cat) => ({ [cat]: 0 }))
+          .reduce((acc, val) => ({ ...acc, ...val }), {});
+        for (const dataPoint of groupedTransactionsByWeek) {
+          dataPoint.categories.forEach(
+            (cat) =>
+              // TODO: REMOVE THE NEGATIVE SIGN
+              (cumulativeSums[cat.category] += -cat.value),
+          );
+          groupedCumulativeTransactionsByWeek.push({
+            date: dataPoint.date,
+            categories: Object.entries(cumulativeSums).map(
+              ([category, value]) => ({
+                category,
+                value,
+              }),
+            ),
+          });
         }
 
-        // Get unique dates in ascending order.
-        const uniqueDates: string[] = Array.from(
-          transactionsByDate.keys(),
-        ).sort((a, b) => a.localeCompare(b));
-
-        // Collect all unique categories from the transactions.
-        const categories: Set<string> = new Set();
-        transactions.forEach((tx) => categories.add(tx.category));
-
-        // Initialize cumulative sums for each category.
-        const cumulativeSums: { [key: string]: number } = {};
-        categories.forEach((cat) => {
-          cumulativeSums[cat] = 0;
-        });
-
-        // Build the cumulative stacked data points.
-        const cumulativeData: CumulativeStackedDataPoint[] = [];
-
-        for (const date of uniqueDates) {
-          // Get all transactions for the current date.
-          const dailyTransactions = transactionsByDate.get(date)!;
-
-          // Update cumulative sums with all transactions from this date.
-          dailyTransactions.forEach((tx) => {
-            cumulativeSums[tx.category] += -tx.amount;
-          });
-
-          // Create a data point that includes the current cumulative sum for each category.
-          const dataPoint: CumulativeStackedDataPoint = {
-            date,
-            categories: [],
-          };
-          categories.forEach((cat) => {
-            // If a category hasn't been encountered, default to 0.
-            dataPoint.categories.push({
-              category: cat,
-              value: cumulativeSums[cat] || 0,
-            });
-          });
-
-          cumulativeData.push(dataPoint);
-        }
-        console.log("Savings data fetched:", cumulativeData);
-
-        setSavingsData(cumulativeData);
+        setSavingsData(groupedCumulativeTransactionsByWeek);
       } catch (error) {
         console.error("Failed to fetch savings data:", error);
       }
