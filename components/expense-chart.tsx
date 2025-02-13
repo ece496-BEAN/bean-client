@@ -25,170 +25,94 @@ import {
 import { useBudgetContext } from "@/contexts/BudgetContext";
 import LineChart from "@/components/LineChart";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import StackedAreaChart from "./StackedAreaChart";
 
-// Mock data for expenses
-const mockExpenseData = [
-  {
-    month: "Jan",
-    Housing: 1200,
-    Food: 450,
-    Entertainment: 200,
-    Transportation: 150,
-    Utilities: 100,
-    Other: 80,
-  },
-  {
-    month: "Feb",
-    Housing: 1200,
-    Food: 600,
-    Entertainment: 180,
-    Transportation: 140,
-    Utilities: 110,
-    Other: 90,
-  },
-  {
-    month: "Mar",
-    Housing: 1200,
-    Food: 350,
-    Entertainment: 220,
-    Transportation: 160,
-    Utilities: 105,
-    Other: 75,
-  },
-  {
-    month: "Apr",
-    Housing: 1200,
-    Food: 500,
-    Entertainment: 190,
-    Transportation: 145,
-    Utilities: 95,
-    Other: 85,
-  },
-  {
-    month: "May",
-    Housing: 1200,
-    Food: 480,
-    Entertainment: 210,
-    Transportation: 155,
-    Utilities: 100,
-    Other: 70,
-  },
-  {
-    month: "Jun",
-    Housing: 1200,
-    Food: 520,
-    Entertainment: 230,
-    Transportation: 170,
-    Utilities: 110,
-    Other: 95,
-  },
-  {
-    month: "Jul",
-    Housing: 1200,
-    Food: 550,
-    Entertainment: 250,
-    Transportation: 180,
-    Utilities: 120,
-    Other: 100,
-  },
-  {
-    month: "Aug",
-    Housing: 1200,
-    Food: 530,
-    Entertainment: 240,
-    Transportation: 175,
-    Utilities: 115,
-    Other: 90,
-  },
-  {
-    month: "Sep",
-    Housing: 1200,
-    Food: 490,
-    Entertainment: 220,
-    Transportation: 160,
-    Utilities: 105,
-    Other: 85,
-  },
-  {
-    month: "Oct",
-    Housing: 1200,
-    Food: 510,
-    Entertainment: 200,
-    Transportation: 150,
-    Utilities: 100,
-    Other: 80,
-  },
-  {
-    month: "Nov",
-    Housing: 1200,
-    Food: 540,
-    Entertainment: 230,
-    Transportation: 165,
-    Utilities: 110,
-    Other: 95,
-  },
-  {
-    month: "Dec",
-    Housing: 1200,
-    Food: 600,
-    Entertainment: 300,
-    Transportation: 200,
-    Utilities: 120,
-    Other: 110,
-  },
-];
-
-const expenseCategories = [
-  "Housing",
-  "Food",
-  "Entertainment",
-  "Transportation",
-  "Utilities",
-  "Other",
-];
-
-const colors = [
-  "rgba(33, 150, 243, 1)", // Solid blue
-  "rgba(33, 150, 243, 0.8)",
-  "rgba(33, 150, 243, 0.6)",
-  "rgba(33, 150, 243, 0.4)",
-  "rgba(33, 150, 243, 0.2)",
-  "rgba(33, 150, 243, 0.1)", // Lightest blue
-];
+export type ChartTransaction = {
+  date: string;
+  amount: number;
+  category: string;
+};
+export interface CumulativeStackedDataPoint {
+  date: string;
+  categories: { category: string; value: number }[];
+}
 
 export function ExpenseChart() {
-  const [selectedCategories, setSelectedCategories] = useState<
-    (keyof (typeof mockExpenseData)[0])[]
-  >(expenseCategories.slice(0, 5) as (keyof (typeof mockExpenseData)[0])[]);
-  const [savingsData, setSavingsData] = useState<
-    { date: Date; value: number }[]
-  >([]);
-  const [selectedTimeframe, setSelectedTimeframe] =
-    useState<string>("PAST_MONTH");
-  const { categories, removeCategory, isEditMode, updateAmount } =
-    useBudgetContext();
+  // const [selectedCategories, setSelectedCategories] = useState<
+  //   (keyof (typeof mockExpenseData)[0])[]
+  // >(expenseCategories.slice(0, 5) as (keyof (typeof mockExpenseData)[0])[]);
+  const [savingsData, setSavingsData] = useState<CumulativeStackedDataPoint[]>(
+    [],
+  );
+  // const [selectedTimeframe, setSelectedTimeframe] =
+  //   useState<string>("PAST_MONTH");
+  // const { categories, removeCategory, isEditMode, updateAmount } =
+  //   useBudgetContext();
 
   useEffect(() => {
     async function fetchSavingsData() {
       try {
-        const response = await fetch("/api/user-data");
-        const data = await response.json();
-        const savingsData: { date: Date; value: number }[] = [];
+        const response = await fetch("/api/user-data/expenses");
+        const transactions: ChartTransaction[] = await response.json();
+        // Create a sorted copy of the transactions (assuming ISO date strings, so lexicographical sort works)
+        const sortedTransactions = transactions
+          .slice()
+          .sort((a, b) => a.date.localeCompare(b.date));
 
-        for (const dateEntry of data) {
-          for (const date in dateEntry) {
-            let dailyValue = 0;
-            for (const transaction of dateEntry[date]) {
-              dailyValue +=
-                transaction.transaction_type === "credit"
-                  ? transaction.amount
-                  : -transaction.amount;
-            }
-            savingsData.push({ date: new Date(date), value: dailyValue });
+        // Group transactions by date.
+        const transactionsByDate: Map<string, ChartTransaction[]> = new Map();
+        for (const tx of sortedTransactions) {
+          if (!transactionsByDate.has(tx.date)) {
+            transactionsByDate.set(tx.date, []);
           }
+          transactionsByDate.get(tx.date)!.push(tx);
         }
 
-        setSavingsData(savingsData);
+        // Get unique dates in ascending order.
+        const uniqueDates: string[] = Array.from(
+          transactionsByDate.keys(),
+        ).sort((a, b) => a.localeCompare(b));
+
+        // Collect all unique categories from the transactions.
+        const categories: Set<string> = new Set();
+        transactions.forEach((tx) => categories.add(tx.category));
+
+        // Initialize cumulative sums for each category.
+        const cumulativeSums: { [key: string]: number } = {};
+        categories.forEach((cat) => {
+          cumulativeSums[cat] = 0;
+        });
+
+        // Build the cumulative stacked data points.
+        const cumulativeData: CumulativeStackedDataPoint[] = [];
+
+        for (const date of uniqueDates) {
+          // Get all transactions for the current date.
+          const dailyTransactions = transactionsByDate.get(date)!;
+
+          // Update cumulative sums with all transactions from this date.
+          dailyTransactions.forEach((tx) => {
+            cumulativeSums[tx.category] += -tx.amount;
+          });
+
+          // Create a data point that includes the current cumulative sum for each category.
+          const dataPoint: CumulativeStackedDataPoint = {
+            date,
+            categories: [],
+          };
+          categories.forEach((cat) => {
+            // If a category hasn't been encountered, default to 0.
+            dataPoint.categories.push({
+              category: cat,
+              value: cumulativeSums[cat] || 0,
+            });
+          });
+
+          cumulativeData.push(dataPoint);
+        }
+        console.log("Savings data fetched:", cumulativeData);
+
+        setSavingsData(cumulativeData);
       } catch (error) {
         console.error("Failed to fetch savings data:", error);
       }
@@ -197,31 +121,31 @@ export function ExpenseChart() {
     fetchSavingsData();
   }, []);
 
-  const handleCategoryToggle = (
-    category: keyof (typeof mockExpenseData)[0],
-  ) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category],
-    );
-  };
+  // const handleCategoryToggle = (
+  //   category: keyof (typeof mockExpenseData)[0],
+  // ) => {
+  //   setSelectedCategories((prev) =>
+  //     prev.includes(category)
+  //       ? prev.filter((c) => c !== category)
+  //       : [...prev, category],
+  //   );
+  // };
 
-  type DataPoint = { month: string; [key: string]: number | string };
+  // type DataPoint = { month: string;[key: string]: number | string };
 
-  const chartData = mockExpenseData.map((entry) => {
-    const dataPoint: Record<string, string | number> = { month: entry.month };
-    let total = 0;
+  // const chartData = mockExpenseData.map((entry) => {
+  //   const dataPoint: Record<string, string | number> = { month: entry.month };
+  //   let total = 0;
 
-    selectedCategories.forEach((category) => {
-      const categoryValue = entry[category as keyof typeof entry] as number;
-      total += categoryValue;
-      dataPoint[category] = categoryValue;
-    });
+  //   selectedCategories.forEach((category) => {
+  //     const categoryValue = entry[category as keyof typeof entry] as number;
+  //     total += categoryValue;
+  //     dataPoint[category] = categoryValue;
+  //   });
 
-    dataPoint["Total"] = total;
-    return dataPoint;
-  });
+  //   dataPoint["Total"] = total;
+  //   return dataPoint;
+  // });
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -229,26 +153,30 @@ export function ExpenseChart() {
         <h1 className="text-2xl font-bold">Savings and Expense Graphs</h1>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-0">
         {/* Savings Graph */}
-        <Card className="bg-white shadow-lg col-span-full lg:col-span-1">
-          <CardHeader className="pb-2">
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
             <CardTitle className="text-lg font-semibold text-gray-700">
               Savings Graph
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="w-full h-64">
+            <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) => (
-                  <LineChart width={width} height={height} data={savingsData} />
+                  <StackedAreaChart
+                    width={width}
+                    height={height}
+                    data={savingsData}
+                  />
                 )}
               </ParentSize>
             </div>
           </CardContent>
         </Card>
 
-        {/* Expense Breakdown */}
+        {/* Expense Breakdown
         <Card className="bg-white shadow-lg col-span-full lg:col-span-1">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold text-gray-700">
@@ -315,7 +243,7 @@ export function ExpenseChart() {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );

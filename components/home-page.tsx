@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import LineChart from "@/components/LineChart"; // Import the new LineChart component
 import ParentSize from "@visx/responsive/lib/components/ParentSize"; // Import ParentSize
 import { useTransactions } from "@/contexts/TransactionsContext";
+import { ChartTransaction, CumulativeStackedDataPoint } from "./expense-chart";
 
 interface RingChartProps {
   percentage: number;
@@ -101,16 +102,74 @@ export function MainPage() {
     "You might save on transportation by using public transit twice a week.",
   ];
 
-  const [savingsData, setSavingsData] = useState<
-    { date: Date; value: number }[]
-  >([]);
+  const [savingsData, setSavingsData] = useState<CumulativeStackedDataPoint[]>(
+    [],
+  );
 
   useEffect(() => {
     async function fetchSavingsData() {
       try {
-        const response = await fetch("/api/user-data");
-        const data = await response.json();
-        setSavingsData(data);
+        const response = await fetch("/api/user-data/expenses");
+        const transactions: ChartTransaction[] = await response.json();
+        // Create a sorted copy of the transactions (assuming ISO date strings, so lexicographical sort works)
+        const sortedTransactions = transactions
+          .slice()
+          .sort((a, b) => a.date.localeCompare(b.date));
+
+        // Group transactions by date.
+        const transactionsByDate: Map<string, ChartTransaction[]> = new Map();
+        for (const tx of sortedTransactions) {
+          if (!transactionsByDate.has(tx.date)) {
+            transactionsByDate.set(tx.date, []);
+          }
+          transactionsByDate.get(tx.date)!.push(tx);
+        }
+
+        // Get unique dates in ascending order.
+        const uniqueDates: string[] = Array.from(
+          transactionsByDate.keys(),
+        ).sort((a, b) => a.localeCompare(b));
+
+        // Collect all unique categories from the transactions.
+        const categories: Set<string> = new Set();
+        transactions.forEach((tx) => categories.add(tx.category));
+
+        // Initialize cumulative sums for each category.
+        const cumulativeSums: { [key: string]: number } = {};
+        categories.forEach((cat) => {
+          cumulativeSums[cat] = 0;
+        });
+
+        // Build the cumulative stacked data points.
+        const cumulativeData: CumulativeStackedDataPoint[] = [];
+
+        for (const date of uniqueDates) {
+          // Get all transactions for the current date.
+          const dailyTransactions = transactionsByDate.get(date)!;
+
+          // Update cumulative sums with all transactions from this date.
+          dailyTransactions.forEach((tx) => {
+            cumulativeSums[tx.category] += -tx.amount;
+          });
+
+          // Create a data point that includes the current cumulative sum for each category.
+          const dataPoint: CumulativeStackedDataPoint = {
+            date,
+            categories: [],
+          };
+          categories.forEach((cat) => {
+            // If a category hasn't been encountered, default to 0.
+            dataPoint.categories.push({
+              category: cat,
+              value: cumulativeSums[cat] || 0,
+            });
+          });
+
+          cumulativeData.push(dataPoint);
+        }
+        console.log("Savings data fetched:", cumulativeData);
+
+        setSavingsData(cumulativeData);
       } catch (error) {
         console.error("Failed to fetch savings data:", error);
       }
@@ -141,7 +200,8 @@ export function MainPage() {
                     <LineChart
                       width={width}
                       height={height}
-                      data={savingsData}
+                      data={[]}
+                      // data={savingsData}
                     />
                   )}
                 </ParentSize>
