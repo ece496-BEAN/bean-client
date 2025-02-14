@@ -1,21 +1,47 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { FormEvent, useContext, useState } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { JwtContext } from "@/app/lib/jwt-provider";
+import { fetchApiSingle, jwtObtainPairEndpoint } from "@/app/lib/api";
+import { useRouter } from "next/navigation";
 
 export function LoginPage() {
+  const router = useRouter();
+
+  const context = useContext(JwtContext);
+  if (!context) {
+    throw new Error("JwtContext must be used within a JwtProvider");
+  }
+  const [jwt, setAndStoreJwt] = context;
+
+  const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle login logic here
-    console.log("Login attempted with:", { email, password });
-  };
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    try {
+      const response = await fetchApiSingle(jwtObtainPairEndpoint, "POST", {
+        email,
+        password,
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setAndStoreJwt(data);
+        router.push("/");
+      } else {
+        setError(data.detail);
+      }
+    } catch (err) {
+      setError("An unexpected error occurred: " + err);
+    }
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-100">
@@ -29,6 +55,9 @@ export function LoginPage() {
             onSubmit={handleLogin}
             className="bg-white shadow-md rounded-lg p-8 space-y-6"
           >
+            {error && (
+              <p className="text-red-500 text-xs font-bold mb-4">{error}</p>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -89,7 +118,7 @@ export function LoginPage() {
       </main>
 
       <footer className="bg-white p-4 text-center text-sm text-gray-600">
-        © 2023 Budget App. All rights reserved.
+        © 2025 Budget App. All rights reserved.
       </footer>
     </div>
   );
