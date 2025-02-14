@@ -112,7 +112,32 @@ export default function StackedAreaChart({
             y0={(d) => yScale(getY0(d) ?? 0)}
             y1={(d) => yScale(getY1(d) ?? 0)}
             color={(_, index) => generateColorByIndex(index)}
-          ></AreaStack>
+          >
+            {({ stacks, path }) =>
+              stacks.map((stack, i) => {
+                // console.log("stack: ", stack);
+                const splitIndex = stack.length / 2 + 1;
+                const firstHalf = stack.slice(0, splitIndex + 1);
+                const secondHalf = stack.slice(splitIndex);
+                return (
+                  <g key={`group-stack-${stack.key}`}>
+                    <path
+                      key={`stack1-${stack.key}`}
+                      d={path(firstHalf) || ""}
+                      stroke="transparent"
+                      fill={generateColorByIndex(i)}
+                    />
+                    <path
+                      key={`stack2-${stack.key}`}
+                      d={path(secondHalf) || ""}
+                      stroke="transparent"
+                      fill={colorShade(generateColorByIndex(i), 40)}
+                    />
+                  </g>
+                );
+              })
+            }
+          </AreaStack>
           <AxisLeft left={margin.left} scale={yScale} numTicks={5} />
           <AxisBottom
             top={innerHeight + margin.top}
@@ -170,6 +195,35 @@ export default function StackedAreaChart({
     </div>
   );
 }
+
+const colorShade = (col: string, amt: number) => {
+  // Remove leading '#' if present
+  col = col.replace(/^#/, "");
+
+  // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+  if (col.length === 3) {
+    col = col[0] + col[0] + col[1] + col[1] + col[2] + col[2];
+  }
+
+  // Match each pair of hex digits
+  const colorParts = col.match(/.{2}/g);
+  if (!colorParts) {
+    throw new Error("Invalid color format");
+  }
+  const [rHex, gHex, bHex] = colorParts;
+
+  // Parse each part and add the amount
+  const rNum = parseInt(rHex, 16) + amt;
+  const gNum = parseInt(gHex, 16) + amt;
+  const bNum = parseInt(bHex, 16) + amt;
+
+  // Clamp the values between 0 and 255 and convert back to hex
+  const r = Math.max(0, Math.min(255, rNum)).toString(16).padStart(2, "0");
+  const g = Math.max(0, Math.min(255, gNum)).toString(16).padStart(2, "0");
+  const b = Math.max(0, Math.min(255, bNum)).toString(16).padStart(2, "0");
+
+  return `#${r}${g}${b}`;
+};
 
 function generateColorByIndex(index: number): string {
   const colors = [
