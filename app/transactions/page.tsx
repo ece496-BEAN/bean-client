@@ -5,7 +5,12 @@
 // }
 
 import { RecentTransactionsPage } from "@/components/recent-transactions-page";
+import JwtProvider from "../lib/jwt-provider";
 
 export default function Page() {
-  return <RecentTransactionsPage />;
+  return (
+    <JwtProvider>
+      <RecentTransactionsPage />
+    </JwtProvider>
+  );
 }

@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useState, FormEvent, ChangeEvent } from "react";
+import React, {
+  useState,
+  FormEvent,
+  ChangeEvent,
+  useContext,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -39,24 +46,14 @@ import { useRouter } from "next/navigation";
 import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { usePlaidContext } from "@/contexts/PlaidContext";
-
-// Define the possible categories
-type TransactionCategory =
-  | "Food"
-  | "Income"
-  | "Utilities"
-  | "Shopping"
-  | "Transportation"
-  | "Entertainment";
-
-// Define the shape of a transaction object
-interface Transaction {
-  id: number;
-  description: string;
-  amount: number;
-  date: string;
-  category: TransactionCategory;
-}
+import {
+  PaginatedServerResponse,
+  PartialByKeys,
+  Transaction,
+  Category,
+} from "@/lib/types";
+import { JwtContext } from "@/app/lib/jwt-provider";
+import { fetchApi } from "@/app/lib/api";
 
 // Interface for category icons
 interface CategoryIcons {
@@ -85,10 +82,14 @@ function AddTransactionModal({
   onClose,
   onAddTransaction,
 }: AddTransactionModalProps) {
-  const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({
+  const [newTransaction, setNewTransaction] = useState<
+    PartialByKeys<Transaction, "id" | "group_id">
+  >({
+    name: "",
+    amount: 0,
     description: "",
     date: new Date().toISOString().split("T")[0],
-    category: undefined,
+    category: { id: "Test", name: "Food", description: "", legacy: false },
   });
 
   const handleInputChange = (
@@ -103,7 +104,6 @@ function AddTransactionModal({
     if (newTransaction.amount && newTransaction.category) {
       onAddTransaction({
         ...newTransaction,
-        id: Date.now(),
         amount: parseFloat(newTransaction.amount.toString()),
         description: newTransaction.description || newTransaction.category,
       } as Transaction);
@@ -156,8 +156,8 @@ function AddTransactionModal({
             <Label htmlFor="category">Category</Label>
             <Select
               name="category"
-              value={newTransaction.category}
-              onValueChange={(value: TransactionCategory) =>
+              value={newTransaction.category.name}
+              onValueChange={(value: string) =>
                 handleInputChange({
                   target: { name: "category", value },
                 } as ChangeEvent<HTMLSelectElement>)
@@ -167,7 +167,7 @@ function AddTransactionModal({
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {/* Ensure that the values match the TransactionCategory type */}
+                {/* Ensure that the values match the Category type */}
                 <SelectItem value="Food">Food</SelectItem>
                 <SelectItem value="Income">Income</SelectItem>
                 <SelectItem value="Utilities">Utilities</SelectItem>
@@ -185,97 +185,66 @@ function AddTransactionModal({
 }
 
 export function RecentTransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    // ... your initial transactions
-    {
-      id: 1,
-      description: "Grocery Store",
-      amount: -75.5,
-      date: "2023-06-15",
-      category: "Food",
-    },
-    {
-      id: 2,
-      description: "Monthly Salary",
-      amount: 3000,
-      date: "2023-06-01",
-      category: "Income",
-    },
-    {
-      id: 3,
-      description: "Restaurant Dinner",
-      amount: -45.0,
-      date: "2023-06-10",
-      category: "Food",
-    },
-    {
-      id: 4,
-      description: "Utility Bill",
-      amount: -120.0,
-      date: "2023-06-05",
-      category: "Utilities",
-    },
-    {
-      id: 5,
-      description: "Online Shopping",
-      amount: -89.99,
-      date: "2023-06-08",
-      category: "Shopping",
-    },
-    {
-      id: 6,
-      description: "Freelance Work",
-      amount: 500,
-      date: "2023-06-12",
-      category: "Income",
-    },
-    {
-      id: 7,
-      description: "Gas Station",
-      amount: -40.0,
-      date: "2023-06-14",
-      category: "Transportation",
-    },
-    {
-      id: 8,
-      description: "Movie Tickets",
-      amount: -30.0,
-      date: "2023-06-17",
-      category: "Entertainment",
-    },
-  ]);
+  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<
-    TransactionCategory | "All"
+    Category["name"] | "All"
   >("All");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const filteredTransactions = transactions.filter(
-    (transaction) =>
-      transaction.description
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) &&
-      (categoryFilter === "All" || transaction.category === categoryFilter),
-  );
+  // const filteredTransactions = transactions.filter(
+  //   (transaction) =>
+  //     transaction.description
+  //       .toLowerCase()
+  //       .includes(searchTerm.toLowerCase()) &&
+  //     (categoryFilter === "All" || transaction.category === categoryFilter),
+  // );
 
-  const totalIncome = filteredTransactions.reduce(
-    (sum, transaction) =>
-      transaction.amount > 0 ? sum + transaction.amount : sum,
-    0,
-  );
+  // const totalIncome = filteredTransactions.reduce(
+  //   (sum, transaction) =>
+  //     transaction.amount > 0 ? sum + transaction.amount : sum,
+  //   0,
+  // );
 
-  const totalExpenses = filteredTransactions.reduce(
-    (sum, transaction) =>
-      transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum,
-    0,
-  );
-
+  // const totalExpenses = filteredTransactions.reduce(
+  //   (sum, transaction) =>
+  //     transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum,
+  //   0,
+  // );
+  const filteredTransactions = transactions;
+  const totalIncome = 10;
+  const totalExpenses = 42;
   const netBalance = totalIncome - totalExpenses;
 
+  const fetchTransactions = useCallback(async () => {
+    try {
+      const response = await fetchApi(
+        jwt,
+        setAndStoreJwt,
+        "transactions/",
+        "GET",
+      );
+      const data: PaginatedServerResponse = await response.json();
+      setTransactions(data.results as Transaction[]);
+      console.log("Fetched transactions:", data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }, [jwt, setAndStoreJwt]);
   const handleAddTransaction = (newTransaction: Transaction) => {
-    setTransactions((prev) => [newTransaction, ...prev]);
+    try {
+      fetchApi(jwt, setAndStoreJwt, "transactions/", "POST", newTransaction);
+    } catch (error) {
+      console.error("Error adding transaction:", error);
+    }
   };
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -376,7 +345,7 @@ export function RecentTransactionsPage() {
               </div>
               <Select
                 value={categoryFilter}
-                onValueChange={(value: TransactionCategory | "All") =>
+                onValueChange={(value: Category["name"] | "All") =>
                   setCategoryFilter(value)
                 }
               >
@@ -398,7 +367,8 @@ export function RecentTransactionsPage() {
             <ul className="space-y-3">
               {filteredTransactions.map((transaction) => {
                 // Use type assertion here for categoryIcons
-                const Icon = categoryIcons[transaction.category] || TrendingUp;
+                const Icon =
+                  categoryIcons[transaction.category.name] || TrendingUp;
                 return (
                   <li
                     key={transaction.id}
@@ -425,7 +395,7 @@ export function RecentTransactionsPage() {
                           {transaction.description}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {transaction.date} • {transaction.category}
+                          {transaction.date} • {transaction.category.name}
                         </p>
                       </div>
                     </div>
