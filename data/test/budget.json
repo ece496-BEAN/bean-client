@@ -1,0 +1,26 @@
+[
+  {
+    "category": "housing",
+    "budget": 2000
+  },
+  {
+    "category": "food",
+    "budget": 500
+  },
+  {
+    "category": "restaurants",
+    "budget": 300
+  },
+  {
+    "category": "utilities",
+    "budget": 200
+  },
+  {
+    "category": "entertainment",
+    "budget": 200
+  },
+  {
+    "category": "other",
+    "budget": 300
+  }
+]

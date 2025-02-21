@@ -14,6 +14,8 @@ export type StackedAreasProps = {
   width: number;
   height: number;
   data: StackedDataPoint[];
+  // The index at which after this is projection values
+  projectionDateIdx: number;
   margin?: { top: number; right: number; bottom: number; left: number };
 };
 
@@ -32,6 +34,7 @@ export default function StackedAreaChart({
   width,
   height,
   data,
+  projectionDateIdx,
   margin = { top: 20, right: 20, bottom: 50, left: 20 },
 }: StackedAreasProps) {
   const { tooltipData, tooltipLeft, tooltipTop, showTooltip, hideTooltip } =
@@ -115,8 +118,7 @@ export default function StackedAreaChart({
           >
             {({ stacks, path }) =>
               stacks.map((stack, i) => {
-                // console.log("stack: ", stack);
-                const splitIndex = stack.length / 2 + 1;
+                const splitIndex = projectionDateIdx;
                 const firstHalf = stack.slice(0, splitIndex + 1);
                 const secondHalf = stack.slice(splitIndex);
                 return (
@@ -131,7 +133,7 @@ export default function StackedAreaChart({
                       key={`stack2-${stack.key}`}
                       d={path(secondHalf) || ""}
                       stroke="transparent"
-                      fill={colorShade(generateColorByIndex(i), 40)}
+                      fill={colorShade(generateColorByIndex(i), 60)}
                     />
                   </g>
                 );
@@ -144,7 +146,7 @@ export default function StackedAreaChart({
             scale={xScale}
             numTicks={width > 520 ? 8 : 5}
           />
-          <Tooltip />
+          {tooltipData && <Tooltip />}
           {/* Rectangle that handles the tooltip events */}
           <Bar
             x={margin.left}
@@ -227,105 +229,14 @@ const colorShade = (col: string, amt: number) => {
 
 function generateColorByIndex(index: number): string {
   const colors = [
-    "#FF0000", // Red
-    "#00FF00", // Green
-    "#0000FF", // Blue
-    "#FFFF00", // Yellow
-    "#FF00FF", // Magenta
-    "#00FFFF", // Cyan
-    "#FFA500", // Orange
-    "#800080", // Purple
-    "#A0522D", // Sienna
-    "#ADD8E6", // Light Blue
-    "#FF69B4", // Hot Pink
-    "#90EE90", // Light Green
-    "#D3D3D3", // Light Gray
-    "#EEE8AA", // Pale Goldenrod
-    "#AFEEEE", // Pale Turquoise
-    "#FFB6C1", // Light Pink
-    "#F08080", // Light Coral
-    "#E6E6FA", // Lavender
-    "#FFFFE0", // Light Yellow
-    "#FFD700", // Gold
-    "#808080", // Gray
-    "#BC8F8F", // Rosy Brown
-    "#CD5C5C", // Indian Red
-    "#F4A460", // Sandy Brown
-    "#DAA520", // Goldenrod
-    "#B8860B", // Dark Goldenrod
-    "#A9A9A9", // Dark Gray
-    "#BDB76B", // Dark Khaki
-    "#FF7F50", // Coral
-    "#FF6347", // Tomato
-    "#FF4500", // Orange Red
-    "#DC143C", // Crimson
-    "#C71585", // Medium Violet Red
-    "#DB7093", // Pale Violet Red
-    "#FF1493", // Deep Pink
-    "#FF00FF", // Magenta
-    "#9400D3", // Dark Violet
-    "#9932CC", // Dark Orchid
-    "#8A2BE2", // Blue Violet
-    "#4B0082", // Indigo
-    "#483D8B", // Dark Slate Blue
-    "#6A5ACD", // Slate Blue
-    "#7B68EE", // Medium Slate Blue
-    "#708090", // Slate Gray
-    "#008080", // Teal
-    "#008B8B", // Dark Cyan
-    "#00CED1", // Dark Turquoise
-    "#00BFFF", // Deep Sky Blue
-    "#1E90FF", // Dodger Blue
-    "#4682B4", // Steel Blue
-    "#87CEFA", // Light Sky Blue
-    "#87CEEB", // Sky Blue
-    "#ADD8E6", // Light Blue
-    "#B0E0E6", // Powder Blue
-    "#5F9EA0", // Cadet Blue
-    "#00FFFF", // Cyan
-    "#E0FFFF", // Light Cyan
-    "#0000FF", // Blue
-    "#4169E1", // Royal Blue
-    "#291290", // Midnight Blue
-    "#191970", // Midnight Blue (alt)
-    "#00008B", // Dark Blue
-    "#000080", // Navy
-    "#001F3F", // Navy (alt)
-    "#006400", // Dark Green
-    "#228B22", // Forest Green
-    "#2E8B57", // Sea Green
-    "#32CD32", // Lime Green
-    "#3CB371", // Medium Sea Green
-    "#90EE90", // Light Green
-    "#98FB98", // Pale Green
-    "#ADFF2F", // Green Yellow
-    "#7FFF00", // Chartreuse
-    "#7CFC00", // Lawn Green
-    "#00FF00", // Lime
-    "#00FA9A", // Medium Spring Green
-    "#00FF7F", // Spring Green
-    "#66B366", // Olive Green
-    "#808000", // Olive
-    "#A0522D", // Sienna
-    "#A52A2A", // Brown
-    "#CD853F", // Peru
-    "#D2691E", // Chocolate
-    "#D2B48C", // Tan
-    "#F0E68C", // Khaki
-    "#F4A460", // Sandy Brown
-    "#F5F5DC", // Beige
-    "#FFD700", // Gold
-    "#FFA07A", // Light Salmon
-    "#FFB347", // BurlyWood
-    "#FFC0CB", // Pink
-    "#FFE4E1", // Seashell
-    "#FFF0F5", // Lavender Blush
-    "#FFF5EE", // Floral White
-    "#FFFF00", // Yellow
-    "#FFFFE0", // Light Yellow
-    "#FFFFFF", // White
+    "#6A040F",
+    "#9D0208",
+    "#DC2F02",
+    "#E85D04",
+    "#F48C06",
+    "#FAA307",
+    "#FFBA08",
   ];
-
   // Ensure index is within bounds by wrapping around the array length
   const wrappedIndex = index % colors.length;
   return colors[wrappedIndex];

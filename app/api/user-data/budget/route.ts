@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 
 export async function GET() {
-  const filePath = path.join(process.cwd(), "data/test/expense.json");
+  const filePath = path.join(process.cwd(), "data/test/budget.json");
   try {
     const data = await fs.promises.readFile(filePath, "utf8");
     const savingsData = JSON.parse(data);
