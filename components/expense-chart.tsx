@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import StackedAreaChart from "./StackedAreaChart";
 import * as d3 from "d3";
+import { expenseColors, incomeColors } from "@/lib/colors";
 
 export type ChartTransaction = {
   date: Date;
@@ -25,13 +26,18 @@ export interface StackedDataPoint {
 }
 
 export function ExpenseChart() {
-  const [savingsData, setSavingsData] = useState<StackedDataPoint[]>([]);
-  const [savingsEndIndex, setSavingsEndIndex] = useState<number>(0);
+  const [expenseData, setExpenseData] = useState<StackedDataPoint[]>([]);
+  const [expenseEndIndex, setExpenseEndIndex] = useState<number>(0);
+
+  const [incomeData, setIncomeData] = useState<StackedDataPoint[]>([]);
+  const [incomeEndIndex, setIncomeEndIndex] = useState<number>(0);
 
   useEffect(() => {
-    async function fetchSavingsData(): Promise<ChartTransaction[]> {
+    async function fetchTransactionData(
+      endpoint: string,
+    ): Promise<ChartTransaction[]> {
       try {
-        const response = await fetch("/api/user-data/expenses");
+        const response = await fetch(endpoint);
 
         type RawData = {
           date: string;
@@ -55,12 +61,12 @@ export function ExpenseChart() {
         return [];
       }
     }
-
-    async function fetchBudgetData(
-      savingsEndDate: Date,
+    async function fetchProjectionData(
+      endpoint: string,
+      transactionsEndDate: Date,
     ): Promise<ChartTransaction[]> {
       try {
-        const response = await fetch("/api/user-data/budget");
+        const response = await fetch(endpoint);
         type RawData = {
           category: string;
           budget: number;
@@ -68,37 +74,63 @@ export function ExpenseChart() {
         const rawData: RawData[] = await response.json();
 
         // the first of the next month after the last savings data point
-        const startDate = new Date(savingsEndDate);
+        const startDate = new Date(transactionsEndDate);
         startDate.setDate(1);
         startDate.setMonth(startDate.getMonth() + 1);
 
-        // Project the next 6 months of budget data
-        const projectedBudgetData: ChartTransaction[] = [];
+        // Project the next 6 months of data
+        const projectedData: ChartTransaction[] = [];
         for (let i = 0; i < 6; i++) {
           const date = new Date(startDate);
           date.setMonth(date.getMonth() + i);
 
           const transactions: ChartTransaction[] = rawData.map((d) => ({
             date: date,
-            amount: -d.budget,
+            amount: d.budget,
             category: d.category,
           }));
 
-          projectedBudgetData.push(...transactions);
+          projectedData.push(...transactions);
         }
-        return projectedBudgetData;
+        return projectedData;
       } catch (error) {
-        console.error("Failed to fetch budget data:", error);
+        console.error("Failed to fetch data:", error);
         return [];
       }
     }
+    async function fetchExpenseData(): Promise<ChartTransaction[]> {
+      return fetchTransactionData("/api/user-data/expense");
+    }
 
-    function mergeSavingsAndBudgetData(
-      savingsData: ChartTransaction[],
-      budgetData: ChartTransaction[],
+    async function fetchBudgetData(
+      expenseEndDate: Date,
+    ): Promise<ChartTransaction[]> {
+      return fetchProjectionData("/api/user-data/budget", expenseEndDate);
+    }
+
+    async function fetchIncomeData(): Promise<ChartTransaction[]> {
+      return fetchTransactionData("/api/user-data/income");
+    }
+
+    async function fetchIncomeProjectionData(
+      incomeEndDate: Date,
+    ): Promise<ChartTransaction[]> {
+      return fetchProjectionData(
+        "/api/user-data/income-projection",
+        incomeEndDate,
+      );
+    }
+
+    function mergeData(
+      historicalData: ChartTransaction[],
+      projectionData: ChartTransaction[],
+      multiplyFactor: number,
     ): [StackedDataPoint[], number] {
-      const savingsEndDate = savingsData[savingsData.length - 1].date;
-      const combinedData: ChartTransaction[] = [...savingsData, ...budgetData];
+      const savingsEndDate = historicalData[historicalData.length - 1].date;
+      const combinedData: ChartTransaction[] = [
+        ...historicalData,
+        ...projectionData,
+      ];
 
       const categories: string[] = Array.from(
         new Set(combinedData.map((tx) => tx.category)),
@@ -138,9 +170,7 @@ export function ExpenseChart() {
         .reduce((acc, val) => ({ ...acc, ...val }), {});
       for (const dataPoint of groupedTransactionsByWeek) {
         dataPoint.categories.forEach(
-          (cat) =>
-            // TODO: REMOVE THE NEGATIVE SIGN
-            (cumulativeSums[cat.category] += -cat.value),
+          (cat) => (cumulativeSums[cat.category] += multiplyFactor * cat.value),
         );
         groupedCumulativeTransactionsByWeek.push({
           date: dataPoint.date,
@@ -159,15 +189,21 @@ export function ExpenseChart() {
       return [groupedCumulativeTransactionsByWeek, lastSavingsDataPointIndex];
     }
 
-    fetchSavingsData().then((savingsData) => {
-      const savingsEndDate = savingsData[savingsData.length - 1].date;
-      fetchBudgetData(savingsEndDate).then((budgetData) => {
-        const [data, index] = mergeSavingsAndBudgetData(
-          savingsData,
-          budgetData,
-        );
-        setSavingsData(data);
-        setSavingsEndIndex(index);
+    fetchExpenseData().then((expenseData) => {
+      const expenseEndDate = expenseData[expenseData.length - 1].date;
+      fetchBudgetData(expenseEndDate).then((budgetData) => {
+        const [data, index] = mergeData(expenseData, budgetData, -1);
+        setExpenseData(data);
+        setExpenseEndIndex(index);
+      });
+    });
+
+    fetchIncomeData().then((incomeData) => {
+      const incomeEndDate = incomeData[incomeData.length - 1].date;
+      fetchIncomeProjectionData(incomeEndDate).then((incomeProjectionData) => {
+        const [data, index] = mergeData(incomeData, incomeProjectionData, 1);
+        setIncomeData(data);
+        setIncomeEndIndex(index);
       });
     });
   }, []);
@@ -179,11 +215,10 @@ export function ExpenseChart() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-0">
-        {/* Savings Graph */}
         <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
           <CardHeader className="pb-1">
             <CardTitle className="text-lg font-semibold text-gray-700">
-              Savings Graph
+              Cumulative Expenses
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -193,13 +228,43 @@ export function ExpenseChart() {
                   <StackedAreaChart
                     width={width}
                     height={height}
-                    data={savingsData}
-                    projectionDateIdx={savingsEndIndex}
+                    data={expenseData}
+                    projectionDateIdx={expenseEndIndex}
+                    colorPalette={expenseColors}
                   />
                 )}
               </ParentSize>
             </div>
           </CardContent>
+        </Card>
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-lg font-semibold text-gray-700">
+              Cumulative Income
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full h-96">
+              <ParentSize>
+                {({ width, height }) => (
+                  <StackedAreaChart
+                    width={width}
+                    height={height}
+                    data={incomeData}
+                    projectionDateIdx={incomeEndIndex}
+                    colorPalette={incomeColors}
+                  />
+                )}
+              </ParentSize>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-lg font-semibold text-gray-700">
+              Padding so the footer doesn't hide content
+            </CardTitle>
+          </CardHeader>
         </Card>
       </div>
     </div>

@@ -9,6 +9,8 @@ import { LegendOrdinal } from "@visx/legend";
 import { Tooltip, TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { localPoint } from "@visx/event";
 import { max, extent, bisector } from "@visx/vendor/d3-array";
+import { generateColorByIndex, colorShade } from "@/lib/colors";
+import { color } from "d3";
 
 export type StackedAreasProps = {
   width: number;
@@ -16,6 +18,7 @@ export type StackedAreasProps = {
   data: StackedDataPoint[];
   // The index at which after this is projection values
   projectionDateIdx: number;
+  colorPalette: string[];
   margin?: { top: number; right: number; bottom: number; left: number };
 };
 
@@ -35,6 +38,7 @@ export default function StackedAreaChart({
   height,
   data,
   projectionDateIdx,
+  colorPalette,
   margin = { top: 20, right: 20, bottom: 50, left: 20 },
 }: StackedAreasProps) {
   const { tooltipData, tooltipLeft, tooltipTop, showTooltip, hideTooltip } =
@@ -65,7 +69,7 @@ export default function StackedAreaChart({
     range:
       data.length === 0
         ? ["#000"]
-        : keys(data).map((_, i) => generateColorByIndex(i)),
+        : keys(data).map((_, i) => generateColorByIndex(i, colorPalette)),
   });
 
   // tooltip handler
@@ -114,7 +118,7 @@ export default function StackedAreaChart({
             x={(d) => xScale(getDate(d.data)) ?? 0}
             y0={(d) => yScale(getY0(d) ?? 0)}
             y1={(d) => yScale(getY1(d) ?? 0)}
-            color={(_, index) => generateColorByIndex(index)}
+            color={(_, index) => generateColorByIndex(index, colorPalette)}
           >
             {({ stacks, path }) =>
               stacks.map((stack, i) => {
@@ -127,13 +131,16 @@ export default function StackedAreaChart({
                       key={`stack1-${stack.key}`}
                       d={path(firstHalf) || ""}
                       stroke="transparent"
-                      fill={generateColorByIndex(i)}
+                      fill={generateColorByIndex(i, colorPalette)}
                     />
                     <path
                       key={`stack2-${stack.key}`}
                       d={path(secondHalf) || ""}
                       stroke="transparent"
-                      fill={colorShade(generateColorByIndex(i), 60)}
+                      fill={colorShade(
+                        generateColorByIndex(i, colorPalette),
+                        60,
+                      )}
                     />
                   </g>
                 );
@@ -182,7 +189,10 @@ export default function StackedAreaChart({
             <strong>{new Date(tooltipData.date).toLocaleDateString()}</strong>
             <br />
             {tooltipData.categories.map((category, i) => (
-              <div key={i} style={{ color: generateColorByIndex(i) }}>
+              <div
+                key={i}
+                style={{ color: generateColorByIndex(i, colorPalette) }}
+              >
                 {category.category}: ${category.value.toFixed(2)}
               </div>
             ))}
@@ -196,48 +206,4 @@ export default function StackedAreaChart({
       />
     </div>
   );
-}
-
-const colorShade = (col: string, amt: number) => {
-  // Remove leading '#' if present
-  col = col.replace(/^#/, "");
-
-  // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-  if (col.length === 3) {
-    col = col[0] + col[0] + col[1] + col[1] + col[2] + col[2];
-  }
-
-  // Match each pair of hex digits
-  const colorParts = col.match(/.{2}/g);
-  if (!colorParts) {
-    throw new Error("Invalid color format");
-  }
-  const [rHex, gHex, bHex] = colorParts;
-
-  // Parse each part and add the amount
-  const rNum = parseInt(rHex, 16) + amt;
-  const gNum = parseInt(gHex, 16) + amt;
-  const bNum = parseInt(bHex, 16) + amt;
-
-  // Clamp the values between 0 and 255 and convert back to hex
-  const r = Math.max(0, Math.min(255, rNum)).toString(16).padStart(2, "0");
-  const g = Math.max(0, Math.min(255, gNum)).toString(16).padStart(2, "0");
-  const b = Math.max(0, Math.min(255, bNum)).toString(16).padStart(2, "0");
-
-  return `#${r}${g}${b}`;
-};
-
-function generateColorByIndex(index: number): string {
-  const colors = [
-    "#6A040F",
-    "#9D0208",
-    "#DC2F02",
-    "#E85D04",
-    "#F48C06",
-    "#FAA307",
-    "#FFBA08",
-  ];
-  // Ensure index is within bounds by wrapping around the array length
-  const wrappedIndex = index % colors.length;
-  return colors[wrappedIndex];
 }
