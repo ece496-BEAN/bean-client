@@ -11,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
-import LineChart from "@/components/LineChart"; // Import the new LineChart component
+import LineChart from "@/components/ThresholdChart"; // Import the new LineChart component
 import ParentSize from "@visx/responsive/lib/components/ParentSize"; // Import ParentSize
 import { useTransactions } from "@/contexts/TransactionsContext";
 import {
@@ -209,7 +209,7 @@ export function MainPage() {
             </CardHeader>
             <CardContent>
               <div className="w-full h-64">
-                <ParentSize>
+                {/* <ParentSize>
                   {({ width, height }) => (
                     <LineChart
                       width={width}
@@ -218,7 +218,7 @@ export function MainPage() {
                       // data={savingsData}
                     />
                   )}
-                </ParentSize>
+                </ParentSize> */}
               </div>
             </CardContent>
           </Card>

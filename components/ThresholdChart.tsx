@@ -1,48 +1,44 @@
 import React, { useCallback } from "react";
-import { AreaStack, Bar, Line } from "@visx/shape";
-import { scaleTime, scaleLinear, scaleOrdinal } from "@visx/scale";
-import { capitalizeWords, StackedDataPoint } from "./expense-chart";
-import { SeriesPoint } from "@visx/shape/lib/types";
+import { Bar, Line } from "@visx/shape";
+import { scaleTime, scaleLinear } from "@visx/scale";
 import { AxisBottom, AxisLeft } from "@visx/axis";
 import { Group } from "@visx/group";
-import { LegendOrdinal } from "@visx/legend";
 import { Tooltip, TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { localPoint } from "@visx/event";
-import { max, extent, bisector } from "@visx/vendor/d3-array";
-import { generateColorByIndex, colorShade } from "@/lib/colors";
-import { color } from "d3";
+import { bisector } from "@visx/vendor/d3-array";
+import { Threshold } from "@visx/threshold";
+import { curveBasis, curveNatural } from "@visx/curve";
 
-export type StackedAreasProps = {
+export type DataPoint = {
+  date: Date;
+  value: number;
+};
+
+export type ThresholdProps = {
   width: number;
   height: number;
-  data: StackedDataPoint[];
+  data: DataPoint[];
   // The index at which after this is projection values
   projectionDateIdx: number;
   colorPalette: string[];
   margin?: { top: number; right: number; bottom: number; left: number };
 };
 
-const getDate = (d: StackedDataPoint) => new Date(d.date).valueOf();
-const keys = (data: StackedDataPoint[]) =>
-  data[0].categories.map((e) => e.category) as string[];
-const getY0 = (d: SeriesPoint<StackedDataPoint>) => d[0];
-const getY1 = (d: SeriesPoint<StackedDataPoint>) => {
-  return d[1];
-};
-const bisectDate = bisector<StackedDataPoint, Date>(
-  (d) => new Date(d.date),
-).left;
+const getDate = (d: DataPoint) => new Date(d.date).valueOf();
+const getValue = (d: DataPoint) => d.value;
 
-export default function StackedAreaChart({
+const bisectDate = bisector<DataPoint, Date>((d) => new Date(d.date)).left;
+
+export default function ThresholdChart({
   width,
   height,
   data,
   projectionDateIdx,
   colorPalette,
   margin = { top: 20, right: 20, bottom: 50, left: 20 },
-}: StackedAreasProps) {
+}: ThresholdProps) {
   const { tooltipData, tooltipLeft, tooltipTop, showTooltip, hideTooltip } =
-    useTooltip<StackedDataPoint>();
+    useTooltip<DataPoint>();
 
   // bounds
   const innerWidth = width - margin.left - margin.right;
@@ -56,20 +52,10 @@ export default function StackedAreaChart({
   const yScale = scaleLinear<number>({
     range: [innerHeight + margin.top, margin.top],
     domain: [
-      0,
-      Math.max(
-        ...data.map((d) => d.categories.reduce((sum, e) => sum + e.value, 0)),
-      ),
+      Math.min(...data.map((d) => d.value), 0),
+      Math.max(...data.map((d) => d.value)),
     ],
     nice: true,
-  });
-  const colorScale = scaleOrdinal({
-    // Maps categories to a color for the legend (e.g., groceries => blue)
-    domain: data.length === 0 ? ["a"] : keys(data),
-    range:
-      data.length === 0
-        ? ["#000"]
-        : keys(data).map((_, i) => generateColorByIndex(i, colorPalette)),
   });
 
   // tooltip handler
@@ -95,9 +81,7 @@ export default function StackedAreaChart({
       showTooltip({
         tooltipData: d,
         tooltipLeft: x,
-        tooltipTop: yScale(
-          d?.categories?.reduce((sum, e) => sum + e.value, 0) ?? 0,
-        ),
+        tooltipTop: yScale(d.value ?? 0),
       });
     },
     [showTooltip, xScale, yScale],
@@ -109,44 +93,25 @@ export default function StackedAreaChart({
     <div style={{ position: "relative" }}>
       <svg width={width} height={height}>
         <Group left={margin.left} top={margin.top}>
-          <AreaStack<StackedDataPoint>
+          <Threshold<DataPoint>
             data={data}
-            keys={data.length != 0 ? keys(data) : []}
-            value={(d, key) =>
-              d.categories.find((e) => e.category === key)?.value ?? 0
-            }
-            x={(d) => xScale(getDate(d.data)) ?? 0}
-            y0={(d) => yScale(getY0(d) ?? 0)}
-            y1={(d) => yScale(getY1(d) ?? 0)}
-            color={(_, index) => generateColorByIndex(index, colorPalette)}
-          >
-            {({ stacks, path }) =>
-              stacks.map((stack, i) => {
-                const splitIndex = projectionDateIdx;
-                const firstHalf = stack.slice(0, splitIndex + 1);
-                const secondHalf = stack.slice(splitIndex);
-                return (
-                  <g key={`group-stack-${stack.key}`}>
-                    <path
-                      key={`stack1-${stack.key}`}
-                      d={path(firstHalf) || ""}
-                      stroke="transparent"
-                      fill={generateColorByIndex(i, colorPalette)}
-                    />
-                    <path
-                      key={`stack2-${stack.key}`}
-                      d={path(secondHalf) || ""}
-                      stroke="transparent"
-                      fill={colorShade(
-                        generateColorByIndex(i, colorPalette),
-                        60,
-                      )}
-                    />
-                  </g>
-                );
-              })
-            }
-          </AreaStack>
+            x={(d) => xScale(getDate(d)) ?? 0}
+            y0={(d) => yScale(getValue(d)) ?? 0}
+            y1={() => yScale(0)}
+            clipAboveTo={0}
+            clipBelowTo={innerHeight + margin.top}
+            curve={curveBasis}
+            belowAreaProps={{
+              fill: "violet",
+              fillOpacity: 0.4,
+            }}
+            aboveAreaProps={{
+              fill: "green",
+              fillOpacity: 0.4,
+            }}
+            id={""}
+          />
+
           <AxisLeft left={margin.left} scale={yScale} numTicks={5} />
           <AxisBottom
             top={innerHeight + margin.top}
@@ -188,23 +153,10 @@ export default function StackedAreaChart({
           <div>
             <strong>{new Date(tooltipData.date).toLocaleDateString()}</strong>
             <br />
-            {tooltipData.categories.map((category, i) => (
-              <div
-                key={i}
-                style={{ color: generateColorByIndex(i, colorPalette) }}
-              >
-                {capitalizeWords(category.category)}: $
-                {category.value.toFixed(2)}
-              </div>
-            ))}
+            {`\$${tooltipData.value.toFixed(2)}`}
           </div>
         </TooltipWithBounds>
       )}
-      <LegendOrdinal
-        scale={colorScale}
-        labelFormat={(label) => capitalizeWords(label)}
-        direction="row"
-      />
     </div>
   );
 }

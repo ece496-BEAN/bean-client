@@ -8,6 +8,24 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import StackedAreaChart from "./StackedAreaChart";
 import * as d3 from "d3";
 import { expenseColors, incomeColors } from "@/lib/colors";
+import ThresholdChart, { DataPoint } from "./ThresholdChart";
+import StackedBarChart from "./StackedBarChart";
+import { group } from "console";
+import exp from "constants";
+
+const TODO = -1;
+
+export function capitalizeWords(str: string): string {
+  if (!str) {
+    return "";
+  }
+
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 export type ChartTransaction = {
   date: Date;
@@ -27,10 +45,21 @@ export interface StackedDataPoint {
 
 export function ExpenseChart() {
   const [expenseData, setExpenseData] = useState<StackedDataPoint[]>([]);
-  const [expenseEndIndex, setExpenseEndIndex] = useState<number>(0);
-
   const [incomeData, setIncomeData] = useState<StackedDataPoint[]>([]);
-  const [incomeEndIndex, setIncomeEndIndex] = useState<number>(0);
+
+  const [cumulativeExpenseData, setCumulativeExpenseData] = useState<
+    StackedDataPoint[]
+  >([]);
+  const [cumulativeExpenseEndIndex, setCumulativeExpenseEndIndex] =
+    useState<number>(0);
+
+  const [cumulativeIncomeData, setCumulativeIncomeData] = useState<
+    StackedDataPoint[]
+  >([]);
+  const [cumulativeIncomeEndIndex, setCumulativeIncomeEndIndex] =
+    useState<number>(0);
+
+  const [savingsData, setSavingsData] = useState<DataPoint[]>([]);
 
   useEffect(() => {
     async function fetchTransactionData(
@@ -121,89 +150,66 @@ export function ExpenseChart() {
       );
     }
 
-    function mergeData(
-      historicalData: ChartTransaction[],
-      projectionData: ChartTransaction[],
-      multiplyFactor: number,
-    ): [StackedDataPoint[], number] {
-      const savingsEndDate = historicalData[historicalData.length - 1].date;
-      const combinedData: ChartTransaction[] = [
-        ...historicalData,
-        ...projectionData,
-      ];
+    const expenseDataProm = fetchExpenseData();
+    const incomeDataProm = fetchIncomeData();
 
-      const categories: string[] = Array.from(
-        new Set(combinedData.map((tx) => tx.category)),
-      );
-
-      // Group transactions first by week, then by category, summing the amounts if
-      // there is multiple of the same category in the same week
-      const rawGroupedTransactionsByWeek = d3.rollup(
-        combinedData,
-        (v) => d3.sum(v, (d) => d.amount),
-        (d) => d3.timeWeek(d.date),
-        (d) => d.category,
-      );
-
-      const groupedTransactionsByWeek: StackedDataPoint[] = Array.from(
-        rawGroupedTransactionsByWeek.entries(),
-      )
-        .map(([date, categoryMap]): StackedDataPoint => {
-          return {
-            date: date as Date,
-            categories: Array.from(
-              categoryMap,
-              ([category, value]): CategoryValue => ({
-                category,
-                value: value,
-              }),
-            ),
-          };
-        })
-        .sort((a: StackedDataPoint, b: StackedDataPoint) =>
-          d3.ascending(a.date, b.date),
-        );
-
-      const groupedCumulativeTransactionsByWeek: StackedDataPoint[] = [];
-      let cumulativeSums: { [key: string]: number } = categories
-        .map((cat) => ({ [cat]: 0 }))
-        .reduce((acc, val) => ({ ...acc, ...val }), {});
-      for (const dataPoint of groupedTransactionsByWeek) {
-        dataPoint.categories.forEach(
-          (cat) => (cumulativeSums[cat.category] += multiplyFactor * cat.value),
-        );
-        groupedCumulativeTransactionsByWeek.push({
-          date: dataPoint.date,
-          categories: Object.entries(cumulativeSums).map(
-            ([category, value]) => ({
-              category,
-              value,
-            }),
-          ),
-        });
-      }
-      const findClosestDate = d3.bisector((d: StackedDataPoint) => d.date).left;
-      const lastSavingsDataPointIndex =
-        findClosestDate(groupedCumulativeTransactionsByWeek, savingsEndDate) -
-        1;
-      return [groupedCumulativeTransactionsByWeek, lastSavingsDataPointIndex];
-    }
-
-    fetchExpenseData().then((expenseData) => {
+    expenseDataProm.then((expenseData) => {
       const expenseEndDate = expenseData[expenseData.length - 1].date;
       fetchBudgetData(expenseEndDate).then((budgetData) => {
         const [data, index] = mergeData(expenseData, budgetData, -1);
-        setExpenseData(data);
-        setExpenseEndIndex(index);
+        setCumulativeExpenseData(data);
+        setCumulativeExpenseEndIndex(index);
       });
     });
 
-    fetchIncomeData().then((incomeData) => {
+    expenseDataProm.then((expenseData) => {
+      setExpenseData(
+        groupTransactionsByPeriod(expenseData, d3.timeMonth).map((d) => ({
+          date: d.date,
+          categories: d.categories.map((c) => ({
+            category: c.category,
+            value: -c.value,
+          })),
+        })),
+      );
+    });
+
+    incomeDataProm.then((incomeData) => {
+      setIncomeData(groupTransactionsByPeriod(incomeData, d3.timeMonth));
+    });
+
+    incomeDataProm.then((incomeData) => {
       const incomeEndDate = incomeData[incomeData.length - 1].date;
       fetchIncomeProjectionData(incomeEndDate).then((incomeProjectionData) => {
         const [data, index] = mergeData(incomeData, incomeProjectionData, 1);
-        setIncomeData(data);
-        setIncomeEndIndex(index);
+        setCumulativeIncomeData(data);
+        setCumulativeIncomeEndIndex(index);
+      });
+    });
+
+    expenseDataProm.then((expenseData) => {
+      incomeDataProm.then((incomeData) => {
+        const combinedSavingsData = d3
+          .rollups(
+            [
+              ...incomeData,
+              ...expenseData.map((d) => ({ ...d, amount: d.amount })),
+            ],
+            (v) => d3.sum(v, (d) => d.amount),
+            (d) => d.date,
+          )
+          .map(([date, value]) => ({ date, value }));
+
+        combinedSavingsData.sort((a, b) => d3.ascending(a.date, b.date));
+        const cumulativeSavingsData = combinedSavingsData.reduce((acc, d) => {
+          acc.push({
+            date: d.date,
+            value:
+              acc.length === 0 ? d.value : acc[acc.length - 1].value + d.value,
+          });
+          return acc;
+        }, [] as DataPoint[]);
+        setSavingsData(cumulativeSavingsData);
       });
     });
   }, []);
@@ -218,6 +224,28 @@ export function ExpenseChart() {
         <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
           <CardHeader className="pb-1">
             <CardTitle className="text-lg font-semibold text-gray-700">
+              Savings Graph
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full h-96">
+              <ParentSize>
+                {({ width, height }) => (
+                  <ThresholdChart
+                    width={width}
+                    height={height}
+                    data={savingsData}
+                    projectionDateIdx={cumulativeExpenseEndIndex}
+                    colorPalette={expenseColors}
+                  />
+                )}
+              </ParentSize>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-lg font-semibold text-gray-700">
               Cumulative Expenses
             </CardTitle>
           </CardHeader>
@@ -228,8 +256,8 @@ export function ExpenseChart() {
                   <StackedAreaChart
                     width={width}
                     height={height}
-                    data={expenseData}
-                    projectionDateIdx={expenseEndIndex}
+                    data={cumulativeExpenseData}
+                    projectionDateIdx={cumulativeExpenseEndIndex}
                     colorPalette={expenseColors}
                   />
                 )}
@@ -250,9 +278,54 @@ export function ExpenseChart() {
                   <StackedAreaChart
                     width={width}
                     height={height}
-                    data={incomeData}
-                    projectionDateIdx={incomeEndIndex}
+                    data={cumulativeIncomeData}
+                    projectionDateIdx={cumulativeIncomeEndIndex}
                     colorPalette={incomeColors}
+                  />
+                )}
+              </ParentSize>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-lg font-semibold text-gray-700">
+              Income By Month
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full h-96">
+              <ParentSize>
+                {({ width, height }) => (
+                  <StackedBarChart
+                    width={width}
+                    height={height}
+                    data={incomeData}
+                    projectionDateIdx={TODO}
+                    colorPalette={incomeColors}
+                  />
+                )}
+              </ParentSize>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-lg font-semibold text-gray-700">
+              Expense By Month
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full h-96">
+              <ParentSize>
+                {({ width, height }) => (
+                  <StackedBarChart
+                    width={width}
+                    height={height}
+                    data={expenseData}
+                    projectionDateIdx={TODO}
+                    colorPalette={expenseColors}
                   />
                 )}
               </ParentSize>
@@ -269,4 +342,73 @@ export function ExpenseChart() {
       </div>
     </div>
   );
+}
+
+function groupTransactionsByPeriod(
+  data: ChartTransaction[],
+  d3PeriodFn: (date: Date) => Date,
+): StackedDataPoint[] {
+  const groupedTransactions = d3.rollup(
+    data,
+    (v) => d3.sum(v, (d) => d.amount),
+    (d) => d3PeriodFn(d.date),
+    (d) => d.category,
+  );
+
+  return Array.from(groupedTransactions.entries())
+    .map(([date, categoryMap]): StackedDataPoint => {
+      return {
+        date: date as Date,
+        categories: Array.from(
+          categoryMap,
+          ([category, value]): CategoryValue => ({
+            category,
+            value: value,
+          }),
+        ),
+      };
+    })
+    .sort((a: StackedDataPoint, b: StackedDataPoint) =>
+      d3.ascending(a.date, b.date),
+    );
+}
+
+function mergeData(
+  historicalData: ChartTransaction[],
+  projectionData: ChartTransaction[],
+  multiplyFactor: number,
+): [StackedDataPoint[], number] {
+  const savingsEndDate = historicalData[historicalData.length - 1].date;
+  const combinedData: ChartTransaction[] = [
+    ...historicalData,
+    ...projectionData,
+  ];
+
+  const categories: string[] = Array.from(
+    new Set(combinedData.map((tx) => tx.category)),
+  );
+
+  const groupedTransactionsByWeek: StackedDataPoint[] =
+    groupTransactionsByPeriod(combinedData, d3.timeWeek);
+
+  const groupedCumulativeTransactionsByWeek: StackedDataPoint[] = [];
+  let cumulativeSums: { [key: string]: number } = categories
+    .map((cat) => ({ [cat]: 0 }))
+    .reduce((acc, val) => ({ ...acc, ...val }), {});
+  for (const dataPoint of groupedTransactionsByWeek) {
+    dataPoint.categories.forEach(
+      (cat) => (cumulativeSums[cat.category] += multiplyFactor * cat.value),
+    );
+    groupedCumulativeTransactionsByWeek.push({
+      date: dataPoint.date,
+      categories: Object.entries(cumulativeSums).map(([category, value]) => ({
+        category,
+        value,
+      })),
+    });
+  }
+  const findClosestDate = d3.bisector((d: StackedDataPoint) => d.date).left;
+  const lastSavingsDataPointIndex =
+    findClosestDate(groupedCumulativeTransactionsByWeek, savingsEndDate) - 1;
+  return [groupedCumulativeTransactionsByWeek, lastSavingsDataPointIndex];
 }

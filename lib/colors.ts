@@ -46,13 +46,12 @@ export const expenseColors = [
 ];
 
 export const incomeColors = [
-  "#d8f3dc",
-  "#b7e4c7",
-  "#95d5b2",
-  "#74c69d",
-  "#52b788",
-  "#40916c",
-  "#2d6a4f",
-  "#1b4332",
-  "#081c15",
+  "#99d98cff",
+  "#76c893ff",
+  "#52b69aff",
+  "#34a0a4ff",
+  "#168aadff",
+  "#1a759fff",
+  "#1e6091ff",
+  "#184e77ff",
 ];
