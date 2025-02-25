@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Home,
   PieChart,
@@ -19,7 +19,7 @@ export const NavigationBar: React.FC = () => {
   const [image, setImage] = useState<string | null>("");
   const [loading, setLoading] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { addTransactions } = useTransactions();
+  const { addTransactions, transactions } = useTransactions();
 
   // Handles the image upload process
   const handleImageUpload = async (
@@ -41,7 +41,6 @@ export const NavigationBar: React.FC = () => {
       });
 
       const data = await response.json();
-      console.log(data);
       addTransactions(data);
 
       setLoading(false); // Reset loading state
@@ -113,7 +112,7 @@ export const NavigationBar: React.FC = () => {
             <BarChart className="w-6 h-6" />
           </Button>
         </li>
-        <li>
+        {/* <li>
           <Button
             variant="ghost"
             size="icon"
@@ -122,7 +121,7 @@ export const NavigationBar: React.FC = () => {
           >
             <Settings className="w-6 h-6" />
           </Button>
-        </li>
+        </li> */}
       </ul>
 
       {/* Hidden file input for image capture */}

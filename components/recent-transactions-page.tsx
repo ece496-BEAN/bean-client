@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent, ChangeEvent } from "react";
+import React, { useState, FormEvent, ChangeEvent, useEffect } from "react";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -185,65 +185,7 @@ function AddTransactionModal({
 }
 
 export function RecentTransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    // ... your initial transactions
-    {
-      id: 1,
-      description: "Grocery Store",
-      amount: -75.5,
-      date: "2023-06-15",
-      category: "Food",
-    },
-    {
-      id: 2,
-      description: "Monthly Salary",
-      amount: 3000,
-      date: "2023-06-01",
-      category: "Income",
-    },
-    {
-      id: 3,
-      description: "Restaurant Dinner",
-      amount: -45.0,
-      date: "2023-06-10",
-      category: "Food",
-    },
-    {
-      id: 4,
-      description: "Utility Bill",
-      amount: -120.0,
-      date: "2023-06-05",
-      category: "Utilities",
-    },
-    {
-      id: 5,
-      description: "Online Shopping",
-      amount: -89.99,
-      date: "2023-06-08",
-      category: "Shopping",
-    },
-    {
-      id: 6,
-      description: "Freelance Work",
-      amount: 500,
-      date: "2023-06-12",
-      category: "Income",
-    },
-    {
-      id: 7,
-      description: "Gas Station",
-      amount: -40.0,
-      date: "2023-06-14",
-      category: "Transportation",
-    },
-    {
-      id: 8,
-      description: "Movie Tickets",
-      amount: -30.0,
-      date: "2023-06-17",
-      category: "Entertainment",
-    },
-  ]);
+  const { transactions, addTransactions } = useTransactions();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<
@@ -259,6 +201,11 @@ export function RecentTransactionsPage() {
       (categoryFilter === "All" || transaction.category === categoryFilter),
   );
 
+  useEffect(() => {
+    // Update the transactions context when the transactions change
+    console.log("Transactions updated:", transactions);
+  }, [transactions]);
+
   const totalIncome = filteredTransactions.reduce(
     (sum, transaction) =>
       transaction.amount > 0 ? sum + transaction.amount : sum,
@@ -272,10 +219,6 @@ export function RecentTransactionsPage() {
   );
 
   const netBalance = totalIncome - totalExpenses;
-
-  const handleAddTransaction = (newTransaction: Transaction) => {
-    setTransactions((prev) => [newTransaction, ...prev]);
-  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -449,7 +392,7 @@ export function RecentTransactionsPage() {
       <AddTransactionModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAddTransaction={handleAddTransaction}
+        onAddTransaction={(transaction) => addTransactions([transaction])}
       />
     </div>
   );

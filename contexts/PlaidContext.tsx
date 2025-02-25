@@ -9,6 +9,7 @@ import {
   useCallback,
   useContext,
 } from "react";
+import { Transaction } from "./TransactionsContext";
 
 interface PlaidState {
   linkToken: string | null;
@@ -40,7 +41,7 @@ interface PlaidContextProps extends PlaidState {
   dispatch: Dispatch<PlaidAction>;
   generateLinkToken: (userId: string) => Promise<void>;
   exchangePublicToken: (publicToken: string) => Promise<void>;
-  fetchTransactions: () => Promise<void>;
+  fetchTransactions: () => Promise<Transaction[]>;
 }
 
 const PlaidContext = createContext<PlaidContextProps | undefined>(undefined);
@@ -129,10 +130,11 @@ export const PlaidProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   const fetchTransactions = useCallback(async () => {
+    const transactions: Transaction[] = [];
     console.log("fetchTransactions called"); // Debugging log
     if (!state.userId) {
       dispatch({ type: "SET_ERROR", payload: "User ID is not set" });
-      return;
+      return transactions;
     }
     try {
       dispatch({ type: "SET_IS_LOADING", payload: true });
@@ -146,6 +148,7 @@ export const PlaidProvider: React.FC<{ children: ReactNode }> = ({
         dispatch({ type: "SET_ERROR", payload: data.error });
       } else {
         dispatch({ type: "SET_TRANSACTIONS", payload: data.transactions });
+        transactions.push(...data.transactions);
       }
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -153,6 +156,7 @@ export const PlaidProvider: React.FC<{ children: ReactNode }> = ({
     } finally {
       dispatch({ type: "SET_IS_LOADING", payload: false });
     }
+    return transactions;
   }, [state.userId]);
 
   const contextValue: PlaidContextProps = {

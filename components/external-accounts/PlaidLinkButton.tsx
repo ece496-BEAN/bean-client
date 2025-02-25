@@ -5,15 +5,25 @@ import { usePlaidLink } from "react-plaid-link";
 import { usePlaidContext } from "@/contexts/PlaidContext";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
+import { useTransactions } from "@/contexts/TransactionsContext";
 
 const PlaidLinkButton = () => {
-  const { linkToken, exchangePublicToken, generateLinkToken, userId } =
-    usePlaidContext();
+  const {
+    linkToken,
+    exchangePublicToken,
+    generateLinkToken,
+    userId,
+    fetchTransactions,
+  } = usePlaidContext();
+
+  const { addTransactions } = useTransactions();
 
   const onSuccess = async (public_token: string, metadata: any) => {
     console.log("PlaidLink onSuccess called"); // Debugging log
     await exchangePublicToken(public_token);
     // Fetch transactions after successful exchange
+    const newTransactions = await fetchTransactions();
+    addTransactions(newTransactions);
   };
 
   const config = {

@@ -16,7 +16,7 @@ function LayoutClient({ children }: { children: ReactNode }) {
   return (
     <>
       {showNavigationBar && <NavigationBar />}
-      <main>
+      <main className="pb-16">
         <PlaidProvider>
           <BudgetProvider>{children}</BudgetProvider>
         </PlaidProvider>

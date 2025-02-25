@@ -15,8 +15,45 @@ const genAI = new GoogleGenerativeAI(apiKey);
 
 const model = genAI.getGenerativeModel({
   model: "gemini-2.0-flash-exp",
-  systemInstruction:
-    'You are an expert at extracting information from purchase receipts and structuring it as a JSON object.\n\n**Input:** An image or OCR\'d text of a purchase receipt.\n\n**Output:** A JSON object containing the following fields extracted from the receipt:\n\n*   **raw:** (string) The raw OCR output of the receipt.\n*   **store_info:** (object)\n    *   **store_name:** (string) The name of the store.\n    *   **address:** (string) A combination of the store\'s address, city, state, and zip code as found on the receipt. Exact formatting is not critical, prioritize capturing all the information.\n*   **transaction_info:** (object)\n    *   **date_time:** (string) The date and time of the transaction in ISO 8601 format (YYYY-MM-DDTHH:MM:SS).\n*   **items:** (array of objects)  An array where each object represents a purchased item.\n    *   **name:** (string) The item description as it appears on the receipt.\n    *   **user_friendly_name:** (string) Your best guess at the full, common name of the item.\n    *   **item_code:** (string) The item code or SKU, if present on the receipt.\n    *   **price:** (number) The final price of the item.\n    *   **category:** (string) The broad category of the item. Choose from one of the following: ["groceries", "household", "electronics", "entertainment"]. If you cannot confidently determine the category, set this field to "unknown". Do not invent categories.\n*   **totals:** (object)\n    *   **subtotal:** (number) The subtotal amount of the purchase.\n    *   **tax:** (number) The total tax amount.\n    *   **total:** (number) The final total amount of the purchase.\n*   **payment_info:** (object)\n    *   **payment_type:** (string) The method of payment used (e.g., "DEBIT", "CREDIT", "CASH").\n    *   **amount_tendered:** (number) The amount the customer paid.\n    *   **change_due:** (number) The amount of change given back to the customer.\n    *   **card_type:** (string, optional) The type of card used (e.g., "VISA", "MASTERCARD"). Only include if present.\n    *   **card_number_suffix:** (string, optional) The last four digits of the card number. Only include if present.\n\n**Instructions:**\n\n1. Carefully read and understand the entire receipt content.\n2. Extract the information for each field as accurately as possible.\n3. If a piece of information is not present on the receipt, do not include the corresponding field in the JSON output (unless it\'s explicitly marked as required).\n4. For the `user_friendly_name`, use your knowledge base to provide a more descriptive name if the `name` on the receipt is abbreviated or unclear. If you are unsure, use the `name` from the receipt.\n5. For the `category`, strictly adhere to the provided list of ["groceries", "household", "electronics", "entertainment"]. If an item doesn\'t clearly fit into one of these, mark it as "unknown".\n6. Ensure the output is a valid JSON object.',
+  systemInstruction: `
+    You are an expert at extracting information from purchase receipts and structuring it as a JSON object.
+
+    **Input:** An image or OCR'd text of a purchase receipt.
+
+    **Output:** A JSON object containing the following fields extracted from the receipt:
+
+    * **raw:** (string) The raw OCR output of the receipt.
+    * **store_info:** (object)
+      * **store_name:** (string) The name of the store.
+      * **address:** (string) A combination of the store's address, city, state, and zip code as found on the receipt. Exact formatting is not critical, prioritize capturing all the information.
+    * **transaction_info:** (object)
+      * **date_time:** (string) The date and time of the transaction in ISO 8601 format (YYYY-MM-DDTHH:MM:SS).
+    * **items:** (array of objects) An array where each object represents a purchased item.
+      * **name:** (string) The item description as it appears on the receipt.
+      * **user_friendly_name:** (string) Your best guess at the full, common name of the item.
+      * **item_code:** (string) The item code or SKU, if present on the receipt.
+      * **price:** (number) The final price of the item.
+      * **category:** (string) The broad category of the item. Choose from one of the following: ["groceries", "household", "electronics", "entertainment"]. If you cannot confidently determine the category, set this field to "unknown". Do not invent categories.
+    * **totals:** (object)
+      * **subtotal:** (number) The subtotal amount of the purchase.
+      * **tax:** (number) The total tax amount.
+      * **total:** (number) The final total amount of the purchase.
+    * **payment_info:** (object)
+      * **payment_type:** (string) The method of payment used (e.g., "DEBIT", "CREDIT", "CASH").
+      * **amount_tendered:** (number) The amount the customer paid.
+      * **change_due:** (number) The amount of change given back to the customer.
+      * **card_type:** (string, optional) The type of card used (e.g., "VISA", "MASTERCARD"). Only include if present.
+      * **card_number_suffix:** (string, optional) The last four digits of the card number. Only include if present.
+
+    **Instructions:**
+
+    1. Carefully read and understand the entire receipt content.
+    2. Extract the information for each field as accurately as possible.
+    3. If a piece of information is not present on the receipt, do not include the corresponding field in the JSON output (unless it's explicitly marked as required).
+    4. For the \`user_friendly_name\`, use your knowledge base to provide a more descriptive name if the \`name\` on the receipt is abbreviated or unclear. If you are unsure, use the \`name\` from the receipt.
+    5. For the \`category\`, strictly adhere to the provided list of ["groceries", "household", "electronics", "entertainment"]. If an item doesn't clearly fit into one of these, mark it as "unknown".
+    6. Ensure the output is a valid JSON object.
+  `,
 });
 
 const generationConfig: GenerationConfig = {
@@ -180,14 +217,25 @@ export async function POST(request: Request) {
     // Process the result into an array of Transaction objects
     const receiptData = JSON.parse(result.response.text());
 
+    // temp map of categories
+    const categoryMap: { [key: string]: string } = {
+      groceries: "Food",
+      household: "Utilities",
+      electronics: "Shopping",
+      entertainment: "Entertainment",
+      unknown: "Unknown",
+    };
+
     const transactions: Transaction[] = receiptData.items.map(
       (item: any, index: number) => ({
         id: index,
         description: item.user_friendly_name || item.name,
         amount: -item.price, // Assuming all items are expenses
-        date: receiptData.transaction_info.date_time,
+        date:
+          receiptData.transaction_info.date_time || new Date().toISOString(),
         category:
-          item.category.charAt(0).toUpperCase() + item.category.slice(1), // Capitalize category
+          // item.category.charAt(0).toUpperCase() + item.category.slice(1), // Capitalize category
+          categoryMap[item.category] || "Unknown",
       }),
     );
 

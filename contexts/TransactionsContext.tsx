@@ -38,13 +38,13 @@ interface TransactionsContextType {
 
 // Initial transactions data
 const initialTransactions: Transaction[] = [
-  {
-    id: 1,
-    description: "Grocery Store",
-    amount: -75.5,
-    date: "2023-06-15",
-    category: "Food",
-  },
+  // {
+  //   id: 1,
+  //   description: "Grocery Store",
+  //   amount: -75.5,
+  //   date: "2023-06-15",
+  //   category: "Food",
+  // },
   {
     id: 2,
     description: "Monthly Salary",
@@ -52,48 +52,48 @@ const initialTransactions: Transaction[] = [
     date: "2023-06-01",
     category: "Income",
   },
-  {
-    id: 3,
-    description: "Restaurant Dinner",
-    amount: -45.0,
-    date: "2023-06-10",
-    category: "Food",
-  },
-  {
-    id: 4,
-    description: "Utility Bill",
-    amount: -120.0,
-    date: "2023-06-05",
-    category: "Utilities",
-  },
-  {
-    id: 5,
-    description: "Online Shopping",
-    amount: -89.99,
-    date: "2023-06-08",
-    category: "Shopping",
-  },
-  {
-    id: 6,
-    description: "Freelance Work",
-    amount: 500,
-    date: "2023-06-12",
-    category: "Income",
-  },
-  {
-    id: 7,
-    description: "Gas Station",
-    amount: -40.0,
-    date: "2023-06-14",
-    category: "Transportation",
-  },
-  {
-    id: 8,
-    description: "Movie Tickets",
-    amount: -30.0,
-    date: "2023-06-17",
-    category: "Entertainment",
-  },
+  // {
+  //   id: 3,
+  //   description: "Restaurant Dinner",
+  //   amount: -45.0,
+  //   date: "2023-06-10",
+  //   category: "Food",
+  // },
+  // {
+  //   id: 4,
+  //   description: "Utility Bill",
+  //   amount: -120.0,
+  //   date: "2023-06-05",
+  //   category: "Utilities",
+  // },
+  // {
+  //   id: 5,
+  //   description: "Online Shopping",
+  //   amount: -89.99,
+  //   date: "2023-06-08",
+  //   category: "Shopping",
+  // },
+  // {
+  //   id: 6,
+  //   description: "Freelance Work",
+  //   amount: 500,
+  //   date: "2023-06-12",
+  //   category: "Income",
+  // },
+  // {
+  //   id: 7,
+  //   description: "Gas Station",
+  //   amount: -40.0,
+  //   date: "2023-06-14",
+  //   category: "Transportation",
+  // },
+  // {
+  //   id: 8,
+  //   description: "Movie Tickets",
+  //   amount: -30.0,
+  //   date: "2023-06-17",
+  //   category: "Entertainment",
+  // },
 ];
 
 // Create the TransactionsContext
@@ -143,18 +143,21 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
    * Adds new transactions to the existing transactions array.
    * Ensures that each transaction has a unique ID.
    */
-  const addTransactions = useCallback((newTransactions: Transaction[]) => {
+  const addTransactions = (newTransactions: Transaction[]) => {
     setTransactions((prevTransactions) => {
       // Concatenate the new transactions with the existing ones
       const updatedTransactions = [...prevTransactions, ...newTransactions];
-
       // Renumber all transactions starting from 0
       return updatedTransactions.map((transaction, index) => ({
         ...transaction,
         id: index,
       }));
     });
-  }, []);
+  };
+
+  useEffect(() => {
+    console.log("Transactions state updated:", transactions);
+  }, [transactions]);
 
   const contextValue: TransactionsContextType = {
     transactions,
