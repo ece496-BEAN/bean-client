@@ -25,6 +25,7 @@
     "@visx/visx": "^3.12.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "fs": "^0.0.1-security",
     "lucide-react": "^0.475.0",
     "memfs": "^4.17.0",
