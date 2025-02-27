@@ -102,6 +102,7 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
   const [confirmDeleteGroup, setConfirmDeleteGroup] =
     useState<TransactionGroup>();
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleteError, setDeleteError] = useState(false); // State for error
 
   const handleDeleteConfirmation = (group: TransactionGroup) => {
     setConfirmDeleteGroup(group);
@@ -110,10 +111,14 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
   const handleConfirmDelete = () => {
     if (confirmDeleteGroup && deleteConfirmation === confirmDeleteGroup.name) {
       onDelete(confirmDeleteGroup.id!);
+      setConfirmDeleteGroup(undefined);
+      setDeleteConfirmation("");
+      setDeleteError(false);
+    } else if (confirmDeleteGroup) {
+      setDeleteError(true);
     }
-    setConfirmDeleteGroup(undefined); // Clear the confirmation after delete (or successful or not)
-    setDeleteConfirmation("");
   };
+
   const handleCancelDelete = () => {
     setConfirmDeleteGroup(undefined); // Clear the group to be deleted
     setDeleteConfirmation(""); // Clear any typed confirmation
@@ -209,7 +214,7 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
               open={confirmDeleteGroup === group}
               onOpenChange={handleCancelDelete}
             >
-              <DialogContent>
+              <DialogContent className={deleteError ? "border-red-500" : ""}>
                 <DialogTitle>Confirm Delete</DialogTitle>
                 <DialogDescription>
                   Are you sure you want to delete transaction group "
@@ -226,7 +231,13 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                     id="deleteConfirmation"
                     value={deleteConfirmation}
                     onChange={(e) => setDeleteConfirmation(e.target.value)}
+                    className={deleteError ? "border-red-500" : ""}
                   />
+                  {deleteError && (
+                    <p className="text-red-500 mt-1">
+                      Transaction group name does not match.
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-2 flex justify-end space-x-2">
@@ -273,6 +284,7 @@ function AddOrEditTransactionGroupModal({
     const date = new Date(dateString);
     return format(date, "yyyy-MM-dd'T'HH:mm:ss"); // Correct format for datetime-local
   };
+
   const [formErrors, setFormErrors] = useState<string[]>([]); // Array of error messages
   useEffect(() => {
     // Update state with initial values when in edit mode.  This useEffect will re-run if initialTransactionGroup changes (when opening in edit mode)
@@ -391,7 +403,7 @@ function AddOrEditTransactionGroupModal({
   return (
     <Dialog open={isOpen} onOpenChange={onModalClose}>
       <DialogContent>
-        <div className="overflow-y-auto max-h-96">
+        <div className="overflow-y-auto max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>
               {mode === "add"
@@ -647,7 +659,12 @@ export function RecentTransactionsPage() {
 
             transaction = { ...rest, category_uuid: category.id };
           }
-
+          if ("amount" in transaction) {
+            // Round to 2 Decimal Places
+            transaction.amount = parseFloat(
+              parseFloat(transaction.amount.toString()).toFixed(2),
+            );
+          }
           return transaction;
         },
       );
@@ -674,6 +691,12 @@ export function RecentTransactionsPage() {
             const { id, category, group_id, ...rest } = transaction;
 
             transaction = { ...rest, uuid: id, category_uuid: category.id };
+          }
+          if ("amount" in transaction) {
+            // Round to 2 Decimal Places
+            transaction.amount = parseFloat(
+              parseFloat(transaction.amount.toString()).toFixed(2),
+            );
           }
 
           return transaction;
