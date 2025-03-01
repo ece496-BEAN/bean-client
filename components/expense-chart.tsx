@@ -5,43 +5,18 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import StackedAreaChart from "./StackedAreaChart";
+import StackedAreaChart from "./charts/StackedAreaChart";
 import * as d3 from "d3";
 import { expenseColors, incomeColors } from "@/lib/colors";
-import ThresholdChart, { DataPoint } from "./ThresholdChart";
-import StackedBarChart from "./StackedBarChart";
-import { group } from "console";
-import exp from "constants";
+import ThresholdChart, { DataPoint } from "./charts/ThresholdChart";
+import StackedBarChart from "./charts/StackedBarChart";
+import {
+  CategoryValue,
+  ChartTransaction,
+  StackedDataPoint,
+} from "./charts/common";
 
 const TODO = -1;
-
-export function capitalizeWords(str: string): string {
-  if (!str) {
-    return "";
-  }
-
-  return str
-    .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-export type ChartTransaction = {
-  date: Date;
-  amount: number;
-  category: string;
-};
-
-export interface CategoryValue {
-  category: string;
-  value: number;
-}
-
-export interface StackedDataPoint {
-  date: Date;
-  categories: CategoryValue[];
-}
 
 export function ExpenseChart() {
   const [expenseData, setExpenseData] = useState<StackedDataPoint[]>([]);
@@ -227,7 +202,7 @@ export function ExpenseChart() {
               Savings Graph
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2">
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) => (
@@ -249,7 +224,7 @@ export function ExpenseChart() {
               Cumulative Expenses
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2">
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) => (
@@ -271,7 +246,7 @@ export function ExpenseChart() {
               Cumulative Income
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2">
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) => (
@@ -294,7 +269,7 @@ export function ExpenseChart() {
               Income By Month
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2">
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) => (
@@ -316,7 +291,7 @@ export function ExpenseChart() {
               Expense By Month
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2">
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) => (

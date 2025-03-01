@@ -11,14 +11,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
-import LineChart from "@/components/ThresholdChart"; // Import the new LineChart component
+import LineChart from "@/components/charts/ThresholdChart"; // Import the new LineChart component
 import ParentSize from "@visx/responsive/lib/components/ParentSize"; // Import ParentSize
 import { useTransactions } from "@/contexts/TransactionsContext";
-import {
-  CategoryValue,
-  ChartTransaction,
-  StackedDataPoint,
-} from "./expense-chart";
+import { StackedDataPoint } from "./charts/common";
+import { CategoryValue } from "./charts/common";
+import { ChartTransaction } from "./charts/common";
 import * as d3 from "d3";
 
 interface RingChartProps {
