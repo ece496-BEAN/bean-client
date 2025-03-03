@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Bell,
   Sparkles,
@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import LineChart from "@/components/LineChart"; // Import the new LineChart component
 import ParentSize from "@visx/responsive/lib/components/ParentSize"; // Import ParentSize
 import { useTransactions } from "@/contexts/TransactionsContext";
+import { JwtContext } from "@/app/lib/jwt-provider";
 
 interface RingChartProps {
   percentage: number;
@@ -76,7 +77,15 @@ interface Notification {
 }
 
 export function MainPage() {
-  const router = useRouter();
+  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const router = useRouter(); // Add this line
+
+  useEffect(() => {
+    if (!jwt) {
+      router.push("/login"); // Redirect to login if JWT is not set
+    }
+  }, [jwt, router]);
+
   const { transactions } = useTransactions();
 
   const totalSpending = 2500;

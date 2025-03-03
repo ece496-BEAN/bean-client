@@ -8,9 +8,5 @@ import { RecentTransactionsPage } from "@/components/recent-transactions-page";
 import JwtProvider from "../lib/jwt-provider";
 
 export default function Page() {
-  return (
-    <JwtProvider>
-      <RecentTransactionsPage />
-    </JwtProvider>
-  );
+  return <RecentTransactionsPage />;
 }
