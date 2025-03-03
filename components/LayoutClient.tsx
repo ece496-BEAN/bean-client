@@ -10,7 +10,7 @@ import { ReactNode } from "react";
 function LayoutClient({ children }: { children: ReactNode }) {
   // login & survey page -> no naviagtion bar
   const pathname = usePathname();
-  const excludedPaths = ["/login", "/survey"];
+  const excludedPaths = ["/login", "/survey", "/signup"];
   const showNavigationBar = !excludedPaths.includes(pathname);
 
   return (
