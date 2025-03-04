@@ -550,6 +550,13 @@ function AddOrEditTransactionGroupModal({
 
 export function RecentTransactionsPage() {
   const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const router = useRouter(); // Add this line
+
+  useEffect(() => {
+    if (!jwt) {
+      router.push("/login"); // Redirect to login if JWT is not set
+    }
+  }, [jwt, router]);
 
   const [transactionGroups, setTransactionGroups] = useState<
     TransactionGroup[]

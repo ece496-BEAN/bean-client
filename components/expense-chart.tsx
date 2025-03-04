@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Area,
   AreaChart,
@@ -25,6 +25,8 @@ import {
 import { useBudgetContext } from "@/contexts/BudgetContext";
 import LineChart from "@/components/LineChart";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import { useRouter } from "next/navigation";
+import { JwtContext } from "@/app/lib/jwt-provider";
 
 // Mock data for expenses
 const mockExpenseData = [
@@ -157,6 +159,15 @@ const colors = [
 ];
 
 export function ExpenseChart() {
+  const router = useRouter(); // Add this line
+  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+
+  useEffect(() => {
+    if (!jwt) {
+      router.push("/login"); // Redirect to login if JWT is not set
+    }
+  }, [jwt, router]);
+
   const [selectedCategories, setSelectedCategories] = useState<
     (keyof (typeof mockExpenseData)[0])[]
   >(expenseCategories.slice(0, 5) as (keyof (typeof mockExpenseData)[0])[]);

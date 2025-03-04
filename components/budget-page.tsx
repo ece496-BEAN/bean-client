@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +9,18 @@ import { Progress } from "@/components/ui/progress";
 import { DollarSign, Sparkles, X, Edit2, Save, PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useBudgetContext } from "../contexts/BudgetContext";
+import { JwtContext } from "@/app/lib/jwt-provider";
 
 export function BudgetPage() {
-  const router = useRouter();
+  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const router = useRouter(); // Add this line
+
+  useEffect(() => {
+    if (!jwt) {
+      router.push("/login"); // Redirect to login if JWT is not set
+    }
+  }, [jwt, router]);
+
   const {
     categories,
     isEditMode,
