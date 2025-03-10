@@ -5,7 +5,12 @@
 // }
 
 import { MainPage } from "@/components/home-page";
+import TransactionProvider from "@/contexts/TransactionsContext";
 
 export default function Page() {
-  return <MainPage />;
+  return (
+    <TransactionProvider>
+      <MainPage />
+    </TransactionProvider>
+  );
 }

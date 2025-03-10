@@ -1,171 +1,194 @@
-// transactionsContext.tsx (No changes)
 "use client";
 
-import React, {
-  createContext,
-  useState,
-  useEffect,
-  useContext,
-  ReactNode,
-  useCallback,
-} from "react";
+import { createContext, useContext, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { JwtContext } from "@/app/lib/jwt-provider";
+import { fetchApi } from "@/app/lib/api";
+import {
+  TransactionGroup,
+  PaginatedServerResponse,
+  Category,
+} from "@/lib/types";
 
-/**
- * Interface for a transaction object.
- */
-export interface Transaction {
-  id: number;
-  description: string;
-  amount: number;
-  date: string;
-  category: string;
-}
-
-/**
- * Interface for the TransactionsContext value.
- */
 interface TransactionsContextType {
-  transactions: Transaction[];
-  filteredTransactions: Transaction[];
-  searchTerm: string;
-  categoryFilter: string;
-  totalIncome: number;
-  totalExpenses: number;
-  setSearchTerm: (searchTerm: string) => void;
-  setCategoryFilter: (category: string) => void;
-  addTransactions: (newTransactions: Transaction[]) => void; // Function to add new transactions
+  transactionGroups: TransactionGroup[];
+  isLoading: boolean;
+  queryError: Error | null;
+  mutationError: Error | null;
+  addTransactionGroup: (newGroup: TransactionGroup) => Promise<void>;
+  editTransactionGroup: (editedGroup: TransactionGroup) => Promise<void>;
+  deleteTransactionGroup: (groupId: string) => Promise<void>;
+  refetchTransactions: () => void;
 }
 
-// Initial transactions data
-const initialTransactions: Transaction[] = [
-  {
-    id: 1,
-    description: "Grocery Store",
-    amount: -75.5,
-    date: "2023-06-15",
-    category: "Food",
-  },
-  {
-    id: 2,
-    description: "Monthly Salary",
-    amount: 3000,
-    date: "2023-06-01",
-    category: "Income",
-  },
-  {
-    id: 3,
-    description: "Restaurant Dinner",
-    amount: -45.0,
-    date: "2023-06-10",
-    category: "Food",
-  },
-  {
-    id: 4,
-    description: "Utility Bill",
-    amount: -120.0,
-    date: "2023-06-05",
-    category: "Utilities",
-  },
-  {
-    id: 5,
-    description: "Online Shopping",
-    amount: -89.99,
-    date: "2023-06-08",
-    category: "Shopping",
-  },
-  {
-    id: 6,
-    description: "Freelance Work",
-    amount: 500,
-    date: "2023-06-12",
-    category: "Income",
-  },
-  {
-    id: 7,
-    description: "Gas Station",
-    amount: -40.0,
-    date: "2023-06-14",
-    category: "Transportation",
-  },
-  {
-    id: 8,
-    description: "Movie Tickets",
-    amount: -30.0,
-    date: "2023-06-17",
-    category: "Entertainment",
-  },
-];
+const TransactionsContext = createContext<TransactionsContextType | null>(null);
 
-// Create the TransactionsContext
-const TransactionsContext = createContext<TransactionsContextType | undefined>(
-  undefined,
-);
+export default function TransactionProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const queryClient = useQueryClient();
+  const [mutationError, setMutationError] = useState<Error | null>(null); // State to hold the mutation error
 
-/**
- * Provider component for the TransactionsContext.
- */
-export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
-  const [transactions, setTransactions] =
-    useState<Transaction[]>(initialTransactions);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("All");
+  const {
+    data: transactionGroups,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["transaction-groups"],
+    queryFn: async () => {
+      try {
+        const response = await fetchApi(
+          jwt,
+          setAndStoreJwt,
+          "transaction-groups/",
+          "GET",
+        );
+        const data: PaginatedServerResponse<TransactionGroup> =
+          await response.json();
+        return data.results;
+      } catch (error) {
+        throw new Error("Error fetching transaction groups: " + error);
+      }
+    },
+    enabled: !!jwt, // Only fetch when jwt is available
+  });
 
-  /**
-   * Filters transactions based on search term and category.
-   */
-  const filteredTransactions = transactions.filter(
-    (transaction) =>
-      transaction.description
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) &&
-      (categoryFilter === "All" || transaction.category === categoryFilter),
-  );
+  const addTransactionGroupMutation = useMutation({
+    onError: (error) => {
+      setMutationError(
+        error instanceof Error
+          ? error
+          : new Error(
+              "An error occurred during the transaction group addition.",
+            ),
+      );
+    },
+    mutationFn: async (newGroup: TransactionGroup) => {
+      // Modify ReadOnlyTransaction to a WriteOnlyTransaction
+      newGroup.transactions = newGroup.transactions.map((transaction) => {
+        if ("category" in transaction) {
+          const { category, ...rest } = transaction;
 
-  /**
-   * Calculates the total income from filtered transactions.
-   */
-  const totalIncome = filteredTransactions.reduce(
-    (sum, transaction) =>
-      transaction.amount > 0 ? sum + transaction.amount : sum,
-    0,
-  );
+          transaction = { ...rest, category_uuid: category.id };
+        }
+        if ("amount" in transaction) {
+          // Round to 2 Decimal Places since server cannot handle more than 2 decimal places
+          transaction.amount = parseFloat(
+            parseFloat(transaction.amount.toString()).toFixed(2),
+          );
+        }
+        return transaction;
+      });
 
-  /**
-   * Calculates the total expenses from filtered transactions.
-   */
-  const totalExpenses = filteredTransactions.reduce(
-    (sum, transaction) =>
-      transaction.amount < 0 ? sum + Math.abs(transaction.amount) : sum,
-    0,
-  );
+      return fetchApi(
+        jwt,
+        setAndStoreJwt,
+        "transaction-groups/",
+        "POST",
+        newGroup,
+      );
+    },
 
-  /**
-   * Adds new transactions to the existing transactions array.
-   * Ensures that each transaction has a unique ID.
-   */
-  const addTransactions = useCallback((newTransactions: Transaction[]) => {
-    setTransactions((prevTransactions) => {
-      // Concatenate the new transactions with the existing ones
-      const updatedTransactions = [...prevTransactions, ...newTransactions];
+    onSuccess: () => {
+      // Invalidate the transaction groups query and it will trigger an update
+      queryClient.invalidateQueries({ queryKey: ["transaction-groups"] });
+    },
+  });
 
-      // Renumber all transactions starting from 0
-      return updatedTransactions.map((transaction, index) => ({
-        ...transaction,
-        id: index,
-      }));
-    });
-  }, []);
+  const editTransactionGroupMutation = useMutation({
+    onError: (error) => {
+      setMutationError(
+        error instanceof Error
+          ? error
+          : new Error("An error occurred during the transaction group update."),
+      );
+    },
+    mutationFn: async (editedTransactionGroup: TransactionGroup) => {
+      // Convert ReadOnlyTransaction to WriteOnlyTransaction
+      editedTransactionGroup.transactions =
+        editedTransactionGroup.transactions.map((transaction) => {
+          if ("id" in transaction) {
+            const { id, category, group_id, ...rest } = transaction;
 
-  const contextValue: TransactionsContextType = {
-    transactions,
-    filteredTransactions,
-    searchTerm,
-    categoryFilter,
-    totalIncome,
-    totalExpenses,
-    setSearchTerm,
-    setCategoryFilter,
-    addTransactions,
+            transaction = { ...rest, uuid: id, category_uuid: category.id };
+          }
+          if ("amount" in transaction) {
+            transaction.amount = parseFloat(
+              parseFloat(transaction.amount.toString()).toFixed(2),
+            );
+          }
+          return transaction;
+        });
+
+      return fetchApi(
+        jwt,
+        setAndStoreJwt,
+        `transaction-groups/${editedTransactionGroup.id}/`,
+        "PUT",
+        editedTransactionGroup,
+      );
+    },
+
+    onSuccess: () => {
+      // Invalidate the transaction groups query and it will trigger an update
+      queryClient.invalidateQueries({ queryKey: ["transaction-groups"] });
+    },
+  });
+
+  const deleteTransactionGroupMutation = useMutation({
+    onError: (error) => {
+      setMutationError(
+        error instanceof Error
+          ? error
+          : new Error(
+              "An error occurred during the transaction group deletion.",
+            ),
+      );
+    },
+    mutationFn: async (groupId: string) => {
+      return fetchApi(
+        jwt,
+        setAndStoreJwt,
+        `transaction-groups/${groupId}/`,
+        "DELETE",
+      );
+    },
+
+    onSuccess: () => {
+      // Invalidate the transaction groups query and it will trigger an update
+      queryClient.invalidateQueries({ queryKey: ["transaction-groups"] });
+    },
+  });
+
+  const addTransactionGroup = async (transactionGroup: TransactionGroup) => {
+    await addTransactionGroupMutation.mutateAsync(transactionGroup);
+  };
+
+  const editTransactionGroup = async (transactionGroup: TransactionGroup) => {
+    await editTransactionGroupMutation.mutateAsync(transactionGroup);
+  };
+
+  const deleteTransactionGroup = async (groupId: string) => {
+    await deleteTransactionGroupMutation.mutateAsync(groupId);
+  };
+
+  const refetchTransactions = () => {
+    refetch();
+  };
+
+  const contextValue = {
+    transactionGroups: transactionGroups || [],
+    isLoading,
+    queryError: error,
+    mutationError: mutationError,
+    addTransactionGroup,
+    editTransactionGroup,
+    deleteTransactionGroup,
+    refetchTransactions,
   };
 
   return (
@@ -173,17 +196,16 @@ export const TransactionsProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </TransactionsContext.Provider>
   );
-};
+}
 
-/**
- * Custom hook to access the TransactionsContext.
- */
 export const useTransactions = () => {
   const context = useContext(TransactionsContext);
+
   if (!context) {
     throw new Error(
       "useTransactions must be used within a TransactionsProvider",
     );
   }
+
   return context;
 };

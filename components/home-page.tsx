@@ -63,13 +63,6 @@ const RingChart: React.FC<RingChartProps> = ({
   );
 };
 
-interface Transaction {
-  id: number;
-  description: string;
-  amount: number;
-  date: string;
-}
-
 interface Notification {
   id: number;
   message: string;
@@ -93,7 +86,7 @@ export function MainPage() {
     }
   }, [jwt, isLoading, router]);
 
-  const { transactions } = useTransactions();
+  const { transactionGroups } = useTransactions();
 
   const totalSpending = 2500;
   const monthlyBudget = 3000;
@@ -238,9 +231,10 @@ export function MainPage() {
                     Recent Transactions
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                {/* TODO: Implement proper way to display transaction groups */}
+                {/* <CardContent>
                   <ul className="space-y-3">
-                    {transactions
+                    {transactionGroups
                       .sort(
                         (a, b) =>
                           new Date(b.date).getTime() -
@@ -280,7 +274,7 @@ export function MainPage() {
                         </li>
                       ))}
                   </ul>
-                </CardContent>
+                </CardContent> */}
               </Card>
 
               {/* Notifications */}

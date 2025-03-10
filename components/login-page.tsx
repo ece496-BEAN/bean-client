@@ -13,18 +13,14 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { JwtContext } from "@/app/lib/jwt-provider";
+import { useJwt } from "@/app/lib/jwt-provider";
 import { fetchApiSingle, jwtObtainPairEndpoint } from "@/app/lib/api";
 import { useRouter } from "next/navigation";
 
 export function LoginPage() {
   const router = useRouter();
 
-  const context = useContext(JwtContext);
-  if (!context) {
-    throw new Error("JwtContext must be used within a JwtProvider");
-  }
-  const [jwt, setAndStoreJwt] = context;
+  const [setAndStoreJwt] = useJwt();
 
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");

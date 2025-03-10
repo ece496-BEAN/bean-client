@@ -1,34 +1,20 @@
 "use client";
 
-import React, {
-  useState,
-  FormEvent,
-  ChangeEvent,
-  useContext,
-  useEffect,
-  useCallback,
-} from "react";
+import React, { useState, FormEvent, useContext, useEffect } from "react";
 import { format } from "date-fns";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
-  Filter,
   Search,
   TrendingDown,
   TrendingUp,
   Plus,
-  ShoppingCart,
-  Utensils,
-  Briefcase,
-  Zap,
-  Car,
-  Film,
   Trash,
   ChevronRight,
   ChevronDown,
   Pencil,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -44,55 +30,44 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+
 import { Label } from "@/components/ui/label";
-import { LucideProps } from "lucide-react";
 import { useRouter } from "next/navigation";
 import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { usePlaidContext } from "@/contexts/PlaidContext";
 import {
-  PaginatedServerResponse,
-  PartialByKeys,
-  Transaction,
   Category,
   TransactionGroup,
   WriteOnlyTransaction,
   ReadOnlyTransaction,
 } from "@/lib/types";
 import { JwtContext } from "@/app/lib/jwt-provider";
-import { fetchApi } from "@/app/lib/api";
+import { useCategories } from "@/contexts/CategoriesContext";
+import { CircularProgress, Button } from "@mui/material";
+import { ToastContainer, toast } from "react-toastify";
 
-// Interface for category icons
-interface CategoryIcons {
-  [key: string]: React.ForwardRefExoticComponent<
-    Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
-  >;
-}
-const categoryIcons: CategoryIcons = {
-  Food: Utensils,
-  Income: Briefcase,
-  Utilities: Zap,
-  Shopping: ShoppingCart,
-  Transportation: Car,
-  Entertainment: Film,
-};
-
-// Props for the AddTransactionModal component
 interface AddOrEditTransactionModalProps {
   isOpen: boolean;
   initialTransactionGroup?: TransactionGroup;
   mode: "add" | "edit";
   onClose: () => void;
-  onSave: (transaction: TransactionGroup) => void;
+  onSave: (transaction: TransactionGroup) => Promise<void>;
 }
 
-type TransactionGroupListProps = {
+interface TransactionSummaryProps {
+  totalIncome: number;
+  totalExpenses: number;
+  netBalance: number;
+}
+
+interface TransactionGroupListProps {
   transactionGroups: TransactionGroup[];
   onEdit: (group: TransactionGroup) => void;
-  onDelete: (uuid: string) => void;
-};
+  onDelete: (uuid: string) => Promise<void>;
+}
+
 const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
   transactionGroups,
   onEdit,
@@ -171,7 +146,7 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                   onClick={() => handleDeleteConfirmation(group)}
                   className="text-red-500 ml-2 hover:text-red-700"
                 >
-                  <Trash size={16} /> {/* Delete icon */}
+                  <Trash size={16} />
                 </button>
               </div>
             </div>
@@ -241,10 +216,10 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                 </div>
 
                 <div className="mt-2 flex justify-end space-x-2">
-                  <Button variant="destructive" onClick={handleConfirmDelete}>
+                  <Button color="error" onClick={handleConfirmDelete}>
                     Delete
                   </Button>
-                  <Button variant="outline" onClick={handleCancelDelete}>
+                  <Button variant="outlined" onClick={handleCancelDelete}>
                     Cancel
                   </Button>
                 </div>
@@ -272,9 +247,7 @@ function AddOrEditTransactionGroupModal({
   initialTransactionGroup,
   onSave,
 }: AddOrEditTransactionModalProps) {
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
-
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { categories } = useCategories();
 
   const [newTransactionGroup, setNewTransactionGroup] =
     useState<TransactionGroup>(
@@ -298,22 +271,6 @@ function AddOrEditTransactionGroupModal({
     }
   }, [mode, initialTransactionGroup]);
 
-  useEffect(() => {
-    // TODO: Maybe consider moving this to a custom hook
-    const fetchCategories = async () => {
-      const categoryResponse = await fetchApi(
-        jwt,
-        setAndStoreJwt,
-        "categories/",
-        "GET",
-      );
-      const fetchedCategories: PaginatedServerResponse<Category> =
-        await categoryResponse.json();
-      setCategories(fetchedCategories.results);
-    };
-
-    fetchCategories();
-  }, [jwt, setAndStoreJwt]);
   const handleTransactionGroupChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -364,15 +321,11 @@ function AddOrEditTransactionGroupModal({
     onClose();
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // Validation logic:
+  const validateForm = () => {
     const errors: string[] = [];
     if (!newTransactionGroup.name) {
       errors.push("Name is required");
     }
-    // Add other top-level field validation as needed
-
     newTransactionGroup.transactions.forEach((transaction, index) => {
       if (!transaction.name) {
         errors.push(`Transaction ${index + 1}: Name is required`);
@@ -387,18 +340,37 @@ function AddOrEditTransactionGroupModal({
       if ("category" in transaction && !transaction.category.id) {
         errors.push(`Transaction ${index + 1}-category: Category is required`);
       }
+      if ("category_uuid" in transaction && !transaction.category_uuid) {
+        errors.push(`Transaction ${index + 1}-category: Category is required`);
+      }
     });
+    return errors;
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const errors = validateForm();
 
     if (errors.length > 0) {
       setFormErrors(errors);
-      return <></>;
+      return; // Prevent form submission if there are errors
     }
+    await onSave(newTransactionGroup); // Call onSave if no errors
 
-    onSave(newTransactionGroup); // Call onSave if no errors
     setFormErrors([]); // Clear errors after submission
 
     onModalClose();
   };
+
+  useEffect(() => {
+    // Display toast notifications for each form error:
+    formErrors.forEach((error) => {
+      toast.error(error);
+    });
+
+    // After displaying toasts, you can clear formErrors here or when errors are fixed.
+  }, [formErrors]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onModalClose}>
@@ -517,8 +489,6 @@ function AddOrEditTransactionGroupModal({
                   onClick={() => removeTransaction(index)}
                   className="text-red-500 hover:text-red-700"
                 >
-                  {" "}
-                  {/* Added delete button */}
                   <Trash className="h-4 w-4" />
                 </Button>
               </div>
@@ -527,18 +497,7 @@ function AddOrEditTransactionGroupModal({
               <Button type="button" onClick={addTransaction}>
                 Add Transaction
               </Button>
-              {formErrors.length > 0 && ( // Conditional error banner
-                <div
-                  className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
-                  role="alert"
-                >
-                  <ul>
-                    {formErrors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <ToastContainer />
               <Button type="submit">Submit Transaction Group</Button>
             </div>
           </form>
@@ -548,42 +507,113 @@ function AddOrEditTransactionGroupModal({
   );
 }
 
+function TransactionSummaryBanner({
+  totalIncome,
+  totalExpenses,
+  netBalance,
+}: TransactionSummaryProps) {
+  return (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+      <Card className="bg-white shadow-lg">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-semibold text-gray-700">
+            Total Income
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center">
+            <ArrowUpIcon className="w-5 h-5 mr-2 text-green-500" />
+            <span className="text-2xl font-bold text-green-600">
+              ${totalIncome.toFixed(2)}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white shadow-lg">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-semibold text-gray-700">
+            Total Expenses
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center">
+            <ArrowDownIcon className="w-5 h-5 mr-2 text-red-500" />
+            <span className="text-2xl font-bold text-red-600">
+              ${totalExpenses.toFixed(2)}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-white shadow-lg">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-semibold text-gray-700">
+            Net Balance
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center">
+            {netBalance >= 0 ? (
+              <TrendingUp className="w-5 h-5 mr-2 text-green-500" />
+            ) : (
+              <TrendingDown className="w-5 h-5 mr-2 text-red-500" />
+            )}
+            <span
+              className={`text-2xl font-bold ${
+                netBalance >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              ${Math.abs(netBalance).toFixed(2)}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export function RecentTransactionsPage() {
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
-  const router = useRouter(); // Add this line
+  const {
+    transactionGroups,
+    isLoading,
+    queryError: transactionQueryError,
+    mutationError: transactionMutationError,
+    refetchTransactions,
+    addTransactionGroup,
+    deleteTransactionGroup,
+    editTransactionGroup,
+  } = useTransactions();
+  const { categories } = useCategories();
+  const [jwt] = useContext(JwtContext);
+  const router = useRouter();
 
   useEffect(() => {
+    console.log("The JWT Token is: ", jwt);
     if (!jwt) {
       router.push("/login"); // Redirect to login if JWT is not set
     }
   }, [jwt, router]);
+  useEffect(() => {
+    if (transactionQueryError) {
+      toast.error(
+        `Error loading transactions: ${transactionQueryError.message}`,
+      );
+    }
+  }, [transactionQueryError]);
 
-  const [transactionGroups, setTransactionGroups] = useState<
-    TransactionGroup[]
-  >([]);
+  useEffect(() => {
+    if (transactionMutationError) {
+      toast.error(
+        `Error modifying transaction: ${transactionMutationError.message}`,
+      );
+    }
+  }, [transactionMutationError]);
 
-  const [categories, setCategories] = useState<Category[]>([]);
   const [isEditing, setIsEditing] = useState(false); // State for edit mode
   const [transactionToEdit, setTransactionToEdit] =
     useState<TransactionGroup>();
-  const [refetchTrigger, setRefetchTrigger] = useState(0); // Trigger to refetch data
 
-  useEffect(() => {
-    // TODO: Maybe consider moving this to a custom hook
-    const fetchCategories = async () => {
-      const categoryResponse = await fetchApi(
-        jwt,
-        setAndStoreJwt,
-        "categories/",
-        "GET",
-      );
-      const fetchedCategories: PaginatedServerResponse<Category> =
-        await categoryResponse.json();
-      setCategories(fetchedCategories.results);
-    };
-
-    fetchCategories();
-  }, [jwt, setAndStoreJwt]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<
     Category["name"] | "All"
@@ -626,101 +656,6 @@ export function RecentTransactionsPage() {
 
   const netBalance = totalIncome - totalExpenses;
 
-  const triggerRefetch = () => {
-    setRefetchTrigger((prev) => prev + 1);
-    fetchTransactions();
-  };
-  // TODO: Move to a custom hook/context
-  const fetchTransactions = useCallback(async () => {
-    try {
-      const response = await fetchApi(
-        jwt,
-        setAndStoreJwt,
-        "transaction-groups/",
-        "GET",
-      );
-      const data: PaginatedServerResponse<TransactionGroup> =
-        await response.json();
-      setTransactionGroups(data.results);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jwt, setAndStoreJwt, refetchTrigger]);
-
-  const handleDeleteTransactionGroup = (uuid: string) => {
-    try {
-      fetchApi(jwt, setAndStoreJwt, `transaction-groups/${uuid}/`, "DELETE");
-      triggerRefetch(); // Fetch transactions after deleting a transaction group
-    } catch (error) {
-      console.error("Error deleting transaction group:", error);
-    }
-  };
-  const handleAddTransactionGroup = (newTransactionGroup: TransactionGroup) => {
-    try {
-      // Convert ReadOnlyTransaction to WriteOnlyTransaction
-      newTransactionGroup.transactions = newTransactionGroup.transactions.map(
-        (transaction) => {
-          if ("category" in transaction) {
-            const { category, ...rest } = transaction;
-
-            transaction = { ...rest, category_uuid: category.id };
-          }
-          if ("amount" in transaction) {
-            // Round to 2 Decimal Places
-            transaction.amount = parseFloat(
-              parseFloat(transaction.amount.toString()).toFixed(2),
-            );
-          }
-          return transaction;
-        },
-      );
-      fetchApi(
-        jwt,
-        setAndStoreJwt,
-        "transaction-groups/",
-        "POST",
-        newTransactionGroup,
-      );
-      triggerRefetch(); // Fetch transactions after adding a new transaction group
-    } catch (error) {
-      console.error("Error adding transaction group:", error);
-    }
-  };
-  const handleEditTransactionGroup = (
-    editedTransactionGroup: TransactionGroup,
-  ) => {
-    try {
-      // Convert ReadOnlyTransaction to WriteOnlyTransaction
-      editedTransactionGroup.transactions =
-        editedTransactionGroup.transactions.map((transaction) => {
-          if ("id" in transaction) {
-            const { id, category, group_id, ...rest } = transaction;
-
-            transaction = { ...rest, uuid: id, category_uuid: category.id };
-          }
-          if ("amount" in transaction) {
-            // Round to 2 Decimal Places
-            transaction.amount = parseFloat(
-              parseFloat(transaction.amount.toString()).toFixed(2),
-            );
-          }
-
-          return transaction;
-        });
-      fetchApi(
-        jwt,
-        setAndStoreJwt,
-        `transaction-groups/${editedTransactionGroup.id}/`,
-        "PUT",
-        editedTransactionGroup,
-      );
-      triggerRefetch(); // Fetch transactions after editing a transaction group
-    } catch (error) {
-      console.error("Error editing transaction group:", error);
-    }
-  };
-
   const handleOpenEditModal = (groupToEdit: TransactionGroup) => {
     setIsAddModalOpen(true); // Open the same modal
     setIsEditing(true); // Make sure it's in edit mode
@@ -732,95 +667,31 @@ export function RecentTransactionsPage() {
     setTransactionToEdit(undefined); // Clear transactionToEdit after closing
   };
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
-
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
         <h1 className="text-2xl font-bold">Recent Transactions</h1>
       </header>
 
+      <ToastContainer />
+
       <main className="flex-grow p-4 overflow-y-auto">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
-          <Card className="bg-white shadow-lg">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold text-gray-700">
-                Total Income
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <ArrowUpIcon className="w-5 h-5 mr-2 text-green-500" />
-                <span className="text-2xl font-bold text-green-600">
-                  ${totalIncome.toFixed(2)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+        <TransactionSummaryBanner
+          totalIncome={totalIncome}
+          totalExpenses={totalExpenses}
+          netBalance={netBalance}
+        />
 
-          <Card className="bg-white shadow-lg">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold text-gray-700">
-                Total Expenses
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <ArrowDownIcon className="w-5 h-5 mr-2 text-red-500" />
-                <span className="text-2xl font-bold text-red-600">
-                  ${totalExpenses.toFixed(2)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-lg">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold text-gray-700">
-                Net Balance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                {netBalance >= 0 ? (
-                  <TrendingUp className="w-5 h-5 mr-2 text-green-500" />
-                ) : (
-                  <TrendingDown className="w-5 h-5 mr-2 text-red-500" />
-                )}
-                <span
-                  className={`text-2xl font-bold ${
-                    netBalance >= 0 ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  ${Math.abs(netBalance).toFixed(2)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Add Plaid Link Button */}
         <div className="mb-6">
           <PlaidLinkButton />
         </div>
 
         <Card className="bg-white shadow-lg">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-lg font-semibold text-gray-700">
-                Transaction List
-              </CardTitle>
-              <Button
-                onClick={() => setIsAddModalOpen(true)}
-                className="bg-white text-purple-700 border border-purple-700 hover:bg-purple-50"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Transaction
-              </Button>
-            </div>
-          </CardHeader>
+          <TransactionListHeader
+            setIsAddModalOpen={setIsAddModalOpen}
+            refetchTransactions={refetchTransactions}
+            isLoading={isLoading}
+          />
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4 mb-4">
               <div className="relative flex-grow">
@@ -852,12 +723,15 @@ export function RecentTransactionsPage() {
                 </SelectContent>
               </Select>
             </div>
-
-            <TransactionGroupList
-              transactionGroups={filteredTransactionGroups}
-              onEdit={handleOpenEditModal}
-              onDelete={handleDeleteTransactionGroup}
-            />
+            {isLoading ? (
+              <CircularProgress />
+            ) : (
+              <TransactionGroupList
+                transactionGroups={filteredTransactionGroups}
+                onEdit={handleOpenEditModal}
+                onDelete={deleteTransactionGroup}
+              />
+            )}
           </CardContent>
         </Card>
       </main>
@@ -866,10 +740,40 @@ export function RecentTransactionsPage() {
         onClose={handleCloseAddModal}
         initialTransactionGroup={transactionToEdit}
         mode={isEditing ? "edit" : "add"}
-        onSave={
-          isEditing ? handleEditTransactionGroup : handleAddTransactionGroup
-        }
+        onSave={isEditing ? editTransactionGroup : addTransactionGroup}
       />
     </div>
+  );
+}
+interface TransactionListHeaderProps {
+  setIsAddModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  refetchTransactions: () => void;
+  isLoading: boolean;
+}
+function TransactionListHeader({
+  setIsAddModalOpen,
+  refetchTransactions,
+  isLoading,
+}: TransactionListHeaderProps) {
+  return (
+    <CardHeader className="pb-2">
+      <div className="flex justify-between items-center">
+        <CardTitle className="text-lg font-semibold text-gray-700">
+          Transaction List
+        </CardTitle>
+        <Button onClick={() => setIsAddModalOpen(true)} variant="contained">
+          <Plus className="w-4 h-4 mr-2" />
+          Add Transaction
+        </Button>
+        <Button
+          onClick={refetchTransactions}
+          loading={isLoading}
+          loadingPosition="end"
+          variant="contained"
+        >
+          Refresh
+        </Button>
+      </div>
+    </CardHeader>
   );
 }

@@ -5,8 +5,15 @@
 // }
 
 import { RecentTransactionsPage } from "@/components/recent-transactions-page";
-import JwtProvider from "../lib/jwt-provider";
+import CategoryProvider from "@/contexts/CategoriesContext";
+import TransactionsProvider from "@/contexts/TransactionsContext";
 
 export default function Page() {
-  return <RecentTransactionsPage />;
+  return (
+    <TransactionsProvider>
+      <CategoryProvider>
+        <RecentTransactionsPage />
+      </CategoryProvider>
+    </TransactionsProvider>
+  );
 }

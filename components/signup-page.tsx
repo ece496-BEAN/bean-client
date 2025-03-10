@@ -14,16 +14,13 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
-import { JwtContext } from "@/app/lib/jwt-provider";
+import { useJwt } from "@/app/lib/jwt-provider";
 import { fetchApiSingle } from "@/app/lib/api";
 
 export function SignupPage() {
   const router = useRouter();
-  const context = useContext(JwtContext);
-  if (!context) {
-    throw new Error("JwtContext must be used within a JwtProvider");
-  }
-  const [jwt, setAndStoreJwt] = context;
+
+  const [setAndStoreJwt] = useJwt();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
