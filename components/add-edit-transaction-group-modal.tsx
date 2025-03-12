@@ -25,6 +25,7 @@ import { useCategories } from "@/contexts/CategoriesContext";
 import { Button, CircularProgress } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
 import { useTransactions } from "@/contexts/TransactionsContext";
+import "react-toastify/dist/ReactToastify.css";
 
 interface AddOrEditTransactionModalProps {
   isOpen: boolean;

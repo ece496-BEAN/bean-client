@@ -28,7 +28,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 
@@ -40,13 +39,7 @@ import {
   useTransactions,
 } from "@/contexts/TransactionsContext";
 import { usePlaidContext } from "@/contexts/PlaidContext";
-import {
-  Category,
-  TransactionGroup,
-  WriteOnlyTransaction,
-  ReadOnlyTransaction,
-  PaginatedServerResponse,
-} from "@/lib/types";
+import { Category, TransactionGroup, ReadOnlyTransaction } from "@/lib/types";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { useCategories } from "@/contexts/CategoriesContext";
 import {
@@ -59,6 +52,7 @@ import { ArrowUpward, ArrowDownward } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
 import { AddOrEditTransactionGroupModal } from "@/components/add-edit-transaction-group-modal";
 import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
+import "react-toastify/dist/ReactToastify.css";
 
 interface TransactionSummaryProps {
   totalIncome: number;
