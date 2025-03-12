@@ -22,8 +22,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { TransactionGroup, WriteOnlyTransaction } from "@/lib/types";
 import { useCategories } from "@/contexts/CategoriesContext";
-import { Button } from "@mui/material";
+import { Button, CircularProgress } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
+import { useTransactions } from "@/contexts/TransactionsContext";
 
 interface AddOrEditTransactionModalProps {
   isOpen: boolean;
@@ -49,7 +50,12 @@ export function AddOrEditTransactionGroupModal({
   onSave,
 }: AddOrEditTransactionModalProps) {
   const { categories } = useCategories();
-
+  const {
+    getTransactionGroup,
+    selectedTransactionGroup,
+    isTransactionGroupLoading,
+    isTransactionGroupError,
+  } = useTransactions();
   const [newTransactionGroup, setNewTransactionGroup] =
     useState<TransactionGroup>(
       initialTransactionGroup ?? defaultTransactionGroup,
@@ -60,17 +66,23 @@ export function AddOrEditTransactionGroupModal({
   };
 
   const [formErrors, setFormErrors] = useState<string[]>([]); // Array of error messages
-  useEffect(() => {
-    // Update state with initial values when in edit mode.  This useEffect will re-run if initialTransactionGroup changes (when opening in edit mode)
-    if (mode === "edit" && initialTransactionGroup) {
-      const formattedDate = formatDateForInput(initialTransactionGroup.date);
 
+  // Fetches transaction group data from backend for specified transaction group when in edit mode
+  useEffect(() => {
+    if (mode === "edit" && initialTransactionGroup?.id) {
+      getTransactionGroup(initialTransactionGroup.id);
+    }
+  }, [mode, initialTransactionGroup, getTransactionGroup]);
+  useEffect(() => {
+    // Set local form data when selectedTransactionGroup changes
+    // This useEffect will re-run if selectedTransactionGroup changes (when opening in edit mode)
+    if (mode === "edit" && selectedTransactionGroup) {
       setNewTransactionGroup({
-        ...initialTransactionGroup,
-        date: formattedDate, // Use the formatted date
+        ...selectedTransactionGroup,
+        date: formatDateForInput(selectedTransactionGroup.date),
       });
     }
-  }, [mode, initialTransactionGroup]);
+  }, [mode, selectedTransactionGroup]);
 
   const handleTransactionGroupChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -172,7 +184,12 @@ export function AddOrEditTransactionGroupModal({
 
     // After displaying toasts, you can clear formErrors here or when errors are fixed.
   }, [formErrors]);
-
+  if (isTransactionGroupLoading) {
+    return <CircularProgress />;
+  }
+  if (isTransactionGroupError) {
+    toast.error(isTransactionGroupError.message);
+  }
   return (
     <Dialog open={isOpen} onOpenChange={onModalClose}>
       <DialogContent>

@@ -339,7 +339,7 @@ export function RecentTransactionsPage() {
   const [jwt] = useContext(JwtContext);
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(20);
+  const [pageSize, setPageSize] = useState<number>(10);
   const [ordering, setOrdering] = useState<string>("-date");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);

@@ -27,6 +27,11 @@ interface TransactionsContextType {
   editTransactionGroup: (editedGroup: TransactionGroup) => Promise<void>;
   deleteTransactionGroup: (groupId: string) => Promise<void>;
   refetchTransactions: () => void;
+
+  getTransactionGroup: (uuid: string) => void; // Gets specified transaction group
+  selectedTransactionGroup: TransactionGroup | undefined;
+  isTransactionGroupLoading: boolean;
+  isTransactionGroupError: Error | null;
 }
 
 export type TransactionGroupQueryParameters = {
@@ -51,6 +56,8 @@ export default function TransactionProvider({
   const queryClient = useQueryClient();
   const [mutationError, setMutationError] = useState<Error | null>(null); // State to hold the mutation error
   const [queryOptions, setQueryOptions] = useState<Record<string, any>>({});
+  const [selectedTransactionGroupUUID, setSelectedTransactionGroupUUID] =
+    useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["transaction-groups", queryOptions],
@@ -84,6 +91,38 @@ export default function TransactionProvider({
       refetch();
     }
   };
+  const {
+    data: selectedTransactionGroup,
+    isLoading: isTransactionGroupLoading,
+    error: isTransactionGroupError,
+  } = useQuery({
+    queryKey: ["transaction-groups", selectedTransactionGroupUUID],
+    queryFn: async () => {
+      if (!selectedTransactionGroupUUID) {
+        return undefined; // Or throw an error if you prefer
+      }
+
+      try {
+        const response = await fetchApi(
+          jwt,
+          setAndStoreJwt,
+          `transaction-groups/${selectedTransactionGroupUUID}/`,
+          "GET",
+        );
+        const transactionGroup: TransactionGroup = await response.json();
+
+        return transactionGroup;
+      } catch (error) {
+        throw new Error(
+          "Error fetching transaction group: " +
+            selectedTransactionGroupUUID +
+            error,
+        );
+      }
+    },
+    enabled: !!selectedTransactionGroupUUID && !!jwt, // Only fetch if uuid is set and jwt is available
+  });
+
   const addTransactionGroupMutation = useMutation({
     onError: (error) => {
       setMutationError(
@@ -122,7 +161,9 @@ export default function TransactionProvider({
 
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
-      queryClient.invalidateQueries({ queryKey: ["transaction-groups"] });
+      queryClient.invalidateQueries({
+        queryKey: ["transaction-groups"],
+      });
     },
   });
 
@@ -162,7 +203,9 @@ export default function TransactionProvider({
 
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
-      queryClient.invalidateQueries({ queryKey: ["transaction-groups"] });
+      queryClient.invalidateQueries({
+        queryKey: ["transaction-groups"],
+      });
     },
   });
 
@@ -187,7 +230,9 @@ export default function TransactionProvider({
 
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
-      queryClient.invalidateQueries({ queryKey: ["transaction-groups"] });
+      queryClient.invalidateQueries({
+        queryKey: ["transaction-groups"],
+      });
     },
   });
 
@@ -207,6 +252,10 @@ export default function TransactionProvider({
     refetch();
   };
 
+  const getTransactionGroup = (uuid: string) => {
+    setSelectedTransactionGroupUUID(uuid);
+  };
+
   const contextValue = {
     transactionGroups:
       data ||
@@ -224,6 +273,10 @@ export default function TransactionProvider({
     deleteTransactionGroup,
     refetchTransactions,
     getTransactionGroups,
+    getTransactionGroup,
+    selectedTransactionGroup,
+    isTransactionGroupLoading,
+    isTransactionGroupError,
   };
 
   return (
