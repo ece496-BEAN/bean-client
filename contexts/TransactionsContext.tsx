@@ -11,15 +11,34 @@ import {
 } from "@/lib/types";
 
 interface TransactionsContextType {
-  transactionGroups: TransactionGroup[];
+  transactionGroups:
+    | PaginatedServerResponse<TransactionGroup>
+    | TransactionGroup[];
   isLoading: boolean;
   queryError: Error | null;
   mutationError: Error | null;
+  getTransactionGroups: (
+    queryParams?: Record<
+      string,
+      string | number | boolean | (string | number | boolean)[] | undefined
+    >,
+  ) => void;
   addTransactionGroup: (newGroup: TransactionGroup) => Promise<void>;
   editTransactionGroup: (editedGroup: TransactionGroup) => Promise<void>;
   deleteTransactionGroup: (groupId: string) => Promise<void>;
   refetchTransactions: () => void;
 }
+
+export type TransactionGroupQueryParameters = {
+  date_after?: string;
+  date_before?: string;
+  category_uuid?: string;
+  search?: string;
+  page?: number;
+  page_size?: number;
+  ordering?: string;
+  no_page?: undefined;
+};
 
 const TransactionsContext = createContext<TransactionsContextType | null>(null);
 
@@ -31,32 +50,40 @@ export default function TransactionProvider({
   const [jwt, setAndStoreJwt] = useContext(JwtContext);
   const queryClient = useQueryClient();
   const [mutationError, setMutationError] = useState<Error | null>(null); // State to hold the mutation error
+  const [queryOptions, setQueryOptions] = useState<Record<string, any>>({});
 
-  const {
-    data: transactionGroups,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["transaction-groups"],
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ["transaction-groups", queryOptions],
     queryFn: async () => {
       try {
-        const response = await fetchApi(
-          jwt,
-          setAndStoreJwt,
-          "transaction-groups/",
-          "GET",
-        );
-        const data: PaginatedServerResponse<TransactionGroup> =
-          await response.json();
-        return data.results;
+        const queryString = new URLSearchParams(queryOptions).toString();
+        const url = `transaction-groups/?${queryString}`;
+        const response = await fetchApi(jwt, setAndStoreJwt, url, "GET");
+        const data:
+          | PaginatedServerResponse<TransactionGroup>
+          | TransactionGroup[] = await response.json();
+
+        return data;
       } catch (error) {
         throw new Error("Error fetching transaction groups: " + error);
       }
     },
     enabled: !!jwt, // Only fetch when jwt is available
   });
-
+  const getTransactionGroups = (
+    queryParams?: Record<
+      string,
+      string | number | boolean | (string | number | boolean)[] | undefined
+    >,
+  ) => {
+    if (queryParams) {
+      // triggers refetch since queryOptions is part of the queryKey
+      setQueryOptions(queryParams);
+    } else {
+      // if no queryParams are provided, force refresh using existing queryOptions.
+      refetch();
+    }
+  };
   const addTransactionGroupMutation = useMutation({
     onError: (error) => {
       setMutationError(
@@ -181,7 +208,14 @@ export default function TransactionProvider({
   };
 
   const contextValue = {
-    transactionGroups: transactionGroups || [],
+    transactionGroups:
+      data ||
+      ({
+        results: [],
+        count: 0,
+        next: null,
+        previous: null,
+      } as PaginatedServerResponse<TransactionGroup>),
     isLoading,
     queryError: error,
     mutationError: mutationError,
@@ -189,6 +223,7 @@ export default function TransactionProvider({
     editTransactionGroup,
     deleteTransactionGroup,
     refetchTransactions,
+    getTransactionGroups,
   };
 
   return (

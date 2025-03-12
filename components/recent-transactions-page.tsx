@@ -35,26 +35,30 @@ import {
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
-import { useTransactions } from "@/contexts/TransactionsContext";
+import {
+  TransactionGroupQueryParameters,
+  useTransactions,
+} from "@/contexts/TransactionsContext";
 import { usePlaidContext } from "@/contexts/PlaidContext";
 import {
   Category,
   TransactionGroup,
   WriteOnlyTransaction,
   ReadOnlyTransaction,
+  PaginatedServerResponse,
 } from "@/lib/types";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { useCategories } from "@/contexts/CategoriesContext";
-import { CircularProgress, Button } from "@mui/material";
+import {
+  CircularProgress,
+  Button,
+  TablePagination,
+  IconButton,
+} from "@mui/material";
+import { ArrowUpward, ArrowDownward } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
-
-interface AddOrEditTransactionModalProps {
-  isOpen: boolean;
-  initialTransactionGroup?: TransactionGroup;
-  mode: "add" | "edit";
-  onClose: () => void;
-  onSave: (transaction: TransactionGroup) => Promise<void>;
-}
+import { AddOrEditTransactionGroupModal } from "@/components/add-edit-transaction-group-modal";
+import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
 
 interface TransactionSummaryProps {
   totalIncome: number;
@@ -66,12 +70,22 @@ interface TransactionGroupListProps {
   transactionGroups: TransactionGroup[];
   onEdit: (group: TransactionGroup) => void;
   onDelete: (uuid: string) => Promise<void>;
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  onPageChange: (pageNumber: number) => void;
+  onRowsPerPageChange: (newPageSize: number) => void;
 }
 
 const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
   transactionGroups,
   onEdit,
   onDelete,
+  totalCount,
+  pageNumber,
+  pageSize,
+  onPageChange,
+  onRowsPerPageChange,
 }) => {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
   const [confirmDeleteGroup, setConfirmDeleteGroup] =
@@ -228,284 +242,19 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
           </div>
         );
       })}
+      <TablePagination
+        component="div"
+        count={totalCount}
+        page={pageNumber}
+        onPageChange={(_, newPage) => onPageChange(newPage)}
+        rowsPerPage={pageSize}
+        onRowsPerPageChange={(e) => {
+          onRowsPerPageChange(parseInt(e.target.value, 10));
+        }}
+      />
     </div>
   );
 };
-
-const defaultTransactionGroup: TransactionGroup = {
-  name: "",
-  description: "",
-  source: null,
-  date: new Date().toISOString(),
-  transactions: [],
-};
-
-function AddOrEditTransactionGroupModal({
-  isOpen,
-  onClose,
-  mode,
-  initialTransactionGroup,
-  onSave,
-}: AddOrEditTransactionModalProps) {
-  const { categories } = useCategories();
-
-  const [newTransactionGroup, setNewTransactionGroup] =
-    useState<TransactionGroup>(
-      initialTransactionGroup ?? defaultTransactionGroup,
-    );
-  const formatDateForInput = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, "yyyy-MM-dd'T'HH:mm:ss"); // Correct format for datetime-local
-  };
-
-  const [formErrors, setFormErrors] = useState<string[]>([]); // Array of error messages
-  useEffect(() => {
-    // Update state with initial values when in edit mode.  This useEffect will re-run if initialTransactionGroup changes (when opening in edit mode)
-    if (mode === "edit" && initialTransactionGroup) {
-      const formattedDate = formatDateForInput(initialTransactionGroup.date);
-
-      setNewTransactionGroup({
-        ...initialTransactionGroup,
-        date: formattedDate, // Use the formatted date
-      });
-    }
-  }, [mode, initialTransactionGroup]);
-
-  const handleTransactionGroupChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setNewTransactionGroup({
-      ...newTransactionGroup,
-      [e.target.name]: e.target.value,
-    });
-  };
-  const addTransaction = () => {
-    setNewTransactionGroup({
-      ...newTransactionGroup,
-      transactions: [
-        ...newTransactionGroup.transactions,
-        { name: "", description: "", amount: 0, category_uuid: "" },
-      ],
-    });
-  };
-  const handleTransactionChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-    index: number,
-  ) => {
-    const updatedTransactions = [...newTransactionGroup.transactions];
-    updatedTransactions[index] = {
-      ...updatedTransactions[index],
-      [e.target.name]: e.target.value,
-    } as WriteOnlyTransaction;
-    setNewTransactionGroup({
-      ...newTransactionGroup,
-      transactions: updatedTransactions,
-    });
-  };
-
-  const removeTransaction = (index: number) => {
-    const updatedTransactions = newTransactionGroup.transactions.filter(
-      (_, i) => i !== index,
-    );
-    setNewTransactionGroup({
-      ...newTransactionGroup,
-      transactions: updatedTransactions,
-    });
-  };
-
-  const onModalClose = () => {
-    setFormErrors([]); // Clear errors when closing modal
-    setNewTransactionGroup(defaultTransactionGroup); // Reset form state
-    onClose();
-  };
-
-  const validateForm = () => {
-    const errors: string[] = [];
-    if (!newTransactionGroup.name) {
-      errors.push("Name is required");
-    }
-    newTransactionGroup.transactions.forEach((transaction, index) => {
-      if (!transaction.name) {
-        errors.push(`Transaction ${index + 1}: Name is required`);
-      }
-      if (isNaN(transaction.amount) || transaction.amount === 0) {
-        // Check for valid amount
-        errors.push(
-          `Transaction ${index + 1}-amount: Valid amount is required`,
-        );
-      }
-
-      if ("category" in transaction && !transaction.category.id) {
-        errors.push(`Transaction ${index + 1}-category: Category is required`);
-      }
-      if ("category_uuid" in transaction && !transaction.category_uuid) {
-        errors.push(`Transaction ${index + 1}-category: Category is required`);
-      }
-    });
-    return errors;
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const errors = validateForm();
-
-    if (errors.length > 0) {
-      setFormErrors(errors);
-      return; // Prevent form submission if there are errors
-    }
-    await onSave(newTransactionGroup); // Call onSave if no errors
-
-    setFormErrors([]); // Clear errors after submission
-
-    onModalClose();
-  };
-
-  useEffect(() => {
-    // Display toast notifications for each form error:
-    formErrors.forEach((error) => {
-      toast.error(error);
-    });
-
-    // After displaying toasts, you can clear formErrors here or when errors are fixed.
-  }, [formErrors]);
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onModalClose}>
-      <DialogContent>
-        <div className="overflow-y-auto max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>
-              {mode === "add"
-                ? "Add New Transaction Group"
-                : "Edit Transaction Group"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={newTransactionGroup.name}
-                onChange={handleTransactionGroupChange}
-                placeholder="Transaction Group Name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                name="description"
-                value={newTransactionGroup.description}
-                onChange={handleTransactionGroupChange}
-                placeholder="Transaction Group description"
-              />
-            </div>
-            <div>
-              <Label htmlFor="date">Date</Label>
-              <Input
-                id="date"
-                name="date"
-                type="datetime-local"
-                value={newTransactionGroup.date}
-                onChange={handleTransactionGroupChange}
-                required
-              />
-            </div>
-            <h3>Transactions</h3>
-            {newTransactionGroup.transactions.map((transaction, index) => (
-              <div key={index} className="flex flex-col">
-                <div>
-                  <Label htmlFor={`transaction-name-${index}`}>Name</Label>
-                  <Input
-                    id={`transaction-name-${index}`}
-                    type="text"
-                    name="name"
-                    value={transaction.name}
-                    onChange={(e) => handleTransactionChange(e, index)}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor={`transaction-description-${index}`}>
-                    Description
-                  </Label>
-                  <Input
-                    id={`transaction-description-${index}`}
-                    type="text"
-                    name="description"
-                    value={transaction.description || ""}
-                    onChange={(e) => handleTransactionChange(e, index)}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor={`transaction-amount-${index}`}>Amount</Label>
-                  <Input
-                    id={`transaction-amount-${index}`}
-                    type="number"
-                    step="0.01"
-                    name="amount"
-                    value={transaction.amount}
-                    onChange={(e) => handleTransactionChange(e, index)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor={`transaction-category-${index}`}>
-                    Category
-                  </Label>
-                  <Select
-                    onValueChange={(value) => {
-                      const updatedTransactions = [
-                        ...newTransactionGroup.transactions,
-                      ];
-                      updatedTransactions[index] = {
-                        ...updatedTransactions[index],
-                        category_uuid: value,
-                      };
-                      setNewTransactionGroup({
-                        ...newTransactionGroup,
-                        transactions: updatedTransactions,
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  type="button"
-                  onClick={() => removeTransaction(index)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            <div className="flex flex-col space-y-2">
-              <Button type="button" onClick={addTransaction}>
-                Add Transaction
-              </Button>
-              <ToastContainer />
-              <Button type="submit">Submit Transaction Group</Button>
-            </div>
-          </form>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function TransactionSummaryBanner({
   totalIncome,
@@ -583,13 +332,21 @@ export function RecentTransactionsPage() {
     addTransactionGroup,
     deleteTransactionGroup,
     editTransactionGroup,
+    getTransactionGroups,
   } = useTransactions();
+
   const { categories } = useCategories();
   const [jwt] = useContext(JwtContext);
   const router = useRouter();
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [ordering, setOrdering] = useState<string>("-date");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
+  const [queryOptions, setQueryOptions] =
+    useState<TransactionGroupQueryParameters>({});
   useEffect(() => {
-    console.log("The JWT Token is: ", jwt);
     if (!jwt) {
       router.push("/login"); // Redirect to login if JWT is not set
     }
@@ -615,30 +372,14 @@ export function RecentTransactionsPage() {
     useState<TransactionGroup>();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<
-    Category["name"] | "All"
-  >("All");
+  const [categoryFilter, setCategoryFilter] = useState<Category["id"]>();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  if (!("results" in transactionGroups)) {
+    return <></>;
+  }
 
-  const categoryFilteredTransactionGroups =
-    categoryFilter !== "All"
-      ? transactionGroups.filter((transactionGroup) =>
-          transactionGroup.transactions.some((transaction) => {
-            // Type Guard to ensure transaction is a ReadOnlyTransaction
-            if (!("category" in transaction)) {
-              return false;
-            }
-            return transaction.category?.name === categoryFilter;
-          }),
-        )
-      : transactionGroups;
-
-  const filteredTransactionGroups = categoryFilteredTransactionGroups.filter(
-    (transactionGroup) =>
-      transactionGroup.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
-  const { totalIncome, totalExpenses } = filteredTransactionGroups.reduce(
+  // FIXME: This does not work with pagination (need no paginated to properly calculate)
+  const { totalIncome, totalExpenses } = transactionGroups.results.reduce(
     (acc, group) => {
       group.transactions.forEach((transaction) => {
         if (transaction.amount < 0) {
@@ -655,7 +396,44 @@ export function RecentTransactionsPage() {
   );
 
   const netBalance = totalIncome - totalExpenses;
+  const applyFilters = () => {
+    // Give no options to set `no_page`
+    let queryParams: TransactionGroupQueryParameters = {};
+    if (searchTerm) {
+      queryParams.search = searchTerm;
+    }
+    if (categoryFilter) {
+      queryParams.category_uuid = categoryFilter;
+    }
+    if (currentPage > 1) {
+      queryParams.page = currentPage;
+    }
+    if (pageSize) {
+      queryParams.page_size = pageSize;
+    }
+    if (ordering) {
+      queryParams.ordering = ordering;
+    }
+    if (startDate) {
+      queryParams.date_after = format(startDate, "yyyy-MM-dd");
+    }
+    if (endDate) {
+      queryParams.date_before = format(endDate, "yyyy-MM-dd");
+    }
 
+    getTransactionGroups(queryParams);
+  };
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setCategoryFilter(undefined);
+    setStartDate(null);
+    setEndDate(null);
+    setCurrentPage(0);
+    setPageSize(10);
+    setOrdering("-date");
+    getTransactionGroups({});
+  };
   const handleOpenEditModal = (groupToEdit: TransactionGroup) => {
     setIsAddModalOpen(true); // Open the same modal
     setIsEditing(true); // Make sure it's in edit mode
@@ -690,10 +468,25 @@ export function RecentTransactionsPage() {
           <TransactionListHeader
             setIsAddModalOpen={setIsAddModalOpen}
             refetchTransactions={refetchTransactions}
+            applyFilters={applyFilters}
             isLoading={isLoading}
           />
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4 mb-4">
+              <IconButton
+                onClick={() => {
+                  setOrdering((prev) => {
+                    if (prev === "-date") {
+                      return "date";
+                    } else {
+                      return "-date";
+                    }
+                  });
+                  applyFilters();
+                }}
+              >
+                {ordering === "date" ? <ArrowUpward /> : <ArrowDownward />}
+              </IconButton>
               <div className="relative flex-grow">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
@@ -705,10 +498,14 @@ export function RecentTransactionsPage() {
                 />
               </div>
               <Select
-                value={categoryFilter}
-                onValueChange={(value: Category["id"]) =>
-                  setCategoryFilter(value)
-                }
+                value={categoryFilter || "All"}
+                onValueChange={(value) => {
+                  if (value === "All") {
+                    setCategoryFilter(undefined);
+                  } else {
+                    setCategoryFilter(value);
+                  }
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Category" />
@@ -722,14 +519,32 @@ export function RecentTransactionsPage() {
                   <SelectItem value="All">All</SelectItem>
                 </SelectContent>
               </Select>
+              <DateRangePicker
+                localeText={{ start: "Start Date", end: "End Date" }}
+                value={[startDate, endDate]}
+                onChange={(newValue) => {
+                  if (newValue[0]) {
+                    setStartDate(newValue[0]);
+                  }
+                  if (newValue[1]) {
+                    setEndDate(newValue[1]);
+                  }
+                }}
+              />
+              <Button onClick={resetFilters}>Clear Filters</Button>
             </div>
             {isLoading ? (
               <CircularProgress />
             ) : (
               <TransactionGroupList
-                transactionGroups={filteredTransactionGroups}
+                transactionGroups={transactionGroups.results}
                 onEdit={handleOpenEditModal}
                 onDelete={deleteTransactionGroup}
+                totalCount={transactionGroups.count}
+                pageNumber={currentPage}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onRowsPerPageChange={setPageSize}
               />
             )}
           </CardContent>
@@ -748,11 +563,13 @@ export function RecentTransactionsPage() {
 interface TransactionListHeaderProps {
   setIsAddModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   refetchTransactions: () => void;
+  applyFilters: () => void;
   isLoading: boolean;
 }
 function TransactionListHeader({
   setIsAddModalOpen,
   refetchTransactions,
+  applyFilters,
   isLoading,
 }: TransactionListHeaderProps) {
   return (
@@ -764,6 +581,14 @@ function TransactionListHeader({
         <Button onClick={() => setIsAddModalOpen(true)} variant="contained">
           <Plus className="w-4 h-4 mr-2" />
           Add Transaction
+        </Button>
+        <Button
+          onClick={applyFilters}
+          loading={isLoading}
+          loadingPosition="end"
+          variant="contained"
+        >
+          Search
         </Button>
         <Button
           onClick={refetchTransactions}
