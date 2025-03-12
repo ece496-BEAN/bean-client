@@ -28,10 +28,11 @@ interface TransactionsContextType {
   deleteTransactionGroup: (groupId: string) => Promise<void>;
   refetchTransactions: () => void;
 
-  getTransactionGroup: (uuid: string) => void; // Gets specified transaction group
+  getTransactionGroup: (groupId: string) => void; // Gets specified transaction group
   selectedTransactionGroup: TransactionGroup | undefined;
   isTransactionGroupLoading: boolean;
   isTransactionGroupError: Error | null;
+  refetchSelectedTransactionGroup: () => void;
 }
 
 export type TransactionGroupQueryParameters = {
@@ -95,8 +96,9 @@ export default function TransactionProvider({
     data: selectedTransactionGroup,
     isLoading: isTransactionGroupLoading,
     error: isTransactionGroupError,
+    refetch: refetchSelectedTransactionGroup,
   } = useQuery({
-    queryKey: ["transaction-groups", selectedTransactionGroupUUID],
+    queryKey: ["transaction-group", selectedTransactionGroupUUID],
     queryFn: async () => {
       if (!selectedTransactionGroupUUID) {
         return undefined; // Or throw an error if you prefer
@@ -162,6 +164,9 @@ export default function TransactionProvider({
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
+        queryKey: ["transaction-group"],
+      });
+      queryClient.invalidateQueries({
         queryKey: ["transaction-groups"],
       });
     },
@@ -204,6 +209,9 @@ export default function TransactionProvider({
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
+        queryKey: ["transaction-group"],
+      });
+      queryClient.invalidateQueries({
         queryKey: ["transaction-groups"],
       });
     },
@@ -231,6 +239,9 @@ export default function TransactionProvider({
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
+        queryKey: ["transaction-group"],
+      });
+      queryClient.invalidateQueries({
         queryKey: ["transaction-groups"],
       });
     },
@@ -254,6 +265,7 @@ export default function TransactionProvider({
 
   const getTransactionGroup = (uuid: string) => {
     setSelectedTransactionGroupUUID(uuid);
+    refetchSelectedTransactionGroup();
   };
 
   const contextValue = {
@@ -277,6 +289,7 @@ export default function TransactionProvider({
     selectedTransactionGroup,
     isTransactionGroupLoading,
     isTransactionGroupError,
+    refetchSelectedTransactionGroup,
   };
 
   return (

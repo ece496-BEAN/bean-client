@@ -291,7 +291,13 @@ export function AddOrEditTransactionGroupModal({
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select Category" />
+                      <SelectValue
+                        placeholder={
+                          "category" in transaction
+                            ? transaction.category.name
+                            : "Select Category"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((category) => (

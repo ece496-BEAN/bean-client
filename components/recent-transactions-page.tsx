@@ -338,7 +338,7 @@ export function RecentTransactionsPage() {
   const { categories } = useCategories();
   const [jwt] = useContext(JwtContext);
   const router = useRouter();
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(10);
   const [ordering, setOrdering] = useState<string>("-date");
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -374,6 +374,12 @@ export function RecentTransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<Category["id"]>();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // Don't automatically refetch on search
+  useEffect(() => {
+    applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, ordering, categoryFilter, startDate, endDate]);
+
   if (!("results" in transactionGroups)) {
     return <></>;
   }
@@ -405,8 +411,9 @@ export function RecentTransactionsPage() {
     if (categoryFilter) {
       queryParams.category_uuid = categoryFilter;
     }
-    if (currentPage > 1) {
-      queryParams.page = currentPage;
+    if (currentPage >= 1) {
+      // Pages for API start at 1, but the pages in the component start at 0
+      queryParams.page = currentPage + 1;
     }
     if (pageSize) {
       queryParams.page_size = pageSize;
@@ -420,7 +427,7 @@ export function RecentTransactionsPage() {
     if (endDate) {
       queryParams.date_before = format(endDate, "yyyy-MM-dd");
     }
-
+    console.log("Applying Filters: ", queryParams);
     getTransactionGroups(queryParams);
   };
 
@@ -482,7 +489,6 @@ export function RecentTransactionsPage() {
                       return "-date";
                     }
                   });
-                  applyFilters();
                 }}
               >
                 {ordering === "date" ? <ArrowUpward /> : <ArrowDownward />}
@@ -543,8 +549,13 @@ export function RecentTransactionsPage() {
                 totalCount={transactionGroups.count}
                 pageNumber={currentPage}
                 pageSize={pageSize}
-                onPageChange={setCurrentPage}
-                onRowsPerPageChange={setPageSize}
+                onPageChange={(page) => {
+                  setCurrentPage((_) => page);
+                }}
+                onRowsPerPageChange={(pageRows) => {
+                  setPageSize((_) => pageRows);
+                  setCurrentPage((_) => 0);
+                }}
               />
             )}
           </CardContent>
