@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "prettier:check": "prettier . --check",
-    "prettier:fix": "prettier . --fix",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
     "lint": "next lint",
     "prepare": "husky",
     "tsc": "tsc"
