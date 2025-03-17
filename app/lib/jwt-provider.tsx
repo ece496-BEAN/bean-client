@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export const JwtContext = createContext<any>([undefined, undefined]);
 
@@ -45,3 +45,13 @@ export default function JwtProvider({
     );
   }
 }
+
+export const useJwt = () => {
+  const context = useContext(JwtContext);
+
+  if (!context) {
+    throw new Error("useJwt must be used within a JwtContext");
+  }
+
+  return context;
+};

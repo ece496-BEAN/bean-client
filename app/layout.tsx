@@ -1,7 +1,7 @@
 // app/layout.tsx
+
 import "./globals.css";
 import { Metadata } from "next";
-import { TransactionsProvider } from "@/contexts/TransactionsContext";
 import LayoutClient from "@/components/LayoutClient"; // Import LayoutClient
 import JwtProvider from "./lib/jwt-provider";
 
@@ -26,10 +26,7 @@ export default function RootLayout({
       </head>
       <body>
         <JwtProvider>
-          <TransactionsProvider>
-            {/* Client Component is rendered here */}
-            <LayoutClient>{children}</LayoutClient>
-          </TransactionsProvider>
+          <LayoutClient>{children}</LayoutClient>
         </JwtProvider>
       </body>
     </html>

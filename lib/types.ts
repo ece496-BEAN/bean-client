@@ -39,13 +39,13 @@ export type Category = {
   legacy: boolean;
 };
 
-export type TransactionGroup = {
-  id?: string; // UUID
+export type TransactionGroup<T extends Transaction> = {
+  id: string; // UUID
   name: string;
   description?: string;
   source: string | null;
   date: string;
-  transactions: Transaction[];
+  transactions: T[];
 };
 
 export type WriteOnlyBudgetItem = {
@@ -72,9 +72,24 @@ export type Budget = {
   items: BudgetItem[];
 };
 
+export type ServerResponse<T> =
+  | PaginatedServerResponse<T>
+  | NonPaginatedServerResponse<T>;
+
+export type NonPaginatedServerResponse<T> =
+  T extends TransactionGroup<Transaction>
+    ? { results: T[]; totals: { income: number; expense: number } } | T // Special case for TransactionGroup
+    : T[] | T;
+
 export type PaginatedServerResponse<T> = {
   count: number;
   next: string | null;
   previous: string | null;
   results: T[];
-};
+} & (T extends TransactionGroup<Transaction>
+  ? { totals: { income: number; expense: number } }
+  : { totals?: undefined });
+
+export function isArrayType<T>(value: T | T[]): value is T[] {
+  return Array.isArray(value);
+}

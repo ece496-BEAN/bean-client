@@ -34,7 +34,7 @@ export function fetchApiSingle(
   if (typeof dataOrToken === "string") {
     headers["Authorization"] = `Bearer ${dataOrToken}`;
   } else {
-  /* Both arguments */
+    /* Both arguments */
     data = dataOrToken;
     if (maybeToken) {
       headers["Authorization"] = `Bearer ${maybeToken}`;

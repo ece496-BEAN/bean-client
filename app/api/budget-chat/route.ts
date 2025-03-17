@@ -4,7 +4,7 @@ import {
   GoogleGenerativeAI,
   SchemaType,
 } from "@google/generative-ai";
-import { Transaction } from "@/contexts/TransactionsContext";
+import { Transaction } from "@/lib/types";
 
 const apiKey = process.env.GOOGLE_AI_STUDIO_KEY;
 if (!apiKey) {

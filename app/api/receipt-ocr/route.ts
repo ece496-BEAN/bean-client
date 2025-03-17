@@ -4,7 +4,7 @@ import {
   GoogleGenerativeAI,
   SchemaType,
 } from "@google/generative-ai";
-import { Transaction } from "@/contexts/TransactionsContext";
+import { Transaction } from "@/lib/types";
 // schema stuff based on the tutorial here: https://ai.google.dev/gemini-api/docs/structured-output?lang=web
 
 const apiKey = process.env.GOOGLE_AI_STUDIO_KEY;
@@ -193,12 +193,17 @@ export async function POST(request: Request) {
     );
 
     // Add a transaction for the tax, if any
+    //
     if (receiptData.totals.tax) {
       transactions.push({
+        // FIXME: Update format to adhere to types
+        // @ts-ignore
         id: transactions.length,
         description: "Sales Tax",
         amount: -receiptData.totals.tax,
         date: receiptData.transaction_info.date_time,
+        // FIXME: Update format to adhere to types
+        // @ts-ignore
         category: "Tax",
       });
     }

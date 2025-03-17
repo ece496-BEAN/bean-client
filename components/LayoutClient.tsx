@@ -6,21 +6,36 @@ import NavigationBar from "@/components/NavigationBar";
 import { PlaidProvider } from "@/contexts/PlaidContext";
 import { BudgetProvider } from "@/contexts/BudgetContext";
 import { ReactNode } from "react";
+import TransactionProvider from "@/contexts/TransactionsContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { LocalizationProvider } from "@mui/x-date-pickers-pro";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 
 function LayoutClient({ children }: { children: ReactNode }) {
-  // login & survey page -> no naviagtion bar
+  // login & survey page -> no navigation bar
   const pathname = usePathname();
   const excludedPaths = ["/login", "/survey", "/signup"];
   const showNavigationBar = !excludedPaths.includes(pathname);
 
+  const queryClient = new QueryClient();
   return (
     <>
-      {showNavigationBar && <NavigationBar />}
-      <main className="pb-16">
-        <PlaidProvider>
-          <BudgetProvider>{children}</BudgetProvider>
-        </PlaidProvider>
-      </main>
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <QueryClientProvider client={queryClient}>
+          {showNavigationBar && (
+            <TransactionProvider>
+              <NavigationBar />
+            </TransactionProvider>
+          )}
+
+          <main className="pb-16">
+            {/* TODO: Move Plaid and Budget Provider to components that need them rather than wrap everything with them */}
+            <PlaidProvider>
+              <BudgetProvider>{children}</BudgetProvider>
+            </PlaidProvider>
+          </main>
+        </QueryClientProvider>
+      </LocalizationProvider>
     </>
   );
 }

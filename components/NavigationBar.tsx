@@ -19,7 +19,7 @@ export const NavigationBar: React.FC = () => {
   const [image, setImage] = useState<string | null>("");
   const [loading, setLoading] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { addTransactions } = useTransactions();
+  const { addTransactionGroup } = useTransactions();
 
   // Handles the image upload process
   const handleImageUpload = async (
@@ -42,7 +42,8 @@ export const NavigationBar: React.FC = () => {
 
       const data = await response.json();
       console.log(data);
-      addTransactions(data);
+      // TODO: Definitely need to display the dialog modal, as well as allow for the creation of DocumentScans instances (with image upload)
+      addTransactionGroup(data);
 
       setLoading(false); // Reset loading state
 
