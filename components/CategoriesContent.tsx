@@ -19,13 +19,29 @@ import {
   CircularProgress,
   FormControlLabel,
   Switch,
+  InputAdornment,
+  Tooltip,
+  Popover,
+  Typography,
+  Checkbox,
+  FormGroup,
 } from "@mui/material";
 import { Pencil, Trash, Check, X } from "lucide-react";
-import { useCategories } from "@/contexts/CategoriesContext";
+import {
+  CategoryQueryParameters,
+  useCategories,
+} from "@/contexts/CategoriesContext";
 import { Category } from "@/lib/types";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
+import {
+  Search,
+  FilterList,
+  ArrowUpward,
+  ArrowDownward,
+} from "@mui/icons-material";
+import { set } from "date-fns";
 
 function CategoriesContent() {
   const {
@@ -40,7 +56,85 @@ function CategoriesContent() {
   const [editingCategory, setEditingCategory] = useState<Category>();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [categoryToBeDeleted, setCategoryToDeleted] = useState<Category>();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [legacyFilter, setLegacyFilter] = useState<boolean | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const filterMenuOpen = Boolean(anchorEl);
 
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  };
+  const handleSearchClick = () => {
+    const params: CategoryQueryParameters = {};
+    if (searchQuery) {
+      params.search = searchQuery;
+    }
+    if (legacyFilter !== null) {
+      params.legacy = legacyFilter;
+    }
+    if (sortDirection) {
+      params.ordering = sortDirection === "asc" ? "name" : "-name";
+    }
+
+    params.page = 1; // Reset to first page when filters change
+    setPage(0);
+
+    getCategories(params);
+  };
+  const handleFilterMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleFilterMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLegacyFilterChange = () => {
+    let legacyValue = null;
+    setLegacyFilter((prev) => {
+      if (prev === null) {
+        legacyValue = true;
+      } else if (prev === true) {
+        legacyValue = false;
+      } else {
+        legacyValue = null;
+      }
+      return legacyValue;
+    });
+    handleFilterMenuClose();
+    console.log(legacyValue);
+    const params: CategoryQueryParameters =
+      legacyValue === null ? {} : { legacy: legacyValue };
+
+    if (searchQuery) {
+      params.name = searchQuery;
+    }
+    if (sortDirection) {
+      params.ordering = sortDirection === "asc" ? "name" : "-name";
+    }
+    setPage(0);
+
+    getCategories(params);
+  };
+
+  const handleSortClick = (direction: "asc" | "desc") => {
+    setSortDirection((_) => direction);
+    handleFilterMenuClose();
+    const params: CategoryQueryParameters = {};
+    if (searchQuery) {
+      params.name = searchQuery;
+    }
+    if (legacyFilter !== null) {
+      params.legacy = legacyFilter;
+    }
+    if (sortDirection) {
+      params.ordering = direction === "asc" ? "name" : "-name";
+    }
+    setPage(0);
+
+    getCategories(params);
+  };
   const handleDeleteConfirmation = (category: Category) => {
     setIsDeleteModalOpen(true);
     setCategoryToDeleted(category);
@@ -118,7 +212,60 @@ function CategoriesContent() {
 
   return (
     <Box className="flex flex-col h-auto bg-gray-50">
-      <div className="flex justify-end">
+      <div className="flex items-center space-x-4 mb-4">
+        <TextField
+          label="Search"
+          variant="outlined"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleSearchClick} edge="end">
+                    <Search />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
+          size="small"
+        />
+        <Button
+          variant="outlined"
+          onClick={handleFilterMenuOpen}
+          startIcon={<FilterList />}
+          size="small"
+        >
+          Filter
+        </Button>
+
+        <Popover // Filter popover (no changes needed here)
+          open={filterMenuOpen}
+          anchorEl={anchorEl}
+          onClose={handleFilterMenuClose}
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+          transformOrigin={{ vertical: "top", horizontal: "left" }}
+        >
+          <div className="p-4">
+            <Typography variant="body2" className="font-bold mb-2">
+              Legacy
+            </Typography>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={legacyFilter === true}
+                    indeterminate={legacyFilter === false}
+                    onChange={handleLegacyFilterChange}
+                    color="primary"
+                  />
+                }
+                label="Filter Legacy"
+              />
+            </FormGroup>
+          </div>
+        </Popover>
         <Button
           variant="contained"
           onClick={() => refetchPaginatedCategories()}
@@ -134,7 +281,24 @@ function CategoriesContent() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Name</TableCell>
+              <TableCell>
+                Name
+                <Tooltip title="Sort">
+                  <IconButton
+                    onClick={() =>
+                      handleSortClick(sortDirection === "asc" ? "desc" : "asc")
+                    }
+                    size="small"
+                    sx={{ ml: 1 }}
+                  >
+                    {sortDirection === "asc" ? (
+                      <ArrowUpward />
+                    ) : (
+                      <ArrowDownward />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              </TableCell>
               <TableCell>Description</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>

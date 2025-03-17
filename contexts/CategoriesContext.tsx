@@ -43,8 +43,11 @@ interface CategoriesContextType {
 export type CategoryQueryParameters = {
   legacy?: boolean;
   name?: string;
+  description?: string;
   page?: number;
   page_size?: number;
+  ordering?: string;
+  search?: string;
   no_page?: undefined;
 };
 
