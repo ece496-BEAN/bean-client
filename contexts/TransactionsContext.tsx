@@ -1,38 +1,55 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { fetchApi } from "@/app/lib/api";
 import {
   TransactionGroup,
+  ServerResponse,
+  NonPaginatedServerResponse,
   PaginatedServerResponse,
-  Category,
+  ReadOnlyTransaction,
+  Transaction,
 } from "@/lib/types";
 
 interface TransactionsContextType {
-  transactionGroups:
-    | PaginatedServerResponse<TransactionGroup>
-    | TransactionGroup[];
-  isLoading: boolean;
-  queryError: Error | null;
+  transactionGroups: NonPaginatedServerResponse<
+    TransactionGroup<ReadOnlyTransaction>
+  >;
+  isTransactionGroupsLoading: boolean;
+  transactionGroupsQueryError: Error | null;
+
+  paginatedTransactionGroups: PaginatedServerResponse<
+    TransactionGroup<ReadOnlyTransaction>
+  >;
+  isPaginatedTransactionGroupsLoading: boolean;
+  paginatedTransactionGroupsQueryError: Error | null;
+
   mutationError: Error | null;
   getTransactionGroups: (
     queryParams?: Record<
       string,
       string | number | boolean | (string | number | boolean)[] | undefined
     >,
+    options?: { no_page?: boolean },
   ) => void;
-  addTransactionGroup: (newGroup: TransactionGroup) => Promise<void>;
-  editTransactionGroup: (editedGroup: TransactionGroup) => Promise<void>;
+
+  addTransactionGroup: (
+    newGroup: Omit<TransactionGroup<Transaction>, "id">,
+  ) => Promise<void>;
+  editTransactionGroup: (
+    editedGroup: TransactionGroup<Transaction>,
+  ) => Promise<void>;
   deleteTransactionGroup: (groupId: string) => Promise<void>;
   refetchTransactions: () => void;
 
-  getTransactionGroup: (groupId: string) => void; // Gets specified transaction group
-  selectedTransactionGroup: TransactionGroup | undefined;
-  isTransactionGroupLoading: boolean;
-  isTransactionGroupError: Error | null;
+  getSelectedTransactionGroup: (groupId: string) => void; // Gets specified transaction group
+  selectedTransactionGroup: TransactionGroup<ReadOnlyTransaction> | undefined;
+  isSelectedTransactionGroupLoading: boolean;
+  selectedTransactionGroupError: Error | null;
   refetchSelectedTransactionGroup: () => void;
+  refetchPaginatedTransactionGroups: () => void;
 }
 
 export type TransactionGroupQueryParameters = {
@@ -53,55 +70,93 @@ export default function TransactionProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
   const queryClient = useQueryClient();
+
+  const [jwt, setAndStoreJwt] = useContext(JwtContext);
   const [mutationError, setMutationError] = useState<Error | null>(null); // State to hold the mutation error
   const [queryOptions, setQueryOptions] = useState<Record<string, any>>({});
+  const [paginatedQueryOptions, setPaginatedQueryOptions] = useState<
+    Record<string, any>
+  >({});
   const [selectedTransactionGroupUUID, setSelectedTransactionGroupUUID] =
     useState<string | null>(null);
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["transaction-groups", queryOptions],
-    queryFn: async () => {
-      try {
-        const queryString = new URLSearchParams(queryOptions).toString();
-        const url = `transaction-groups/?${queryString}`;
-        const response = await fetchApi(jwt, setAndStoreJwt, url, "GET");
-        const data:
-          | PaginatedServerResponse<TransactionGroup>
-          | TransactionGroup[] = await response.json();
+  const fetchTransactionGroups = async (queryOptions: Record<string, any>) => {
+    try {
+      const queryString = new URLSearchParams(queryOptions).toString();
+      const url = `transaction-groups/?${queryString}`;
+      const response = await fetchApi(jwt, setAndStoreJwt, url, "GET");
+      const data: ServerResponse<TransactionGroup<ReadOnlyTransaction>> =
+        await response.json();
 
-        return data;
-      } catch (error) {
-        throw new Error("Error fetching transaction groups: " + error);
-      }
-    },
-    enabled: !!jwt, // Only fetch when jwt is available
-  });
-  const getTransactionGroups = (
-    queryParams?: Record<
-      string,
-      string | number | boolean | (string | number | boolean)[] | undefined
-    >,
-  ) => {
-    if (queryParams) {
-      // triggers refetch since queryOptions is part of the queryKey
-      setQueryOptions(queryParams);
-    } else {
-      // if no queryParams are provided, force refresh using existing queryOptions.
-      refetch();
+      return data;
+    } catch (err) {
+      throw new Error("Error fetching transaction groups: " + err);
     }
   };
+
+  // Fetch Non-Paginated Transaction Groups
+  const {
+    data: transactionGroups,
+    isLoading: isTransactionGroupsLoading,
+    error: transactionGroupsQueryError,
+    refetch: refetchTransactions,
+  } = useQuery({
+    queryKey: ["transaction-groups", queryOptions],
+    queryFn: () => fetchTransactionGroups(queryOptions),
+    enabled: !!jwt, // Only fetch when jwt is available
+  });
+
+  // Fetch Paginated Transaction Groups
+  const {
+    data: paginatedTransactionGroups,
+    isLoading: isPaginatedTransactionGroupsLoading,
+    error: paginatedTransactionGroupsQueryError,
+    refetch: refetchPaginatedTransactionGroups,
+  } = useQuery({
+    queryKey: ["transaction-groups", paginatedQueryOptions],
+    queryFn: () => fetchTransactionGroups(paginatedQueryOptions),
+    enabled: !!jwt, // Only fetch when jwt is available
+  });
+
+  // Add `options: { no_page: true }` for non-paginated response
+  const getTransactionGroups = useCallback(
+    (
+      queryParams?: Record<
+        string,
+        string | number | boolean | (string | number | boolean)[] | undefined
+      >,
+      options?: { no_page?: boolean },
+    ) => {
+      if (queryParams) {
+        if (options?.no_page) {
+          // if no_page is set, don't use pagination
+          setQueryOptions({ ...queryParams, no_page: true });
+        } else {
+          // Extract `no_page` from queryParams if it exists
+          const { no_page, ...paginatedQueryParams } = queryParams || {};
+          setPaginatedQueryOptions(paginatedQueryParams);
+        }
+      } else {
+        options?.no_page
+          ? refetchTransactions()
+          : refetchPaginatedTransactionGroups();
+      }
+    },
+    [refetchTransactions, refetchPaginatedTransactionGroups],
+  );
+
+  // Used for fetching a single transaction group
   const {
     data: selectedTransactionGroup,
-    isLoading: isTransactionGroupLoading,
-    error: isTransactionGroupError,
+    isLoading: isSelectedTransactionGroupLoading,
+    error: selectedTransactionGroupError,
     refetch: refetchSelectedTransactionGroup,
   } = useQuery({
-    queryKey: ["transaction-group", selectedTransactionGroupUUID],
+    queryKey: ["transaction-groups", selectedTransactionGroupUUID],
     queryFn: async () => {
       if (!selectedTransactionGroupUUID) {
-        return undefined; // Or throw an error if you prefer
+        throw Error("No transaction group UUID provided");
       }
 
       try {
@@ -111,7 +166,8 @@ export default function TransactionProvider({
           `transaction-groups/${selectedTransactionGroupUUID}/`,
           "GET",
         );
-        const transactionGroup: TransactionGroup = await response.json();
+        const transactionGroup: TransactionGroup<ReadOnlyTransaction> =
+          await response.json();
 
         return transactionGroup;
       } catch (error) {
@@ -135,7 +191,7 @@ export default function TransactionProvider({
             ),
       );
     },
-    mutationFn: async (newGroup: TransactionGroup) => {
+    mutationFn: async (newGroup: Omit<TransactionGroup<Transaction>, "id">) => {
       // Modify ReadOnlyTransaction to a WriteOnlyTransaction
       newGroup.transactions = newGroup.transactions.map((transaction) => {
         if ("category" in transaction) {
@@ -164,9 +220,6 @@ export default function TransactionProvider({
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
-        queryKey: ["transaction-group"],
-      });
-      queryClient.invalidateQueries({
         queryKey: ["transaction-groups"],
       });
     },
@@ -180,7 +233,9 @@ export default function TransactionProvider({
           : new Error("An error occurred during the transaction group update."),
       );
     },
-    mutationFn: async (editedTransactionGroup: TransactionGroup) => {
+    mutationFn: async (
+      editedTransactionGroup: TransactionGroup<Transaction>,
+    ) => {
       // Convert ReadOnlyTransaction to WriteOnlyTransaction
       editedTransactionGroup.transactions =
         editedTransactionGroup.transactions.map((transaction) => {
@@ -209,9 +264,6 @@ export default function TransactionProvider({
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
-        queryKey: ["transaction-group"],
-      });
-      queryClient.invalidateQueries({
         queryKey: ["transaction-groups"],
       });
     },
@@ -239,19 +291,20 @@ export default function TransactionProvider({
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
-        queryKey: ["transaction-group"],
-      });
-      queryClient.invalidateQueries({
         queryKey: ["transaction-groups"],
       });
     },
   });
 
-  const addTransactionGroup = async (transactionGroup: TransactionGroup) => {
+  const addTransactionGroup = async (
+    transactionGroup: Omit<TransactionGroup<Transaction>, "id">,
+  ) => {
     await addTransactionGroupMutation.mutateAsync(transactionGroup);
   };
 
-  const editTransactionGroup = async (transactionGroup: TransactionGroup) => {
+  const editTransactionGroup = async (
+    transactionGroup: TransactionGroup<Transaction>,
+  ) => {
     await editTransactionGroupMutation.mutateAsync(transactionGroup);
   };
 
@@ -259,37 +312,49 @@ export default function TransactionProvider({
     await deleteTransactionGroupMutation.mutateAsync(groupId);
   };
 
-  const refetchTransactions = () => {
-    refetch();
-  };
-
-  const getTransactionGroup = (uuid: string) => {
+  const getSelectedTransactionGroup = (uuid: string) => {
     setSelectedTransactionGroupUUID(uuid);
     refetchSelectedTransactionGroup();
   };
-
+  const defaultNonPaginatedData: ServerResponse<
+    TransactionGroup<ReadOnlyTransaction>
+  > = {
+    results: [],
+    totals: { income: 0, expense: 0 },
+  };
+  const defaultPaginatedData: ServerResponse<
+    TransactionGroup<ReadOnlyTransaction>
+  > = {
+    ...defaultNonPaginatedData,
+    count: 0,
+    next: null,
+    previous: null,
+  };
   const contextValue = {
     transactionGroups:
-      data ||
-      ({
-        results: [],
-        count: 0,
-        next: null,
-        previous: null,
-      } as PaginatedServerResponse<TransactionGroup>),
-    isLoading,
-    queryError: error,
-    mutationError: mutationError,
+      (transactionGroups as NonPaginatedServerResponse<
+        TransactionGroup<ReadOnlyTransaction>
+      >) || defaultNonPaginatedData,
+    isTransactionGroupsLoading,
+    transactionGroupsQueryError,
+    paginatedTransactionGroups:
+      (paginatedTransactionGroups as PaginatedServerResponse<
+        TransactionGroup<ReadOnlyTransaction>
+      >) || defaultPaginatedData,
+    isPaginatedTransactionGroupsLoading,
+    paginatedTransactionGroupsQueryError,
+    mutationError,
     addTransactionGroup,
     editTransactionGroup,
     deleteTransactionGroup,
     refetchTransactions,
     getTransactionGroups,
-    getTransactionGroup,
+    getSelectedTransactionGroup,
     selectedTransactionGroup,
-    isTransactionGroupLoading,
-    isTransactionGroupError,
+    isSelectedTransactionGroupLoading,
+    selectedTransactionGroupError,
     refetchSelectedTransactionGroup,
+    refetchPaginatedTransactionGroups,
   };
 
   return (

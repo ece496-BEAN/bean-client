@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 export function LoginPage() {
   const router = useRouter();
 
-  const [setAndStoreJwt] = useJwt();
+  const [_, setAndStoreJwt] = useJwt();
 
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");

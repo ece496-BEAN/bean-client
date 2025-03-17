@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, FormEvent, useEffect } from "react";
+import React, { useState, FormEvent, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { Trash } from "lucide-react";
+import { Trash, X } from "lucide-react";
 // import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,15 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
 
 import { Label } from "@/components/ui/label";
-import { TransactionGroup, WriteOnlyTransaction } from "@/lib/types";
+import {
+  isArrayType,
+  PartialByKeys,
+  ReadOnlyTransaction,
+  Transaction,
+  TransactionGroup,
+  WriteOnlyTransaction,
+} from "@/lib/types";
 import { useCategories } from "@/contexts/CategoriesContext";
 import { Button, CircularProgress } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
@@ -29,13 +31,15 @@ import "react-toastify/dist/ReactToastify.css";
 
 interface AddOrEditTransactionModalProps {
   isOpen: boolean;
-  initialTransactionGroup?: TransactionGroup;
+  initialTransactionGroup?: TransactionGroup<ReadOnlyTransaction>;
   mode: "add" | "edit";
   onClose: () => void;
-  onSave: (transaction: TransactionGroup) => Promise<void>;
+  onSave: (
+    transaction: PartialByKeys<TransactionGroup<Transaction>, "id">,
+  ) => Promise<void>;
 }
 
-const defaultTransactionGroup: TransactionGroup = {
+const defaultTransactionGroup: Omit<TransactionGroup<Transaction>, "id"> = {
   name: "",
   description: "",
   source: null,
@@ -50,24 +54,23 @@ export function AddOrEditTransactionGroupModal({
   initialTransactionGroup,
   onSave,
 }: AddOrEditTransactionModalProps) {
-  const { categories } = useCategories();
+  const { categories, categoriesQueryError } = useCategories();
   const {
-    getTransactionGroup,
+    getSelectedTransactionGroup: getTransactionGroup,
     selectedTransactionGroup,
-    isTransactionGroupLoading,
-    isTransactionGroupError,
+    isSelectedTransactionGroupLoading: isTransactionGroupLoading,
+    selectedTransactionGroupError: isTransactionGroupError,
   } = useTransactions();
-  const [newTransactionGroup, setNewTransactionGroup] =
-    useState<TransactionGroup>(
-      initialTransactionGroup ?? defaultTransactionGroup,
-    );
+  const [newTransactionGroup, setNewTransactionGroup] = useState<
+    PartialByKeys<TransactionGroup<Transaction>, "id">
+  >(initialTransactionGroup ?? defaultTransactionGroup);
   const formatDateForInput = (dateString: string) => {
     const date = new Date(dateString);
     return format(date, "yyyy-MM-dd'T'HH:mm:ss"); // Correct format for datetime-local
   };
 
   const [formErrors, setFormErrors] = useState<string[]>([]); // Array of error messages
-
+  const formRef = useRef<HTMLFormElement>(null);
   // Fetches transaction group data from backend for specified transaction group when in edit mode
   useEffect(() => {
     if (mode === "edit" && initialTransactionGroup?.id) {
@@ -84,7 +87,13 @@ export function AddOrEditTransactionGroupModal({
       });
     }
   }, [mode, selectedTransactionGroup]);
-
+  useEffect(() => {
+    if (categoriesQueryError) {
+      toast.error(`Error loading categories: ${categoriesQueryError.message}`, {
+        position: "bottom-left",
+      });
+    }
+  }, [categoriesQueryError]);
   const handleTransactionGroupChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -163,7 +172,6 @@ export function AddOrEditTransactionGroupModal({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const errors = validateForm();
 
     if (errors.length > 0) {
@@ -180,29 +188,61 @@ export function AddOrEditTransactionGroupModal({
   useEffect(() => {
     // Display toast notifications for each form error:
     formErrors.forEach((error) => {
-      toast.error(error);
+      toast.error(error, {
+        position: "bottom-left",
+      });
     });
 
     // After displaying toasts, you can clear formErrors here or when errors are fixed.
   }, [formErrors]);
+  useEffect(() => {
+    if (isTransactionGroupError) {
+      toast.error(
+        `Error loading transaction: ${isTransactionGroupError.message}`,
+        {
+          position: "bottom-left",
+        },
+      );
+    }
+  }, [isTransactionGroupError]);
   if (isTransactionGroupLoading) {
     return <CircularProgress />;
   }
-  if (isTransactionGroupError) {
-    toast.error(isTransactionGroupError.message);
+
+  if (!isArrayType(categories)) {
+    toast.error("Error loading categories: categories is not an array", {
+      position: "bottom-left",
+    });
+    return <ToastContainer />;
   }
   return (
-    <Dialog open={isOpen} onOpenChange={onModalClose}>
-      <DialogContent>
-        <div className="overflow-y-auto max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>
-              {mode === "add"
-                ? "Add New Transaction Group"
-                : "Edit Transaction Group"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog
+      open={isOpen}
+      onClose={onModalClose}
+      scroll="paper"
+      fullWidth={true}
+      className="overflow-y-hidden"
+    >
+      <DialogTitle className="flex justify-between items-center bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
+        <div>
+          {mode === "add" ? (
+            <h2 className="text-2xl font-bold">Add New Transaction Group</h2>
+          ) : (
+            <h2 className="text-2xl font-bold">Edit Transaction Group</h2>
+          )}
+        </div>
+        <IconButton
+          aria-label="close"
+          className="ml-auto"
+          onClick={onModalClose}
+          sx={{ color: "white" }}
+        >
+          <X />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent dividers={true}>
+        <div>
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-2">
             <div>
               <Label htmlFor="name">Name</Label>
               <Input
@@ -236,7 +276,10 @@ export function AddOrEditTransactionGroupModal({
             </div>
             <h3>Transactions</h3>
             {newTransactionGroup.transactions.map((transaction, index) => (
-              <div key={index} className="flex flex-col">
+              <div
+                key={index}
+                className="flex flex-col border border-solid border-indigo-600"
+              >
                 <div>
                   <Label htmlFor={`transaction-name-${index}`}>Name</Label>
                   <Input
@@ -281,10 +324,23 @@ export function AddOrEditTransactionGroupModal({
                       const updatedTransactions = [
                         ...newTransactionGroup.transactions,
                       ];
-                      updatedTransactions[index] = {
-                        ...updatedTransactions[index],
-                        category_uuid: value,
-                      };
+                      if (
+                        mode === "edit" &&
+                        "category" in updatedTransactions[index]
+                      ) {
+                        updatedTransactions[index] = {
+                          ...updatedTransactions[index],
+                          category: {
+                            ...updatedTransactions[index].category,
+                            id: value,
+                          },
+                        };
+                      } else {
+                        updatedTransactions[index] = {
+                          ...updatedTransactions[index],
+                          category_uuid: value,
+                        };
+                      }
                       setNewTransactionGroup({
                         ...newTransactionGroup,
                         transactions: updatedTransactions,
@@ -318,16 +374,30 @@ export function AddOrEditTransactionGroupModal({
                 </Button>
               </div>
             ))}
-            <div className="flex flex-col space-y-2">
-              <Button type="button" onClick={addTransaction}>
-                Add Transaction
-              </Button>
-              <ToastContainer />
-              <Button type="submit">Submit Transaction Group</Button>
-            </div>
           </form>
         </div>
       </DialogContent>
+      <div className="flex flex-col space-y-1">
+        <Button type="button" variant="contained" onClick={addTransaction}>
+          Add Transaction
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          onClick={() => {
+            if (formRef.current) {
+              formRef.current.dispatchEvent(
+                new Event("submit", { cancelable: true, bubbles: true }),
+              );
+            } else {
+              console.error("formRef.current is null");
+            }
+          }}
+        >
+          Submit Transaction Group
+        </Button>
+      </div>
+      <ToastContainer />
     </Dialog>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { format } from "date-fns";
 import {
   ArrowDownIcon,
@@ -24,14 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
-import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
 import {
@@ -39,7 +32,13 @@ import {
   useTransactions,
 } from "@/contexts/TransactionsContext";
 import { usePlaidContext } from "@/contexts/PlaidContext";
-import { Category, TransactionGroup, ReadOnlyTransaction } from "@/lib/types";
+import {
+  Category,
+  TransactionGroup,
+  ReadOnlyTransaction,
+  isArrayType,
+  Transaction,
+} from "@/lib/types";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { useCategories } from "@/contexts/CategoriesContext";
 import {
@@ -53,6 +52,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { AddOrEditTransactionGroupModal } from "@/components/add-edit-transaction-group-modal";
 import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
 import "react-toastify/dist/ReactToastify.css";
+import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 
 interface TransactionSummaryProps {
   totalIncome: number;
@@ -61,8 +61,8 @@ interface TransactionSummaryProps {
 }
 
 interface TransactionGroupListProps {
-  transactionGroups: TransactionGroup[];
-  onEdit: (group: TransactionGroup) => void;
+  transactionGroups: TransactionGroup<ReadOnlyTransaction>[];
+  onEdit: (group: TransactionGroup<ReadOnlyTransaction>) => void;
   onDelete: (uuid: string) => Promise<void>;
   totalCount: number;
   pageNumber: number;
@@ -82,29 +82,20 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
   onRowsPerPageChange,
 }) => {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-  const [confirmDeleteGroup, setConfirmDeleteGroup] =
-    useState<TransactionGroup>();
-  const [deleteConfirmation, setDeleteConfirmation] = useState("");
-  const [deleteError, setDeleteError] = useState(false); // State for error
+  const [groupToDeleted, setGroupToDeleted] =
+    useState<TransactionGroup<ReadOnlyTransaction>>();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
 
-  const handleDeleteConfirmation = (group: TransactionGroup) => {
-    setConfirmDeleteGroup(group);
+  const handleDeleteConfirmation = (
+    group: TransactionGroup<ReadOnlyTransaction>,
+  ) => {
+    setIsDeleteModalOpen(true);
+    setGroupToDeleted(group);
   };
 
-  const handleConfirmDelete = () => {
-    if (confirmDeleteGroup && deleteConfirmation === confirmDeleteGroup.name) {
-      onDelete(confirmDeleteGroup.id!);
-      setConfirmDeleteGroup(undefined);
-      setDeleteConfirmation("");
-      setDeleteError(false);
-    } else if (confirmDeleteGroup) {
-      setDeleteError(true);
-    }
-  };
-
-  const handleCancelDelete = () => {
-    setConfirmDeleteGroup(undefined); // Clear the group to be deleted
-    setDeleteConfirmation(""); // Clear any typed confirmation
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setGroupToDeleted(undefined);
   };
   const toggleGroup = (groupId: string) => {
     setOpenGroups((prevState) => ({
@@ -115,8 +106,6 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
 
   return (
     <div className="space-y-4">
-      {" "}
-      {/* Add spacing between groups */}
       {transactionGroups.map((group) => {
         const groupId = group.id || "temp-key";
         const isOpen = openGroups[groupId];
@@ -124,8 +113,6 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
         return (
           <div key={groupId} className="border rounded-lg p-4 relative">
             <div className="flex justify-between items-start">
-              {" "}
-              {/* Header */}
               <div className="flex">
                 <button onClick={() => toggleGroup(groupId)} className="mr-2">
                   {isOpen ? (
@@ -192,47 +179,12 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                 ))}
               </ul>
             )}
-
-            <Dialog
-              open={confirmDeleteGroup === group}
-              onOpenChange={handleCancelDelete}
-            >
-              <DialogContent className={deleteError ? "border-red-500" : ""}>
-                <DialogTitle>Confirm Delete</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to delete transaction group "
-                  {confirmDeleteGroup?.name}"? This action cannot be undone.
-                </DialogDescription>
-
-                <div>
-                  <Label htmlFor="deleteConfirmation">
-                    Type the name of the transaction group to confirm:
-                  </Label>
-
-                  <Input
-                    type="text"
-                    id="deleteConfirmation"
-                    value={deleteConfirmation}
-                    onChange={(e) => setDeleteConfirmation(e.target.value)}
-                    className={deleteError ? "border-red-500" : ""}
-                  />
-                  {deleteError && (
-                    <p className="text-red-500 mt-1">
-                      Transaction group name does not match.
-                    </p>
-                  )}
-                </div>
-
-                <div className="mt-2 flex justify-end space-x-2">
-                  <Button color="error" onClick={handleConfirmDelete}>
-                    Delete
-                  </Button>
-                  <Button variant="outlined" onClick={handleCancelDelete}>
-                    Cancel
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <ConfirmDeleteModal
+              isOpen={isDeleteModalOpen}
+              onDelete={onDelete}
+              confirmDeleteItem={groupToDeleted}
+              onClose={handleCloseDeleteModal}
+            />
           </div>
         );
       })}
@@ -318,18 +270,19 @@ function TransactionSummaryBanner({
 
 export function RecentTransactionsPage() {
   const {
-    transactionGroups,
-    isLoading,
-    queryError: transactionQueryError,
+    paginatedTransactionGroups: transactionGroups,
+    isPaginatedTransactionGroupsLoading: isTransactionGroupLoading,
+    paginatedTransactionGroupsQueryError: transactionQueryError,
     mutationError: transactionMutationError,
-    refetchTransactions,
+    refetchPaginatedTransactionGroups: refetchTransactions,
     addTransactionGroup,
     deleteTransactionGroup,
     editTransactionGroup,
     getTransactionGroups,
   } = useTransactions();
 
-  const { categories } = useCategories();
+  const { categories, categoriesQueryError, refetchCategories } =
+    useCategories();
   const [jwt] = useContext(JwtContext);
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState<number>(0);
@@ -338,8 +291,13 @@ export function RecentTransactionsPage() {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
-  const [queryOptions, setQueryOptions] =
-    useState<TransactionGroupQueryParameters>({});
+  useEffect(() => {
+    if (categoriesQueryError) {
+      toast.error(`Error loading categories: ${categoriesQueryError.message}`, {
+        position: "bottom-left",
+      });
+    }
+  }, [categoriesQueryError]);
   useEffect(() => {
     if (!jwt) {
       router.push("/login"); // Redirect to login if JWT is not set
@@ -348,7 +306,9 @@ export function RecentTransactionsPage() {
   useEffect(() => {
     if (transactionQueryError) {
       toast.error(
-        `Error loading transactions: ${transactionQueryError.message}`,
+        `Error loading transactions: ${transactionQueryError.message}, {
+        position: "bottom-left",
+      }`,
       );
     }
   }, [transactionQueryError]);
@@ -357,13 +317,16 @@ export function RecentTransactionsPage() {
     if (transactionMutationError) {
       toast.error(
         `Error modifying transaction: ${transactionMutationError.message}`,
+        {
+          position: "bottom-left",
+        },
       );
     }
   }, [transactionMutationError]);
 
   const [isEditing, setIsEditing] = useState(false); // State for edit mode
   const [transactionToEdit, setTransactionToEdit] =
-    useState<TransactionGroup>();
+    useState<TransactionGroup<ReadOnlyTransaction>>();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<Category["id"]>();
@@ -374,28 +337,6 @@ export function RecentTransactionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, pageSize, ordering, categoryFilter, startDate, endDate]);
 
-  if (!("results" in transactionGroups)) {
-    return <></>;
-  }
-
-  // FIXME: This does not work with pagination (need no paginated to properly calculate)
-  const { totalIncome, totalExpenses } = transactionGroups.results.reduce(
-    (acc, group) => {
-      group.transactions.forEach((transaction) => {
-        if (transaction.amount < 0) {
-          // Subtract since income is stored as a negative number in database
-          acc.totalIncome -= transaction.amount;
-        } else {
-          acc.totalExpenses += transaction.amount;
-        }
-      });
-
-      return acc;
-    },
-    { totalIncome: 0, totalExpenses: 0 }, // Initial accumulator value
-  );
-
-  const netBalance = totalIncome - totalExpenses;
   const applyFilters = () => {
     // Give no options to set `no_page`
     let queryParams: TransactionGroupQueryParameters = {};
@@ -421,10 +362,12 @@ export function RecentTransactionsPage() {
     if (endDate) {
       queryParams.date_before = format(endDate, "yyyy-MM-dd");
     }
-    console.log("Applying Filters: ", queryParams);
     getTransactionGroups(queryParams);
   };
-
+  const refetchData = () => {
+    refetchTransactions;
+    refetchCategories();
+  };
   const resetFilters = () => {
     setSearchTerm("");
     setCategoryFilter(undefined);
@@ -435,7 +378,9 @@ export function RecentTransactionsPage() {
     setOrdering("-date");
     getTransactionGroups({});
   };
-  const handleOpenEditModal = (groupToEdit: TransactionGroup) => {
+  const handleOpenEditModal = (
+    groupToEdit: TransactionGroup<ReadOnlyTransaction>,
+  ) => {
     setIsAddModalOpen(true); // Open the same modal
     setIsEditing(true); // Make sure it's in edit mode
     setTransactionToEdit(groupToEdit);
@@ -446,8 +391,30 @@ export function RecentTransactionsPage() {
     setTransactionToEdit(undefined); // Clear transactionToEdit after closing
   };
 
+  // Type Guard to ensure `transactionGroups` object is a PaginatedServerResponse<TransactionGroup>
+  if (!("count" in transactionGroups)) {
+    toast.error(
+      "Error loading transactions: transactionGroups is a NonPaginatedServerResponse<TransactionGroup>",
+      {
+        position: "bottom-left",
+      },
+    );
+    return <ToastContainer />;
+  }
+  // Type Guard to ensure `categories` object is an array
+  if (!isArrayType(categories)) {
+    toast.error("Error loading categories: categories is not an array", {
+      position: "bottom-left",
+    });
+    return <ToastContainer />;
+  }
+  // We know `totals` will always exist for transaction groups
+  const { income: totalIncome, expense: totalExpenses } =
+    transactionGroups.totals;
+
+  const netBalance = totalIncome - totalExpenses;
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-auto bg-gray-50">
       <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
         <h1 className="text-2xl font-bold">Recent Transactions</h1>
       </header>
@@ -468,9 +435,9 @@ export function RecentTransactionsPage() {
         <Card className="bg-white shadow-lg">
           <TransactionListHeader
             setIsAddModalOpen={setIsAddModalOpen}
-            refetchTransactions={refetchTransactions}
+            refetchData={refetchData}
             applyFilters={applyFilters}
-            isLoading={isLoading}
+            isLoading={isTransactionGroupLoading}
           />
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4 mb-4">
@@ -533,7 +500,7 @@ export function RecentTransactionsPage() {
               />
               <Button onClick={resetFilters}>Clear Filters</Button>
             </div>
-            {isLoading ? (
+            {isTransactionGroupLoading ? (
               <CircularProgress />
             ) : (
               <TransactionGroupList
@@ -560,20 +527,25 @@ export function RecentTransactionsPage() {
         onClose={handleCloseAddModal}
         initialTransactionGroup={transactionToEdit}
         mode={isEditing ? "edit" : "add"}
-        onSave={isEditing ? editTransactionGroup : addTransactionGroup}
+        onSave={
+          isEditing
+            ? (group) =>
+                editTransactionGroup(group as TransactionGroup<Transaction>)
+            : addTransactionGroup
+        }
       />
     </div>
   );
 }
 interface TransactionListHeaderProps {
   setIsAddModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  refetchTransactions: () => void;
+  refetchData: () => void;
   applyFilters: () => void;
   isLoading: boolean;
 }
 function TransactionListHeader({
   setIsAddModalOpen,
-  refetchTransactions,
+  refetchData,
   applyFilters,
   isLoading,
 }: TransactionListHeaderProps) {
@@ -596,7 +568,7 @@ function TransactionListHeader({
           Search
         </Button>
         <Button
-          onClick={refetchTransactions}
+          onClick={refetchData}
           loading={isLoading}
           loadingPosition="end"
           variant="contained"

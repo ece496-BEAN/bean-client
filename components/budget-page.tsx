@@ -12,8 +12,8 @@ import { useBudgetContext } from "../contexts/BudgetContext";
 import { JwtContext } from "@/app/lib/jwt-provider";
 
 export function BudgetPage() {
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
-  const router = useRouter(); // Add this line
+  const [jwt, _] = useContext(JwtContext);
+  const router = useRouter();
 
   useEffect(() => {
     if (!jwt) {

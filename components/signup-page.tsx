@@ -20,7 +20,7 @@ import { fetchApiSingle } from "@/app/lib/api";
 export function SignupPage() {
   const router = useRouter();
 
-  const [setAndStoreJwt] = useJwt();
+  const [_, setAndStoreJwt] = useJwt();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
