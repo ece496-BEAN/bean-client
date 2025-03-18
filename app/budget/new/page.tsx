@@ -1,5 +1,5 @@
 import React from "react";
-import AllBudgetsContent from "@/components/AllBudgetsContent";
+import { AddBudgetPage } from "@/components/addBudgetPage";
 import { BudgetAndCategoryPage } from "@/components/BudgetManagement";
 import BudgetProvider from "@/contexts/BudgetContext";
 import CategoryProvider from "@/contexts/CategoriesContext";
@@ -11,7 +11,7 @@ export default function Page() {
       <CurrentBudgetProvider>
         <BudgetAndCategoryPage>
           <CategoryProvider>
-            <AllBudgetsContent />
+            <AddBudgetPage />
           </CategoryProvider>
         </BudgetAndCategoryPage>
       </CurrentBudgetProvider>

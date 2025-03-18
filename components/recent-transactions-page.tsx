@@ -373,8 +373,8 @@ export function RecentTransactionsPage() {
     setCategoryFilter(undefined);
     setStartDate(null);
     setEndDate(null);
-    setCurrentPage(0);
-    setPageSize(10);
+    setCurrentPage((_) => 0);
+    setPageSize((_) => 10);
     setOrdering("-date");
     getTransactionGroups({});
   };

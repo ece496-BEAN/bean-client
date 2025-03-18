@@ -1,0 +1,111 @@
+"use client";
+
+import { JwtContext } from "@/app/lib/jwt-provider";
+import { Box, Tab, Tabs } from "@mui/material";
+import Grid from "@mui/material/Grid2";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useContext, useEffect, useState } from "react";
+import Link from "next/link";
+import { useCurrentBudget } from "@/contexts/CurrentBudgetContext";
+
+interface BudgetAndCategoryPageProps {
+  children?: React.ReactNode;
+  initialTab?: number;
+}
+export function BudgetAndCategoryPage({
+  children,
+}: BudgetAndCategoryPageProps) {
+  const [jwt, _] = useContext(JwtContext);
+  const { currentBudgetUUID, fetchCurrentBudget } = useCurrentBudget();
+
+  const router = useRouter();
+  const path = usePathname();
+
+  const routes = {
+    currentBudget: currentBudgetUUID
+      ? `/budget/${currentBudgetUUID}`
+      : "/budget/current", // Conditional route
+    allBudgets: "/budget",
+    categories: "/categories",
+  };
+  const [selectedTab, setSelectedTab] = useState(() => {
+    if (
+      path.startsWith(routes.currentBudget) ||
+      path.startsWith("/budget/current")
+    )
+      return 0;
+    if (path.startsWith(routes.allBudgets)) return 1;
+    if (path.startsWith(routes.categories)) return 2;
+    return 0; // Default to Current Budget,
+  });
+
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
+  };
+
+  useEffect(() => {
+    console.log("Check if login");
+    if (!jwt) {
+      router.push("/login"); // Redirect to login if JWT is not set
+    }
+  }, [jwt, router]);
+
+  useEffect(() => {
+    // Sync selectedTab with router.pathname when it changes
+    let newIndex = 0;
+    if (path.startsWith("/budget/current")) newIndex = 0;
+    else if (path.startsWith("/budget")) newIndex = 1;
+    else if (path.startsWith("/categories")) newIndex = 2;
+    setSelectedTab(newIndex);
+  }, [path]);
+  useEffect(() => {
+    // Redirect to /budget/new ONLY IF on /budget/current AND no current budget exists.
+    if (path === routes.currentBudget && !currentBudgetUUID) {
+      console.log("No current budget found, start fetching for current budget");
+      fetchCurrentBudget(router);
+    }
+  }, [
+    currentBudgetUUID,
+    fetchCurrentBudget,
+    path,
+    router,
+    routes.currentBudget,
+  ]);
+  const currentPage = () => {
+    switch (selectedTab) {
+      case 0:
+        return "Current Budget";
+      case 1:
+        return "All Budgets";
+      case 2:
+        return "Categories";
+      default:
+        return null;
+    }
+  };
+  return (
+    <div>
+      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">{currentPage()}</h1>
+      </header>
+      <Grid container justifyContent="left">
+        <Box sx={{ width: "100%", bgcolor: "background.paper" }}>
+          <Tabs value={selectedTab} onChange={handleTabChange}>
+            <Tab
+              label="Current Budget"
+              component={Link}
+              href={routes.currentBudget}
+            />
+            <Tab
+              label="All Budgets"
+              component={Link}
+              href={routes.allBudgets}
+            />
+            <Tab label="Categories" component={Link} href={routes.categories} />
+          </Tabs>
+        </Box>
+      </Grid>
+      <main>{children}</main>
+    </div>
+  );
+}

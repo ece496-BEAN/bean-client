@@ -1,10 +1,10 @@
-// src/components/LayoutClient.tsx
-"use client"; // Mark this component as client-side
+"use client";
 
+import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import NavigationBar from "@/components/NavigationBar";
 import { PlaidProvider } from "@/contexts/PlaidContext";
-import { BudgetProvider } from "@/contexts/BudgetContext";
+import BudgetProvider from "@/contexts/BudgetContext";
 import { ReactNode } from "react";
 import TransactionProvider from "@/contexts/TransactionsContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -17,7 +17,7 @@ function LayoutClient({ children }: { children: ReactNode }) {
   const excludedPaths = ["/login", "/survey", "/signup"];
   const showNavigationBar = !excludedPaths.includes(pathname);
 
-  const queryClient = new QueryClient();
+  const [queryClient] = useState(() => new QueryClient());
   return (
     <>
       <LocalizationProvider dateAdapter={AdapterDateFns}>

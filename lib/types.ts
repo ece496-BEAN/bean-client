@@ -49,7 +49,7 @@ export type TransactionGroup<T extends Transaction> = {
 };
 
 export type WriteOnlyBudgetItem = {
-  uuid: string; // UUID
+  uuid?: string; // UUID
   allocation: number; // 2 decimal places
   category_uuid: string; // UUID
 };
