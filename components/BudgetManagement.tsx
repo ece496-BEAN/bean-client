@@ -16,7 +16,7 @@ export function BudgetAndCategoryPage({
   children,
 }: BudgetAndCategoryPageProps) {
   const [jwt, _] = useContext(JwtContext);
-  const { currentBudgetUUID, fetchCurrentBudget } = useCurrentBudget();
+  const { currentBudgetUUID } = useCurrentBudget();
 
   const router = useRouter();
   const path = usePathname();
@@ -25,6 +25,7 @@ export function BudgetAndCategoryPage({
     currentBudget: currentBudgetUUID
       ? `/budget/${currentBudgetUUID}`
       : "/budget/current", // Conditional route
+    addBudget: "/budget/new",
     allBudgets: "/budget",
     categories: "/categories",
   };
@@ -34,8 +35,9 @@ export function BudgetAndCategoryPage({
       path.startsWith("/budget/current")
     )
       return 0;
-    if (path.startsWith(routes.allBudgets)) return 1;
-    if (path.startsWith(routes.categories)) return 2;
+    if (path.startsWith(routes.addBudget)) return 1;
+    if (path.startsWith(routes.allBudgets)) return 2;
+    if (path.startsWith(routes.categories)) return 3;
     return 0; // Default to Current Budget,
   });
 
@@ -54,30 +56,21 @@ export function BudgetAndCategoryPage({
     // Sync selectedTab with router.pathname when it changes
     let newIndex = 0;
     if (path.startsWith("/budget/current")) newIndex = 0;
-    else if (path.startsWith("/budget")) newIndex = 1;
-    else if (path.startsWith("/categories")) newIndex = 2;
+    else if (path.startsWith("/budget/new")) newIndex = 1;
+    else if (path.startsWith("/budget")) newIndex = 2;
+    else if (path.startsWith("/categories")) newIndex = 3;
     setSelectedTab(newIndex);
   }, [path]);
-  useEffect(() => {
-    // Redirect to /budget/new ONLY IF on /budget/current AND no current budget exists.
-    if (path === routes.currentBudget && !currentBudgetUUID) {
-      console.log("No current budget found, start fetching for current budget");
-      fetchCurrentBudget(router);
-    }
-  }, [
-    currentBudgetUUID,
-    fetchCurrentBudget,
-    path,
-    router,
-    routes.currentBudget,
-  ]);
+
   const currentPage = () => {
     switch (selectedTab) {
       case 0:
         return "Current Budget";
       case 1:
-        return "All Budgets";
+        return "Add Budget";
       case 2:
+        return "All Budgets";
+      case 3:
         return "Categories";
       default:
         return null;
@@ -90,12 +83,18 @@ export function BudgetAndCategoryPage({
       </header>
       <Grid container justifyContent="left">
         <Box sx={{ width: "100%", bgcolor: "background.paper" }}>
-          <Tabs value={selectedTab} onChange={handleTabChange}>
+          <Tabs
+            value={selectedTab}
+            onChange={handleTabChange}
+            scrollButtons="auto"
+            variant="scrollable"
+          >
             <Tab
               label="Current Budget"
               component={Link}
               href={routes.currentBudget}
             />
+            <Tab label="Add Budget" component={Link} href={routes.addBudget} />
             <Tab
               label="All Budgets"
               component={Link}

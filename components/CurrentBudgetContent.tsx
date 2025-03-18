@@ -2,6 +2,8 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCurrentBudget } from "@/contexts/CurrentBudgetContext";
+import { Button } from "@mui/material";
+import Link from "next/link";
 
 function CurrentBudgetContent() {
   const { currentBudgetUUID } = useCurrentBudget();
@@ -14,10 +16,16 @@ function CurrentBudgetContent() {
       );
       router.push(`/budget/${currentBudgetUUID}`);
     } else {
-      console.log("No current budget found, redirecting to new budget page");
-      router.push("/budget/new");
+      console.log("No current budget found");
     }
   }, [currentBudgetUUID, router]);
-  return <p>Welp</p>;
+  return (
+    <div>
+      <h1>Current Budget Content</h1>
+      <Button>
+        <Link href="/budget/new">Create New Budget</Link>
+      </Button>
+    </div>
+  );
 }
 export default CurrentBudgetContent;

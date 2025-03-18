@@ -69,7 +69,9 @@ export default function BudgetProvider({
   const queryClient = useQueryClient();
   const [jwt, setAndStoreJwt] = useContext(JwtContext);
   const [mutationError, setMutationError] = useState<Error | null>(null); // State to hold the mutation error
-  const [queryOptions, setQueryOptions] = useState<Record<string, any>>({});
+  const [queryOptions, setQueryOptions] = useState<Record<string, any>>({
+    no_page: true,
+  });
   const [paginatedQueryOptions, setPaginatedQueryOptions] = useState<
     Record<string, any>
   >({});
@@ -143,9 +145,10 @@ export default function BudgetProvider({
       options?: { no_page?: boolean },
     ) => {
       if (options?.no_page) {
-        setQueryOptions(queryParams || {});
+        setQueryOptions({ ...queryParams, no_page: true });
       } else {
-        setPaginatedQueryOptions(queryParams || {});
+        const { no_page, ...paginatedQueryParams } = queryParams || {};
+        setPaginatedQueryOptions(paginatedQueryParams);
       }
     },
     [setQueryOptions, setPaginatedQueryOptions],
@@ -186,6 +189,9 @@ export default function BudgetProvider({
       queryClient.invalidateQueries({
         queryKey: ["budgets"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["currentBudget"],
+      });
     },
   });
 
@@ -224,6 +230,9 @@ export default function BudgetProvider({
       queryClient.invalidateQueries({
         queryKey: ["budgets"],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["currentBudget"],
+      });
     },
   });
   const deleteBudgetMutation = useMutation({
@@ -245,6 +254,9 @@ export default function BudgetProvider({
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["budgets"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["currentBudget"],
       });
     },
   });

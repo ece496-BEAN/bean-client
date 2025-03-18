@@ -75,7 +75,9 @@ export default function TransactionProvider({
 
   const [jwt, setAndStoreJwt] = useContext(JwtContext);
   const [mutationError, setMutationError] = useState<Error | null>(null); // State to hold the mutation error
-  const [queryOptions, setQueryOptions] = useState<Record<string, any>>({});
+  const [queryOptions, setQueryOptions] = useState<Record<string, any>>({
+    no_page: true,
+  });
   const [paginatedQueryOptions, setPaginatedQueryOptions] = useState<
     Record<string, any>
   >({});

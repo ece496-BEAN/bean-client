@@ -61,6 +61,9 @@ function CategoriesContent() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const filterMenuOpen = Boolean(anchorEl);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   const handleOpenAddModal = () => {
     setIsAddModalOpen(true);
   };
@@ -147,9 +150,6 @@ function CategoriesContent() {
     setIsDeleteModalOpen(false);
     setCategoryToDeleted(undefined);
   };
-
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // TODO: Make it refetch with the proper query parameters other than pages
   const handleChangePage = useCallback(

@@ -78,8 +78,8 @@ export type ServerResponse<T> =
 
 export type NonPaginatedServerResponse<T> =
   T extends TransactionGroup<Transaction>
-    ? { results: T[]; totals: { income: number; expense: number } } | T // Special case for TransactionGroup
-    : T[] | T;
+    ? { results: T[]; totals: { income: number; expense: number } } // Special case for TransactionGroup
+    : T[];
 
 export type PaginatedServerResponse<T> = {
   count: number;
