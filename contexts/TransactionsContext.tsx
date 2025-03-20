@@ -64,6 +64,7 @@ export type TransactionGroupQueryParameters = {
   date_after?: string;
   date_before?: string;
   category_uuid?: string;
+  category_type_is_income?: boolean;
   search?: string;
   page?: number;
   page_size?: number;

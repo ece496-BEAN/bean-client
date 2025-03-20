@@ -8,7 +8,15 @@ import Button from "@mui/material/Button";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import { useCategories } from "@/contexts/CategoriesContext"; // Import your context
 import { Category, PartialByKeys } from "@/lib/types"; // Import your types
-import { Chip, CircularProgress, Stack, Typography } from "@mui/material";
+import {
+  Chip,
+  CircularProgress,
+  FormControlLabel,
+  Stack,
+  Switch,
+  Typography,
+} from "@mui/material";
+import { set } from "date-fns";
 
 type CategoryOption = Category & { inputValue?: string };
 
@@ -29,6 +37,7 @@ export default function CategoryAutocomplete({
   >({
     name: "",
     description: "",
+    is_income_type: false,
   });
 
   const loading = open && isCategoriesLoading;
@@ -45,6 +54,7 @@ export default function CategoryAutocomplete({
     setDialogValue({
       name: "",
       description: "",
+      is_income_type: false,
     });
     toggleOpen(false);
   };
@@ -70,6 +80,7 @@ export default function CategoryAutocomplete({
             setDialogValue({
               name: newValue.inputValue,
               description: "",
+              is_income_type: false,
             });
           } else {
             onChange(newValue);
@@ -83,8 +94,10 @@ export default function CategoryAutocomplete({
             filtered.push({
               inputValue: params.inputValue,
               name: `Add "${params.inputValue}"`, // Display in options
-              id: params.inputValue, // Placeholder ID (will be overwritten later)
+              // Placeholder values (will be overwritten later)
+              id: params.inputValue,
               legacy: false,
+              is_income_type: false,
             });
           }
 
@@ -173,6 +186,26 @@ export default function CategoryAutocomplete({
                     ...dialogValue,
                     description: e.target.value,
                   })
+                }
+              />
+              <FormControlLabel
+                label={
+                  <Chip
+                    label={dialogValue.is_income_type ? "Income" : "Expense"}
+                    color={dialogValue.is_income_type ? "success" : "error"}
+                  />
+                }
+                control={
+                  <Switch
+                    name="is_income_type"
+                    checked={dialogValue.is_income_type}
+                    onChange={(e) =>
+                      setDialogValue({
+                        ...dialogValue,
+                        is_income_type: e.target.checked,
+                      })
+                    }
+                  />
                 }
               />
             </div>

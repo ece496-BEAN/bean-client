@@ -491,6 +491,7 @@ export function RecentTransactionsPage() {
                   }
                 }}
               />
+
               <Button onClick={resetFilters}>Clear Filters</Button>
             </div>
             {isTransactionGroupLoading ? (

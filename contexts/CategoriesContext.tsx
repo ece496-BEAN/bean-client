@@ -59,6 +59,7 @@ export type CategoryQueryParameters = {
   legacy?: boolean;
   name?: string;
   description?: string;
+  is_income_type?: boolean;
   page?: number;
   page_size?: number;
   ordering?: string;

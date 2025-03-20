@@ -58,6 +58,9 @@ function CategoriesContent() {
   const [categoryToBeDeleted, setCategoryToDeleted] = useState<Category>();
   const [searchQuery, setSearchQuery] = useState("");
   const [legacyFilter, setLegacyFilter] = useState<boolean | null>(null);
+  const [isIncomeTypeFilter, setIsIncomeTypeFilter] = useState<boolean | null>(
+    null,
+  );
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const filterMenuOpen = Boolean(anchorEl);
@@ -82,6 +85,9 @@ function CategoriesContent() {
     if (legacyFilter !== null) {
       params.legacy = legacyFilter;
     }
+    if (isIncomeTypeFilter !== null) {
+      params.is_income_type = isIncomeTypeFilter;
+    }
     if (sortDirection) {
       params.ordering = sortDirection === "asc" ? "name" : "-name";
     }
@@ -98,7 +104,31 @@ function CategoriesContent() {
   const handleFilterMenuClose = () => {
     setAnchorEl(null);
   };
-
+  const handleIsIncomeTypeFilterChange = () => {
+    let isIncomeTypeValue = null;
+    setIsIncomeTypeFilter((prev) => {
+      if (prev === null) {
+        isIncomeTypeValue = true;
+      } else if (prev === true) {
+        isIncomeTypeValue = false;
+      } else {
+        isIncomeTypeValue = null;
+      }
+      return isIncomeTypeValue;
+    });
+    handleFilterMenuClose();
+    const params: CategoryQueryParameters =
+      isIncomeTypeValue === null ? {} : { is_income_type: isIncomeTypeValue };
+    if (legacyFilter !== null) {
+      params.legacy = legacyFilter;
+    }
+    if (searchQuery) {
+      params.name = searchQuery;
+    }
+    if (sortDirection) {
+      params.ordering = sortDirection === "asc" ? "name" : "-name";
+    }
+  };
   const handleLegacyFilterChange = () => {
     let legacyValue = null;
     setLegacyFilter((prev) => {
@@ -114,7 +144,9 @@ function CategoriesContent() {
     handleFilterMenuClose();
     const params: CategoryQueryParameters =
       legacyValue === null ? {} : { legacy: legacyValue };
-
+    if (isIncomeTypeFilter !== null) {
+      params.is_income_type = isIncomeTypeFilter;
+    }
     if (searchQuery) {
       params.name = searchQuery;
     }
@@ -135,6 +167,9 @@ function CategoriesContent() {
     }
     if (legacyFilter !== null) {
       params.legacy = legacyFilter;
+    }
+    if (isIncomeTypeFilter !== null) {
+      params.is_income_type = isIncomeTypeFilter;
     }
     if (sortDirection) {
       params.ordering = direction === "asc" ? "name" : "-name";
@@ -205,7 +240,7 @@ function CategoriesContent() {
   };
 
   const handleValueChange = (
-    field: "name" | "description" | "legacy",
+    field: "name" | "description" | "legacy" | "is_income_type",
     value: string | boolean,
   ) => {
     if (editingCategory) {
@@ -345,6 +380,40 @@ function CategoriesContent() {
                     />
                   ) : (
                     category.description || ""
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingCategory?.id === category.id ? (
+                    <FormControlLabel
+                      label={
+                        <Chip
+                          label={
+                            editingCategory.is_income_type
+                              ? "Income"
+                              : "Expense"
+                          }
+                          color={
+                            editingCategory.is_income_type ? "success" : "error"
+                          }
+                        />
+                      }
+                      control={
+                        <Switch
+                          checked={!editingCategory.is_income_type}
+                          onChange={(e) =>
+                            handleValueChange(
+                              "is_income_type",
+                              !e.target.checked,
+                            )
+                          }
+                        />
+                      }
+                    />
+                  ) : (
+                    <Chip
+                      label={category.is_income_type ? "Income" : "Expense"}
+                      color={category.is_income_type ? "success" : "error"}
+                    />
                   )}
                 </TableCell>
                 <TableCell>
