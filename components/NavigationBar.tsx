@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Home,
   PieChart,
@@ -114,7 +114,7 @@ export const NavigationBar: React.FC = () => {
             <BarChart className="w-6 h-6" />
           </Button>
         </li>
-        <li>
+        {/* <li>
           <Button
             variant="ghost"
             size="icon"
@@ -123,7 +123,7 @@ export const NavigationBar: React.FC = () => {
           >
             <Settings className="w-6 h-6" />
           </Button>
-        </li>
+        </li> */}
       </ul>
 
       {/* Hidden file input for image capture */}

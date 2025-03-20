@@ -1,162 +1,23 @@
 "use client";
 
 import React, { useState, useEffect, useContext } from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useBudgetContext } from "@/contexts/BudgetContextOld";
-import LineChart from "@/components/LineChart";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 import { useRouter } from "next/navigation";
 import { JwtContext } from "@/app/lib/jwt-provider";
+import StackedAreaChart from "./charts/StackedAreaChart";
+import * as d3 from "d3";
+import { expenseColors, incomeColors } from "@/lib/colors";
+import ThresholdChart, { DataPoint } from "./charts/ThresholdChart";
+import StackedBarChart from "./charts/StackedBarChart";
+import {
+  CategoryValue,
+  ChartTransaction,
+  StackedDataPoint,
+} from "./charts/common";
 
-// Mock data for expenses
-const mockExpenseData = [
-  {
-    month: "Jan",
-    Housing: 1200,
-    Food: 450,
-    Entertainment: 200,
-    Transportation: 150,
-    Utilities: 100,
-    Other: 80,
-  },
-  {
-    month: "Feb",
-    Housing: 1200,
-    Food: 600,
-    Entertainment: 180,
-    Transportation: 140,
-    Utilities: 110,
-    Other: 90,
-  },
-  {
-    month: "Mar",
-    Housing: 1200,
-    Food: 350,
-    Entertainment: 220,
-    Transportation: 160,
-    Utilities: 105,
-    Other: 75,
-  },
-  {
-    month: "Apr",
-    Housing: 1200,
-    Food: 500,
-    Entertainment: 190,
-    Transportation: 145,
-    Utilities: 95,
-    Other: 85,
-  },
-  {
-    month: "May",
-    Housing: 1200,
-    Food: 480,
-    Entertainment: 210,
-    Transportation: 155,
-    Utilities: 100,
-    Other: 70,
-  },
-  {
-    month: "Jun",
-    Housing: 1200,
-    Food: 520,
-    Entertainment: 230,
-    Transportation: 170,
-    Utilities: 110,
-    Other: 95,
-  },
-  {
-    month: "Jul",
-    Housing: 1200,
-    Food: 550,
-    Entertainment: 250,
-    Transportation: 180,
-    Utilities: 120,
-    Other: 100,
-  },
-  {
-    month: "Aug",
-    Housing: 1200,
-    Food: 530,
-    Entertainment: 240,
-    Transportation: 175,
-    Utilities: 115,
-    Other: 90,
-  },
-  {
-    month: "Sep",
-    Housing: 1200,
-    Food: 490,
-    Entertainment: 220,
-    Transportation: 160,
-    Utilities: 105,
-    Other: 85,
-  },
-  {
-    month: "Oct",
-    Housing: 1200,
-    Food: 510,
-    Entertainment: 200,
-    Transportation: 150,
-    Utilities: 100,
-    Other: 80,
-  },
-  {
-    month: "Nov",
-    Housing: 1200,
-    Food: 540,
-    Entertainment: 230,
-    Transportation: 165,
-    Utilities: 110,
-    Other: 95,
-  },
-  {
-    month: "Dec",
-    Housing: 1200,
-    Food: 600,
-    Entertainment: 300,
-    Transportation: 200,
-    Utilities: 120,
-    Other: 110,
-  },
-];
-
-const expenseCategories = [
-  "Housing",
-  "Food",
-  "Entertainment",
-  "Transportation",
-  "Utilities",
-  "Other",
-];
-
-const colors = [
-  "rgba(33, 150, 243, 1)", // Solid blue
-  "rgba(33, 150, 243, 0.8)",
-  "rgba(33, 150, 243, 0.6)",
-  "rgba(33, 150, 243, 0.4)",
-  "rgba(33, 150, 243, 0.2)",
-  "rgba(33, 150, 243, 0.1)", // Lightest blue
-];
+const TODO = -1;
 
 export function ExpenseChart() {
   const router = useRouter(); // Add this line
@@ -168,71 +29,175 @@ export function ExpenseChart() {
     }
   }, [jwt, router]);
 
-  const [selectedCategories, setSelectedCategories] = useState<
-    (keyof (typeof mockExpenseData)[0])[]
-  >(expenseCategories.slice(0, 5) as (keyof (typeof mockExpenseData)[0])[]);
-  const [savingsData, setSavingsData] = useState<
-    { date: Date; value: number }[]
+  const [expenseData, setExpenseData] = useState<StackedDataPoint[]>([]);
+  const [incomeData, setIncomeData] = useState<StackedDataPoint[]>([]);
+
+  const [cumulativeExpenseData, setCumulativeExpenseData] = useState<
+    StackedDataPoint[]
   >([]);
-  const [selectedTimeframe, setSelectedTimeframe] =
-    useState<string>("PAST_MONTH");
-  const { categories, removeCategory, isEditMode, updateAmount } =
-    useBudgetContext();
+  const [cumulativeExpenseEndIndex, setCumulativeExpenseEndIndex] =
+    useState<number>(0);
+
+  const [cumulativeIncomeData, setCumulativeIncomeData] = useState<
+    StackedDataPoint[]
+  >([]);
+  const [cumulativeIncomeEndIndex, setCumulativeIncomeEndIndex] =
+    useState<number>(0);
+
+  const [savingsData, setSavingsData] = useState<DataPoint[]>([]);
 
   useEffect(() => {
-    async function fetchSavingsData() {
+    async function fetchTransactionData(
+      endpoint: string,
+    ): Promise<ChartTransaction[]> {
       try {
-        const response = await fetch("/api/user-data");
-        const data = await response.json();
-        const savingsData: { date: Date; value: number }[] = [];
+        const response = await fetch(endpoint);
 
-        for (const dateEntry of data) {
-          for (const date in dateEntry) {
-            let dailyValue = 0;
-            for (const transaction of dateEntry[date]) {
-              dailyValue +=
-                transaction.transaction_type === "credit"
-                  ? transaction.amount
-                  : -transaction.amount;
-            }
-            savingsData.push({ date: new Date(date), value: dailyValue });
-          }
-        }
+        type RawData = {
+          date: string;
+          amount: number;
+          // ISO 8601 date-time string
+          category: string;
+        };
 
-        setSavingsData(savingsData);
+        const rawData: RawData[] = await response.json();
+
+        const parsedTransactions: ChartTransaction[] = rawData
+          .map((tx) => ({
+            ...tx,
+            date: d3.isoParse(tx.date) as Date,
+          }))
+          .sort((a, b) => d3.ascending(a.date, b.date));
+
+        return parsedTransactions;
       } catch (error) {
         console.error("Failed to fetch savings data:", error);
+        return [];
       }
     }
+    async function fetchProjectionData(
+      endpoint: string,
+      transactionsEndDate: Date,
+    ): Promise<ChartTransaction[]> {
+      try {
+        const response = await fetch(endpoint);
+        type RawData = {
+          category: string;
+          budget: number;
+        };
+        const rawData: RawData[] = await response.json();
 
-    fetchSavingsData();
-  }, []);
+        // the first of the next month after the last savings data point
+        const startDate = new Date(transactionsEndDate);
+        startDate.setDate(1);
+        startDate.setMonth(startDate.getMonth() + 1);
 
-  const handleCategoryToggle = (
-    category: keyof (typeof mockExpenseData)[0],
-  ) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category],
-    );
-  };
+        // Project the next 6 months of data
+        const projectedData: ChartTransaction[] = [];
+        for (let i = 0; i < 6; i++) {
+          const date = new Date(startDate);
+          date.setMonth(date.getMonth() + i);
 
-  type DataPoint = { month: string; [key: string]: number | string };
+          const transactions: ChartTransaction[] = rawData.map((d) => ({
+            date: date,
+            amount: d.budget,
+            category: d.category,
+          }));
 
-  const chartData = mockExpenseData.map((entry) => {
-    const dataPoint: Record<string, string | number> = { month: entry.month };
-    let total = 0;
+          projectedData.push(...transactions);
+        }
+        return projectedData;
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        return [];
+      }
+    }
+    async function fetchExpenseData(): Promise<ChartTransaction[]> {
+      return fetchTransactionData("/api/user-data/expense");
+    }
 
-    selectedCategories.forEach((category) => {
-      const categoryValue = entry[category as keyof typeof entry] as number;
-      total += categoryValue;
-      dataPoint[category] = categoryValue;
+    async function fetchBudgetData(
+      expenseEndDate: Date,
+    ): Promise<ChartTransaction[]> {
+      return fetchProjectionData("/api/user-data/budget", expenseEndDate);
+    }
+
+    async function fetchIncomeData(): Promise<ChartTransaction[]> {
+      return fetchTransactionData("/api/user-data/income");
+    }
+
+    async function fetchIncomeProjectionData(
+      incomeEndDate: Date,
+    ): Promise<ChartTransaction[]> {
+      return fetchProjectionData(
+        "/api/user-data/income-projection",
+        incomeEndDate,
+      );
+    }
+
+    const expenseDataProm = fetchExpenseData();
+    const incomeDataProm = fetchIncomeData();
+
+    expenseDataProm.then((expenseData) => {
+      const expenseEndDate = expenseData[expenseData.length - 1].date;
+      fetchBudgetData(expenseEndDate).then((budgetData) => {
+        const [data, index] = mergeData(expenseData, budgetData, -1);
+        setCumulativeExpenseData(data);
+        setCumulativeExpenseEndIndex(index);
+      });
     });
 
-    dataPoint["Total"] = total;
-    return dataPoint;
-  });
+    expenseDataProm.then((expenseData) => {
+      setExpenseData(
+        groupTransactionsByPeriod(expenseData, d3.timeMonth).map((d) => ({
+          date: d.date,
+          categories: d.categories.map((c) => ({
+            category: c.category,
+            value: -c.value,
+          })),
+        })),
+      );
+    });
+
+    incomeDataProm.then((incomeData) => {
+      setIncomeData(groupTransactionsByPeriod(incomeData, d3.timeMonth));
+    });
+
+    incomeDataProm.then((incomeData) => {
+      const incomeEndDate = incomeData[incomeData.length - 1].date;
+      fetchIncomeProjectionData(incomeEndDate).then((incomeProjectionData) => {
+        const [data, index] = mergeData(incomeData, incomeProjectionData, 1);
+        setCumulativeIncomeData(data);
+        setCumulativeIncomeEndIndex(index);
+      });
+    });
+
+    expenseDataProm.then((expenseData) => {
+      incomeDataProm.then((incomeData) => {
+        const combinedSavingsData = d3
+          .rollups(
+            [
+              ...incomeData,
+              ...expenseData.map((d) => ({ ...d, amount: d.amount })),
+            ],
+            (v) => d3.sum(v, (d) => d.amount),
+            (d) => d.date,
+          )
+          .map(([date, value]) => ({ date, value }));
+
+        combinedSavingsData.sort((a, b) => d3.ascending(a.date, b.date));
+        const cumulativeSavingsData = combinedSavingsData.reduce((acc, d) => {
+          acc.push({
+            date: d.date,
+            value:
+              acc.length === 0 ? d.value : acc[acc.length - 1].value + d.value,
+          });
+          return acc;
+        }, [] as DataPoint[]);
+        setSavingsData(cumulativeSavingsData);
+      });
+    });
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -240,94 +205,195 @@ export function ExpenseChart() {
         <h1 className="text-2xl font-bold">Savings and Expense Graphs</h1>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4">
-        {/* Savings Graph */}
-        <Card className="bg-white shadow-lg col-span-full lg:col-span-1">
-          <CardHeader className="pb-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-0">
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
             <CardTitle className="text-lg font-semibold text-gray-700">
               Savings Graph
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="w-full h-64">
+          <CardContent className="p-2">
+            <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) => (
-                  <LineChart width={width} height={height} data={savingsData} />
+                  <ThresholdChart
+                    width={width}
+                    height={height}
+                    data={savingsData}
+                    projectionDateIdx={cumulativeExpenseEndIndex}
+                    colorPalette={expenseColors}
+                  />
+                )}
+              </ParentSize>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-lg font-semibold text-gray-700">
+              Cumulative Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-2">
+            <div className="w-full h-96">
+              <ParentSize>
+                {({ width, height }) => (
+                  <StackedAreaChart
+                    width={width}
+                    height={height}
+                    data={cumulativeExpenseData}
+                    projectionDateIdx={cumulativeExpenseEndIndex}
+                    colorPalette={expenseColors}
+                  />
+                )}
+              </ParentSize>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-lg font-semibold text-gray-700">
+              Cumulative Income
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-2">
+            <div className="w-full h-96">
+              <ParentSize>
+                {({ width, height }) => (
+                  <StackedAreaChart
+                    width={width}
+                    height={height}
+                    data={cumulativeIncomeData}
+                    projectionDateIdx={cumulativeIncomeEndIndex}
+                    colorPalette={incomeColors}
+                  />
                 )}
               </ParentSize>
             </div>
           </CardContent>
         </Card>
 
-        {/* Expense Breakdown */}
-        <Card className="bg-white shadow-lg col-span-full lg:col-span-1">
-          <CardHeader className="pb-2">
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
             <CardTitle className="text-lg font-semibold text-gray-700">
-              Expense Breakdown
+              Income By Month
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={Object.fromEntries(
-                [...selectedCategories, "Total"].map((category, index) => [
-                  category,
-                  { label: category, color: colors[index % colors.length] },
-                ]),
-              )}
-              className="h-[400px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={chartData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip content={<ChartTooltipContent />} />
-                  <Legend />
-                  {selectedCategories.map((category, index) => (
-                    <Area
-                      key={category}
-                      type="monotone"
-                      dataKey={category}
-                      stackId="1"
-                      stroke={colors[index % colors.length]}
-                      fill={colors[index % colors.length]}
-                      fillOpacity={1}
-                    />
-                  ))}
-                  <Area
-                    type="monotone"
-                    dataKey="Total"
-                    stroke="#000000"
-                    fill="none"
-                    strokeDasharray="5 5"
+          <CardContent className="p-2">
+            <div className="w-full h-96">
+              <ParentSize>
+                {({ width, height }) => (
+                  <StackedBarChart
+                    width={width}
+                    height={height}
+                    data={incomeData}
+                    projectionDateIdx={TODO}
+                    colorPalette={incomeColors}
                   />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
-              {expenseCategories.map((category) => (
-                <div key={category} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`category-${category}`}
-                    checked={selectedCategories.includes(
-                      category as keyof (typeof mockExpenseData)[0],
-                    )}
-                    onCheckedChange={() =>
-                      handleCategoryToggle(
-                        category as keyof (typeof mockExpenseData)[0],
-                      )
-                    }
-                  />
-                  <Label htmlFor={`category-${category}`}>{category}</Label>
-                </div>
-              ))}
+                )}
+              </ParentSize>
             </div>
           </CardContent>
+        </Card>
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-lg font-semibold text-gray-700">
+              Expense By Month
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-2">
+            <div className="w-full h-96">
+              <ParentSize>
+                {({ width, height }) => (
+                  <StackedBarChart
+                    width={width}
+                    height={height}
+                    data={expenseData}
+                    projectionDateIdx={TODO}
+                    colorPalette={expenseColors}
+                  />
+                )}
+              </ParentSize>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white shadow-lg col-span-full lg:col-span-2">
+          <CardHeader className="pb-1">
+            <CardTitle className="text-lg font-semibold text-gray-700">
+              Padding so the footer doesn't hide content
+            </CardTitle>
+          </CardHeader>
         </Card>
       </div>
     </div>
   );
+}
+
+function groupTransactionsByPeriod(
+  data: ChartTransaction[],
+  d3PeriodFn: (date: Date) => Date,
+): StackedDataPoint[] {
+  const groupedTransactions = d3.rollup(
+    data,
+    (v) => d3.sum(v, (d) => d.amount),
+    (d) => d3PeriodFn(d.date),
+    (d) => d.category,
+  );
+
+  return Array.from(groupedTransactions.entries())
+    .map(([date, categoryMap]): StackedDataPoint => {
+      return {
+        date: date as Date,
+        categories: Array.from(
+          categoryMap,
+          ([category, value]): CategoryValue => ({
+            category,
+            value: value,
+          }),
+        ),
+      };
+    })
+    .sort((a: StackedDataPoint, b: StackedDataPoint) =>
+      d3.ascending(a.date, b.date),
+    );
+}
+
+function mergeData(
+  historicalData: ChartTransaction[],
+  projectionData: ChartTransaction[],
+  multiplyFactor: number,
+): [StackedDataPoint[], number] {
+  const savingsEndDate = historicalData[historicalData.length - 1].date;
+  const combinedData: ChartTransaction[] = [
+    ...historicalData,
+    ...projectionData,
+  ];
+
+  const categories: string[] = Array.from(
+    new Set(combinedData.map((tx) => tx.category)),
+  );
+
+  const groupedTransactionsByWeek: StackedDataPoint[] =
+    groupTransactionsByPeriod(combinedData, d3.timeWeek);
+
+  const groupedCumulativeTransactionsByWeek: StackedDataPoint[] = [];
+  let cumulativeSums: { [key: string]: number } = categories
+    .map((cat) => ({ [cat]: 0 }))
+    .reduce((acc, val) => ({ ...acc, ...val }), {});
+  for (const dataPoint of groupedTransactionsByWeek) {
+    dataPoint.categories.forEach(
+      (cat) => (cumulativeSums[cat.category] += multiplyFactor * cat.value),
+    );
+    groupedCumulativeTransactionsByWeek.push({
+      date: dataPoint.date,
+      categories: Object.entries(cumulativeSums).map(([category, value]) => ({
+        category,
+        value,
+      })),
+    });
+  }
+  const findClosestDate = d3.bisector((d: StackedDataPoint) => d.date).left;
+  const lastSavingsDataPointIndex =
+    findClosestDate(groupedCumulativeTransactionsByWeek, savingsEndDate) - 1;
+  return [groupedCumulativeTransactionsByWeek, lastSavingsDataPointIndex];
 }
