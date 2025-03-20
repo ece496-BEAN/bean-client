@@ -1,5 +1,10 @@
 import { ExpenseChart } from "@/components/expense-chart";
+import TransactionsProvider from "@/contexts/TransactionsContext";
 
 export default function Page() {
-  return <ExpenseChart />;
+  return (
+    <TransactionsProvider>
+      <ExpenseChart />
+    </TransactionsProvider>
+  );
 }

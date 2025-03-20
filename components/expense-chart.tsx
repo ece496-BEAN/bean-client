@@ -16,6 +16,7 @@ import {
   ChartTransaction,
   StackedDataPoint,
 } from "./charts/common";
+import { useTransactions } from "@/contexts/TransactionsContext";
 
 const TODO = -1;
 
@@ -28,6 +29,8 @@ export function ExpenseChart() {
       router.push("/login"); // Redirect to login if JWT is not set
     }
   }, [jwt, router]);
+
+  const { transactionGroups, getTransactionGroups } = useTransactions();
 
   const [expenseData, setExpenseData] = useState<StackedDataPoint[]>([]);
   const [incomeData, setIncomeData] = useState<StackedDataPoint[]>([]);
@@ -47,33 +50,37 @@ export function ExpenseChart() {
   const [savingsData, setSavingsData] = useState<DataPoint[]>([]);
 
   useEffect(() => {
-    async function fetchTransactionData(
-      endpoint: string,
-    ): Promise<ChartTransaction[]> {
-      try {
-        const response = await fetch(endpoint);
-
-        type RawData = {
-          date: string;
-          amount: number;
-          // ISO 8601 date-time string
-          category: string;
-        };
-
-        const rawData: RawData[] = await response.json();
-
-        const parsedTransactions: ChartTransaction[] = rawData
-          .map((tx) => ({
-            ...tx,
-            date: d3.isoParse(tx.date) as Date,
-          }))
-          .sort((a, b) => d3.ascending(a.date, b.date));
-
-        return parsedTransactions;
-      } catch (error) {
-        console.error("Failed to fetch savings data:", error);
-        return [];
+    function fetchTransactionData(
+      expenses: boolean = true,
+    ): ChartTransaction[] {
+      function stripIncome(str: string) {
+        const prefix = "income-";
+        if (str.startsWith(prefix)) {
+          return str.slice(prefix.length);
+        }
+        return str;
       }
+
+      const parsedTransactions: ChartTransaction[] = transactionGroups.results
+        .flatMap((tx) =>
+          tx.transactions
+            .filter((t) =>
+              expenses
+                ? !t.category.name.startsWith("income-")
+                : t.category.name.startsWith("income-"),
+            )
+            .map((t) => ({
+              date: new Date(tx.date),
+              amount: -t.amount,
+              category: expenses
+                ? t.category.name
+                : stripIncome(t.category.name),
+            })),
+        )
+        .sort((a, b) => d3.ascending(a.date, b.date));
+
+      console.log(parsedTransactions);
+      return parsedTransactions;
     }
     async function fetchProjectionData(
       endpoint: string,
@@ -113,7 +120,7 @@ export function ExpenseChart() {
       }
     }
     async function fetchExpenseData(): Promise<ChartTransaction[]> {
-      return fetchTransactionData("/api/user-data/expense");
+      return fetchTransactionData();
     }
 
     async function fetchBudgetData(
@@ -123,7 +130,7 @@ export function ExpenseChart() {
     }
 
     async function fetchIncomeData(): Promise<ChartTransaction[]> {
-      return fetchTransactionData("/api/user-data/income");
+      return fetchTransactionData(false);
     }
 
     async function fetchIncomeProjectionData(
@@ -197,7 +204,7 @@ export function ExpenseChart() {
         setSavingsData(cumulativeSavingsData);
       });
     });
-  }, []);
+  }, [transactionGroups]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
