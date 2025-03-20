@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 
 import { DollarSign, Sparkles, X, Edit2, Save, PlusCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useBudgetContext } from "../contexts/BudgetContext";
+import { useBudgetContext } from "../contexts/BudgetContextOld";
 import { JwtContext } from "@/app/lib/jwt-provider";
 
 export function BudgetPage() {

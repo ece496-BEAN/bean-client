@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import React from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 export const JwtContext = createContext<any>([undefined, undefined]);
 
@@ -21,14 +28,14 @@ export default function JwtProvider({
   const [jwt, setJwt] = useState(undefined);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const setAndStoreJwt = (newJwt: any) => {
+  const setAndStoreJwt = useCallback((newJwt: any) => {
     if (newJwt === undefined) {
       localStorage.removeItem("jwt");
     } else {
       setLocalStorage("jwt", newJwt);
     }
     setJwt(newJwt);
-  };
+  }, []);
 
   useEffect(() => {
     setJwt(getLocalStorage("jwt"));

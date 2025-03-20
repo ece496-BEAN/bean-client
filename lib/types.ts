@@ -49,7 +49,7 @@ export type TransactionGroup<T extends Transaction> = {
 };
 
 export type WriteOnlyBudgetItem = {
-  uuid: string; // UUID
+  uuid?: string; // UUID
   allocation: number; // 2 decimal places
   category_uuid: string; // UUID
 };
@@ -78,8 +78,8 @@ export type ServerResponse<T> =
 
 export type NonPaginatedServerResponse<T> =
   T extends TransactionGroup<Transaction>
-    ? { results: T[]; totals: { income: number; expense: number } } | T // Special case for TransactionGroup
-    : T[] | T;
+    ? { results: T[]; totals: { income: number; expense: number } } // Special case for TransactionGroup
+    : T[];
 
 export type PaginatedServerResponse<T> = {
   count: number;

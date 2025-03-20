@@ -1,124 +1,338 @@
 "use client";
 
+import { fetchApi } from "@/app/lib/api";
+import { JwtContext } from "@/app/lib/jwt-provider";
+import {
+  Budget,
+  NonPaginatedServerResponse,
+  PaginatedServerResponse,
+  ServerResponse,
+} from "@/lib/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, {
   createContext,
   useState,
-  ReactNode,
   useCallback,
   useContext,
+  useMemo,
 } from "react";
 
-type Category = {
-  name: string;
-  amount: number;
-  color: string;
-};
-
 type BudgetContextType = {
-  categories: Category[];
-  isEditMode: boolean;
-  newCategory: string;
-  newAmount: string;
-  addCategory: (e: React.FormEvent) => void;
-  removeCategory: (index: number) => void;
-  updateAmount: (index: number, amount: string) => void;
-  setIsEditMode: (isEditMode: boolean) => void;
-  setNewCategory: (newCategory: string) => void;
-  setNewAmount: (newAmount: string) => void;
+  budgets: NonPaginatedServerResponse<Budget>;
+  isBudgetsLoading: boolean;
+  budgetsQueryError: Error | null;
+  refetchBudgets: () => void;
+
+  paginatedBudgets: PaginatedServerResponse<Budget>;
+  isPaginatedBudgetsLoading: boolean;
+  paginatedBudgetsQueryError: Error | null;
+  refetchPaginatedBudgets: () => void;
+
+  selectedBudget: Budget | undefined;
+  isSelectedBudgetLoading: boolean;
+  selectedBudgetQueryError: Error | null;
+  refetchSelectedBudget: () => void;
+
+  mutationError: Error | null;
+  getBudgets: (
+    queryParams?: Record<
+      string,
+      string | number | boolean | (string | number | boolean)[] | undefined
+    >,
+    options?: { no_page?: boolean },
+  ) => void;
+  getSelectedBudget: (uuid: string) => void;
+  addBudget: (budget: Budget) => void;
+  editBudget: (budget: Budget) => void;
+  deleteBudget: (budgetId: string) => void;
 };
 
-// Default values for the context
-const defaultBudgetContextValue: BudgetContextType = {
-  categories: [],
-  isEditMode: false,
-  newCategory: "",
-  newAmount: "",
-  addCategory: () => {},
-  removeCategory: () => {},
-  updateAmount: () => {},
-  setIsEditMode: () => {},
-  setNewCategory: () => {},
-  setNewAmount: () => {},
+export type BudgetQueryParameters = {
+  start_date_after?: string;
+  start_date_before?: string;
+  end_date_after?: string;
+  end_date_before?: string;
+  search?: string;
+  page?: number;
+  page_size?: number;
+  ordering?: string;
+  no_page?: undefined;
 };
 
-const BudgetContext = createContext<BudgetContextType>(
-  defaultBudgetContextValue,
-);
+const BudgetContext = createContext<BudgetContextType | null>(null);
 
-type BudgetProviderProps = {
-  children: ReactNode;
-};
+export default function BudgetProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const queryClient = useQueryClient();
+  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const [mutationError, setMutationError] = useState<Error | null>(null); // State to hold the mutation error
+  const [queryOptions, setQueryOptions] = useState<Record<string, any>>({
+    no_page: true,
+  });
+  const [paginatedQueryOptions, setPaginatedQueryOptions] = useState<
+    Record<string, any>
+  >({});
+  const [selectedBudgetUUID, setSelectedBudgetUUID] = useState<string>();
 
-export const BudgetProvider = ({ children }: BudgetProviderProps) => {
-  const [categories, setCategories] = useState<Category[]>([
-    { name: "Housing", amount: 1200, color: "#4CAF50" },
-    { name: "Food", amount: 500, color: "#FFC107" },
-    { name: "Transportation", amount: 300, color: "#2196F3" },
-    { name: "Entertainment", amount: 200, color: "#9C27B0" },
-    { name: "Miscellaneous", amount: 150, color: "#FF5722" },
-  ]);
-  const [newCategory, setNewCategory] = useState("");
-  const [newAmount, setNewAmount] = useState("");
-  const [isEditMode, setIsEditMode] = useState(false);
+  const fetchBudgets = async (
+    queryOptions: Record<string, any>,
+    options?: { uuid: string },
+  ) => {
+    try {
+      if (options?.uuid) {
+        const url = `budgets/${options.uuid}/`;
+        const response = await fetchApi(jwt, setAndStoreJwt, url, "GET");
+        const data: Budget = await response.json();
+        return data;
+      }
+      const queryString = new URLSearchParams(queryOptions).toString();
+      const url = `budgets/?${queryString}`;
+      const response = await fetchApi(jwt, setAndStoreJwt, url, "GET");
+      const data: ServerResponse<Budget> = await response.json();
 
-  const addCategory = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (newCategory.trim() !== "" && newAmount.trim() !== "") {
-        setCategories([
-          ...categories,
-          {
-            name: newCategory.trim(),
-            amount: parseFloat(newAmount),
-            color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-          },
-        ]);
-        setNewCategory("");
-        setNewAmount("");
+      return data;
+    } catch (err) {
+      throw new Error("Error fetching budgets: " + err);
+    }
+  };
+
+  // Fetch budgets without pagination
+  const {
+    data: budgets,
+    isLoading: isBudgetsLoading,
+    error: budgetsQueryError,
+    refetch: refetchBudgets,
+  } = useQuery({
+    queryKey: ["budgets", queryOptions],
+    queryFn: () => fetchBudgets(queryOptions),
+    enabled: !!jwt,
+  });
+
+  // Fetch paginated budgets
+  const {
+    data: paginatedBudgets,
+    isLoading: isPaginatedBudgetsLoading,
+    error: paginatedBudgetsQueryError,
+    refetch: refetchPaginatedBudgets,
+  } = useQuery({
+    queryKey: ["budgets", paginatedQueryOptions],
+    queryFn: () => fetchBudgets(paginatedQueryOptions),
+    enabled: !!jwt, // Only fetch when jwt is available
+  });
+
+  // Fetch a single budget
+  const {
+    data: selectedBudget,
+    isLoading: isSelectedBudgetLoading,
+    error: selectedBudgetQueryError,
+    refetch: refetchSelectedBudget,
+  } = useQuery({
+    queryKey: ["budgets", selectedBudgetUUID],
+    queryFn: () =>
+      fetchBudgets({}, { uuid: selectedBudgetUUID! }) as Promise<Budget>,
+    enabled: !!selectedBudgetUUID,
+  });
+
+  const getBudgets = useCallback(
+    (
+      queryParams?: Record<
+        string,
+        string | number | boolean | (string | number | boolean)[] | undefined
+      >,
+      options?: { no_page?: boolean },
+    ) => {
+      if (options?.no_page) {
+        setQueryOptions({ ...queryParams, no_page: true });
+      } else {
+        const { no_page, ...paginatedQueryParams } = queryParams || {};
+        setPaginatedQueryOptions(paginatedQueryParams);
       }
     },
-    [categories, newCategory, newAmount],
+    [setQueryOptions, setPaginatedQueryOptions],
   );
 
-  const removeCategory = useCallback(
-    (index: number) => {
-      setCategories(categories.filter((_, i) => i !== index));
+  const getSelectedBudget = useCallback(
+    (uuid: string) => {
+      setSelectedBudgetUUID(uuid);
+      refetchSelectedBudget();
     },
-    [categories],
+    [refetchSelectedBudget],
   );
 
-  const updateAmount = useCallback(
-    (index: number, amount: string) => {
-      const updatedCategories = [...categories];
-      updatedCategories[index].amount = parseFloat(amount) || 0;
-      setCategories(updatedCategories);
+  const addBudgetMutation = useMutation({
+    onError: (error) => {
+      setMutationError(
+        error instanceof Error
+          ? error
+          : new Error("An error occurred during the budget creation."),
+      );
     },
-    [categories],
+    mutationFn: async (newBudget: Omit<Budget, "id">) => {
+      newBudget.items = newBudget.items.map((item) => {
+        if ("category" in item) {
+          const { category, ...rest } = item;
+          item = {
+            ...rest,
+            category_uuid: item.category.id,
+          };
+        }
+        // Round to 2 Decimal Places since server cannot handle more than 2 decimal places
+        item.allocation = parseFloat(item.allocation.toFixed(2));
+        return item;
+      });
+      return await fetchApi(jwt, setAndStoreJwt, "budgets/", "POST", newBudget);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["budgets"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["currentBudget"],
+      });
+    },
+  });
+
+  const editBudgetMutation = useMutation({
+    onError: (error) => {
+      setMutationError(
+        error instanceof Error
+          ? error
+          : new Error("An error occurred during the budget update."),
+      );
+    },
+    mutationFn: async (updatedBudget: Budget) => {
+      // Convert ReadOnlyBudgetItem to WriteOnlyBudgetItem
+      updatedBudget.items = updatedBudget.items.map((item) => {
+        if ("id" in item) {
+          const { id, category, budget_id, ...rest } = item;
+          item = {
+            ...rest,
+            uuid: id,
+            category_uuid: item.category.id,
+          };
+        }
+        item.allocation = parseFloat(item.allocation.toFixed(2));
+
+        return item;
+      });
+      return await fetchApi(
+        jwt,
+        setAndStoreJwt,
+        `budgets/${updatedBudget.id}/`,
+        "PUT",
+        updatedBudget,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["budgets"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["currentBudget"],
+      });
+    },
+  });
+  const deleteBudgetMutation = useMutation({
+    onError: (error) => {
+      setMutationError(
+        error instanceof Error
+          ? error
+          : new Error("An error occurred during the budget deletion."),
+      );
+    },
+    mutationFn: async (budgetId: string) => {
+      return await fetchApi(
+        jwt,
+        setAndStoreJwt,
+        `budgets/${budgetId}/`,
+        "DELETE",
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["budgets"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["currentBudget"],
+      });
+    },
+  });
+
+  const { mutateAsync: addBudgetMutateAsync } = addBudgetMutation;
+  const { mutateAsync: editBudgetMutateAsync } = editBudgetMutation;
+  const { mutateAsync: deleteBudgetMutateAsync } = deleteBudgetMutation;
+
+  const addBudget = useCallback(
+    async (budget: Budget) => {
+      await addBudgetMutateAsync(budget);
+    },
+    [addBudgetMutateAsync],
   );
 
+  const editBudget = useCallback(
+    async (budget: Budget) => {
+      await editBudgetMutateAsync(budget);
+    },
+    [editBudgetMutateAsync],
+  );
+
+  const deleteBudget = useCallback(
+    async (budgetId: string) => {
+      await deleteBudgetMutateAsync(budgetId);
+    },
+    [deleteBudgetMutateAsync],
+  );
+
+  const defaultPaginatedBudget = useMemo(
+    () => ({
+      count: 0,
+      next: null,
+      previous: null,
+      results: [],
+    }),
+    [],
+  );
   const value = {
-    categories,
-    isEditMode,
-    newCategory,
-    newAmount,
-    addCategory,
-    removeCategory,
-    updateAmount,
-    setIsEditMode,
-    setNewCategory,
-    setNewAmount,
+    budgets: useMemo(() => {
+      return (budgets as NonPaginatedServerResponse<Budget>) || [];
+    }, [budgets]),
+    isBudgetsLoading,
+    budgetsQueryError,
+    refetchBudgets,
+    paginatedBudgets: useMemo(() => {
+      return (
+        (paginatedBudgets as PaginatedServerResponse<Budget>) ||
+        defaultPaginatedBudget
+      );
+    }, [paginatedBudgets, defaultPaginatedBudget]),
+    isPaginatedBudgetsLoading,
+    paginatedBudgetsQueryError,
+    refetchPaginatedBudgets,
+    selectedBudget,
+    isSelectedBudgetLoading,
+    selectedBudgetQueryError,
+    refetchSelectedBudget,
+    getBudgets,
+    getSelectedBudget,
+    addBudget,
+    editBudget,
+    deleteBudget,
+    mutationError,
   };
 
   return (
     <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>
   );
-};
+}
 
 // Custom hook to ensure the context is used within a provider
-export const useBudgetContext = () => {
+export const useBudgets = () => {
   const context = useContext(BudgetContext);
-  if (context === undefined) {
-    throw new Error("useBudgetContext must be used within a BudgetProvider");
+  if (!context) {
+    throw new Error("useBudgets must be used within a BudgetProvider");
   }
   return context;
 };

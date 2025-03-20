@@ -373,8 +373,8 @@ export function RecentTransactionsPage() {
     setCategoryFilter(undefined);
     setStartDate(null);
     setEndDate(null);
-    setCurrentPage(0);
-    setPageSize(10);
+    setCurrentPage((_) => 0);
+    setPageSize((_) => 10);
     setOrdering("-date");
     getTransactionGroups({});
   };
@@ -401,13 +401,7 @@ export function RecentTransactionsPage() {
     );
     return <ToastContainer />;
   }
-  // Type Guard to ensure `categories` object is an array
-  if (!isArrayType(categories)) {
-    toast.error("Error loading categories: categories is not an array", {
-      position: "bottom-left",
-    });
-    return <ToastContainer />;
-  }
+
   // We know `totals` will always exist for transaction groups
   const { income: totalIncome, expense: totalExpenses } =
     transactionGroups.totals;

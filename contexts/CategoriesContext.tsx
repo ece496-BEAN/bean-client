@@ -1,15 +1,23 @@
 "use client";
 
+import React from "react";
 import { fetchApi } from "@/app/lib/api";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import {
   Category,
   NonPaginatedServerResponse,
   PaginatedServerResponse,
+  PartialByKeys,
   ServerResponse,
 } from "@/lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createContext, useCallback, useContext, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 
 interface CategoriesContextType {
   paginatedCategories: PaginatedServerResponse<Category>;
@@ -67,9 +75,7 @@ export default function CategoryProvider({
   >({ no_page: true });
   const [paginatedCategoriesQueryOptions, setPaginatedCategoriesQueryOptions] =
     useState<Record<string, any>>({});
-  const [selectedCategoryUUID, setSelectedCategoryUUID] = useState<
-    string | null
-  >(null);
+
   const fetchCategories = async (queryOptions: Record<string, any>) => {
     try {
       const queryString = new URLSearchParams(queryOptions).toString();
@@ -140,8 +146,8 @@ export default function CategoryProvider({
     },
     mutationFn: async (
       newCategory:
-        | Omit<Category, "legacy" | "id">
-        | Omit<Category, "legacy" | "id">[],
+        | PartialByKeys<Category, "legacy" | "id">
+        | PartialByKeys<Category, "legacy" | "id">[],
     ) => {
       const response = await fetchApi(
         jwt,
@@ -175,13 +181,12 @@ export default function CategoryProvider({
       );
     },
     mutationFn: async (categoryId: string) => {
-      const response = await fetchApi(
+      return await fetchApi(
         jwt,
         setAndStoreJwt,
         `categories/${categoryId}/`,
         "DELETE",
       );
-      return response.json();
     },
     onSuccess: () => {
       // Invalidate the transaction groups and budget queries as well since they nest category information in their responses
@@ -229,33 +234,56 @@ export default function CategoryProvider({
     },
   });
 
-  const addCategory = async (
-    newCategories:
-      | Omit<Category, "legacy" | "id">
-      | Omit<Category, "legacy" | "id">[],
-  ) => {
-    addCategoryMutation.mutate(newCategories);
-  };
-  const editCategory = async (editedCategory: Category) => {
-    editCategoryMutation.mutate(editedCategory);
-  };
-  const deleteCategory = async (categoryId: string) => {
-    deleteCategoryMutation.mutate(categoryId);
-  };
+  const { mutateAsync: addCategoryMutateAsync } = addCategoryMutation;
+  const { mutateAsync: editCategoryMutateAsync } = editCategoryMutation;
+  const { mutateAsync: deleteCategoryMutateAsync } = deleteCategoryMutation;
 
-  const defaultPaginatedCategories: ServerResponse<Category> = {
-    count: 0,
-    next: null,
-    previous: null,
-    results: [],
-  };
+  const addCategory = useCallback(
+    async (
+      newCategories:
+        | Omit<Category, "legacy" | "id">
+        | Omit<Category, "legacy" | "id">[],
+    ) => {
+      await addCategoryMutateAsync(newCategories);
+    },
+    [addCategoryMutateAsync],
+  );
+
+  const editCategory = useCallback(
+    async (editedCategory: Category) => {
+      await editCategoryMutateAsync(editedCategory);
+    },
+    [editCategoryMutateAsync],
+  );
+
+  const deleteCategory = useCallback(
+    async (categoryId: string) => {
+      await deleteCategoryMutateAsync(categoryId);
+    },
+    [deleteCategoryMutateAsync],
+  );
+
+  const defaultPaginatedCategories: ServerResponse<Category> = useMemo(
+    () => ({
+      count: 0,
+      next: null,
+      previous: null,
+      results: [],
+    }),
+    [],
+  );
   const contextValue = {
-    paginatedCategories:
-      (paginated_categories as PaginatedServerResponse<Category>) ||
-      defaultPaginatedCategories,
+    paginatedCategories: useMemo(() => {
+      return (
+        (paginated_categories as PaginatedServerResponse<Category>) ||
+        defaultPaginatedCategories
+      );
+    }, [paginated_categories, defaultPaginatedCategories]),
     isPaginatedCategoriesLoading,
     paginatedCategoriesQueryError,
-    categories: (categories as NonPaginatedServerResponse<Category>) || [],
+    categories: useMemo(() => {
+      return (categories as NonPaginatedServerResponse<Category>) || [];
+    }, [categories]),
     isCategoriesLoading,
     categoriesQueryError,
     mutationError,

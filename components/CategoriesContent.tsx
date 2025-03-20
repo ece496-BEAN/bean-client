@@ -16,7 +16,6 @@ import {
   IconButton,
   Box,
   Button,
-  CircularProgress,
   FormControlLabel,
   Switch,
   InputAdornment,
@@ -41,14 +40,14 @@ import {
   ArrowUpward,
   ArrowDownward,
 } from "@mui/icons-material";
-import { set } from "date-fns";
+import { AddCategoryModal } from "@/components/AddCategoryModal";
 
 function CategoriesContent() {
   const {
     paginatedCategories,
-    isPaginatedCategoriesLoading,
     paginatedCategoriesQueryError,
     getCategories,
+    addCategory,
     editCategory,
     deleteCategory,
     refetchPaginatedCategories,
@@ -61,7 +60,16 @@ function CategoriesContent() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const filterMenuOpen = Boolean(anchorEl);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  const handleOpenAddModal = () => {
+    setIsAddModalOpen(true);
+  };
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+  };
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
@@ -103,7 +111,6 @@ function CategoriesContent() {
       return legacyValue;
     });
     handleFilterMenuClose();
-    console.log(legacyValue);
     const params: CategoryQueryParameters =
       legacyValue === null ? {} : { legacy: legacyValue };
 
@@ -144,29 +151,33 @@ function CategoriesContent() {
     setCategoryToDeleted(undefined);
   };
 
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
+  // TODO: Make it refetch with the proper query parameters other than pages
   const handleChangePage = useCallback(
     (newPage: number) => {
-      setPage(newPage);
-      getCategories({ page: newPage + 1, page_size: rowsPerPage });
+      setPage((_) => newPage);
+      const params: CategoryQueryParameters = {};
+      if (searchQuery) {
+        params.name = searchQuery;
+      }
+      if (legacyFilter !== null) {
+        params.legacy = legacyFilter;
+      }
+      if (sortDirection) {
+        params.ordering = sortDirection === "asc" ? "name" : "-name";
+      }
+      getCategories({ ...params, page: newPage + 1, page_size: rowsPerPage });
     },
-    [rowsPerPage, getCategories],
+    [rowsPerPage, searchQuery, legacyFilter, sortDirection, getCategories],
   );
 
   const handleChangeRowsPerPage = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      setRowsPerPage(parseInt(event.target.value, 10));
-      setPage(0);
+      setRowsPerPage((_) => parseInt(event.target.value, 10));
+      setPage((_) => 0);
       getCategories({ page: 1, page_size: parseInt(event.target.value, 10) }); // Reset to page 1
     },
     [getCategories],
   );
-
-  // useEffect(() => {
-  //     getCategories({page: page + 1, page_size: rowsPerPage})
-  // }, [])
 
   useEffect(() => {
     if (paginatedCategoriesQueryError) {
@@ -201,15 +212,7 @@ function CategoriesContent() {
     }
   };
 
-  if (isPaginatedCategoriesLoading) {
-    return <CircularProgress />;
-  }
-
-  if (!paginatedCategories || !("results" in paginatedCategories)) {
-    return <div>Error loading categories</div>;
-  }
   const { results: categories, count: totalCount } = paginatedCategories;
-
   return (
     <Box className="flex flex-col h-auto bg-gray-50">
       <div className="flex items-center space-x-4 mb-4">
@@ -266,6 +269,16 @@ function CategoriesContent() {
             </FormGroup>
           </div>
         </Popover>
+        <Button
+          variant="contained"
+          onClick={handleOpenAddModal}
+          sx={{
+            backgroundColor: "purple",
+            ":hover": { backgroundColor: "#6366f1" },
+          }}
+        >
+          Add New Categories
+        </Button>
         <Button
           variant="contained"
           onClick={() => refetchPaginatedCategories()}
@@ -395,6 +408,11 @@ function CategoriesContent() {
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
       <ToastContainer />
+      <AddCategoryModal
+        isOpen={isAddModalOpen}
+        onClose={handleCloseAddModal}
+        onSave={addCategory}
+      />
       <ConfirmDeleteModal
         isOpen={isDeleteModalOpen}
         confirmDeleteItem={categoryToBeDeleted}
