@@ -17,8 +17,10 @@ interface AddCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (
-    transaction: PartialByKeys<Category, "id" | "legacy">[],
-  ) => Promise<void>;
+    category:
+      | PartialByKeys<Category, "id" | "legacy">[]
+      | PartialByKeys<Category, "id" | "legacy">,
+  ) => Promise<Category[] | Category>;
 }
 
 const defaultCategory: PartialByKeys<Category, "id" | "legacy"> = {

@@ -2,14 +2,12 @@
 
 import React, {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
-import { useBudgets } from "@/contexts/BudgetContext";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { fetchApi } from "@/app/lib/api";

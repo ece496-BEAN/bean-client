@@ -46,7 +46,6 @@ export function BudgetAndCategoryPage({
   };
 
   useEffect(() => {
-    console.log("Check if login");
     if (!jwt) {
       router.push("/login"); // Redirect to login if JWT is not set
     }
@@ -55,9 +54,10 @@ export function BudgetAndCategoryPage({
   useEffect(() => {
     // Sync selectedTab with router.pathname when it changes
     let newIndex = 0;
-    if (path.startsWith("/budget/current")) newIndex = 0;
+    if (path === "/budget") newIndex = 2;
     else if (path.startsWith("/budget/new")) newIndex = 1;
-    else if (path.startsWith("/budget")) newIndex = 2;
+    else if (path.startsWith("/budget/current") || path.startsWith(`/budget`))
+      newIndex = 0;
     else if (path.startsWith("/categories")) newIndex = 3;
     setSelectedTab(newIndex);
   }, [path]);
@@ -65,7 +65,8 @@ export function BudgetAndCategoryPage({
   const currentPage = () => {
     switch (selectedTab) {
       case 0:
-        return "Current Budget";
+        if (!currentBudgetUUID) return "No Active Budget Detected";
+        return `Budget ${currentBudgetUUID} Details`;
       case 1:
         return "Add Budget";
       case 2:
@@ -90,7 +91,7 @@ export function BudgetAndCategoryPage({
             variant="scrollable"
           >
             <Tab
-              label="Current Budget"
+              label="Budget Details"
               component={Link}
               href={routes.currentBudget}
             />

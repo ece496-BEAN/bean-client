@@ -36,7 +36,6 @@ import {
   Category,
   TransactionGroup,
   ReadOnlyTransaction,
-  isArrayType,
   Transaction,
 } from "@/lib/types";
 import { JwtContext } from "@/app/lib/jwt-provider";
@@ -49,7 +48,7 @@ import {
 } from "@mui/material";
 import { ArrowUpward, ArrowDownward } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
-import { AddOrEditTransactionGroupModal } from "@/components/add-edit-transaction-group-modal";
+import { AddOrEditTransactionGroupModal } from "@/components/AddOrEditTransactionModal";
 import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";

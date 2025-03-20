@@ -10,7 +10,12 @@ import {
   PartialByKeys,
   ServerResponse,
 } from "@/lib/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   createContext,
   useCallback,
@@ -23,10 +28,12 @@ interface CategoriesContextType {
   paginatedCategories: PaginatedServerResponse<Category>;
   isPaginatedCategoriesLoading: boolean;
   paginatedCategoriesQueryError: Error | null;
+  isPaginatedCategoriesPlaceholderData: boolean;
 
   categories: NonPaginatedServerResponse<Category>;
   isCategoriesLoading: boolean;
   categoriesQueryError: Error | null;
+  isCategoriesPlaceholderData: boolean;
 
   mutationError: Error | null;
 
@@ -41,8 +48,8 @@ interface CategoriesContextType {
     newCategories:
       | Omit<Category, "legacy" | "id">
       | Omit<Category, "legacy" | "id">[],
-  ) => Promise<void>;
-  editCategory: (editedCategory: Category) => Promise<void>;
+  ) => Promise<Category | Category[]>;
+  editCategory: (editedCategory: Category) => Promise<Category>;
   deleteCategory: (categoryId: string) => Promise<void>;
   refetchPaginatedCategories: () => void;
   refetchCategories: () => void;
@@ -93,9 +100,11 @@ export default function CategoryProvider({
     isLoading: isPaginatedCategoriesLoading,
     error: paginatedCategoriesQueryError,
     refetch: refetchPaginatedCategories,
+    isPlaceholderData: isPaginatedCategoriesPlaceholderData,
   } = useQuery({
     queryKey: ["categories", paginatedCategoriesQueryOptions],
     queryFn: async () => fetchCategories(paginatedCategoriesQueryOptions),
+    placeholderData: keepPreviousData,
     enabled: !!jwt, // Only fetch when jwt is available
   });
 
@@ -105,9 +114,11 @@ export default function CategoryProvider({
     isLoading: isCategoriesLoading,
     error: categoriesQueryError,
     refetch: refetchCategories,
+    isPlaceholderData: isCategoriesPlaceholderData,
   } = useQuery({
     queryKey: ["categories", categoriesQueryOptions],
     queryFn: async () => fetchCategories(categoriesQueryOptions),
+    placeholderData: keepPreviousData,
     enabled: !!jwt, // Only fetch when jwt is available
   });
 
@@ -156,7 +167,10 @@ export default function CategoryProvider({
         "POST",
         newCategory,
       );
-      return response.json();
+      if (Array.isArray(newCategory)) {
+        return (await response.json()) as Category[];
+      }
+      return (await response.json()) as Category;
     },
     onSuccess: () => {
       // Invalidate the transaction groups and budget queries as well since they nest category information in their responses
@@ -181,7 +195,7 @@ export default function CategoryProvider({
       );
     },
     mutationFn: async (categoryId: string) => {
-      return await fetchApi(
+      await fetchApi(
         jwt,
         setAndStoreJwt,
         `categories/${categoryId}/`,
@@ -218,7 +232,7 @@ export default function CategoryProvider({
         "PATCH",
         editedCategory,
       );
-      return response.json();
+      return (await response.json()) as Category;
     },
     onSuccess: () => {
       // Invalidate the transaction groups and budget queries as well since they nest category information in their responses
@@ -244,14 +258,18 @@ export default function CategoryProvider({
         | Omit<Category, "legacy" | "id">
         | Omit<Category, "legacy" | "id">[],
     ) => {
-      await addCategoryMutateAsync(newCategories);
+      const newlyCreatedCategory = await addCategoryMutateAsync(newCategories);
+      if (Array.isArray(newCategories)) {
+        return newlyCreatedCategory as Category[];
+      }
+      return newlyCreatedCategory as Category;
     },
     [addCategoryMutateAsync],
   );
 
   const editCategory = useCallback(
     async (editedCategory: Category) => {
-      await editCategoryMutateAsync(editedCategory);
+      return await editCategoryMutateAsync(editedCategory);
     },
     [editCategoryMutateAsync],
   );
@@ -281,11 +299,13 @@ export default function CategoryProvider({
     }, [paginated_categories, defaultPaginatedCategories]),
     isPaginatedCategoriesLoading,
     paginatedCategoriesQueryError,
+    isPaginatedCategoriesPlaceholderData,
     categories: useMemo(() => {
       return (categories as NonPaginatedServerResponse<Category>) || [];
     }, [categories]),
     isCategoriesLoading,
     categoriesQueryError,
+    isCategoriesPlaceholderData,
     mutationError,
     getCategories,
     addCategory,

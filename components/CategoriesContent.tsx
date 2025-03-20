@@ -45,6 +45,7 @@ import { AddCategoryModal } from "@/components/AddCategoryModal";
 function CategoriesContent() {
   const {
     paginatedCategories,
+    isCategoriesLoading: isLoading,
     paginatedCategoriesQueryError,
     getCategories,
     addCategory,
@@ -243,7 +244,7 @@ function CategoriesContent() {
           Filter
         </Button>
 
-        <Popover // Filter popover (no changes needed here)
+        <Popover
           open={filterMenuOpen}
           anchorEl={anchorEl}
           onClose={handleFilterMenuClose}
@@ -281,7 +282,9 @@ function CategoriesContent() {
         </Button>
         <Button
           variant="contained"
-          onClick={() => refetchPaginatedCategories()}
+          onClick={refetchPaginatedCategories}
+          loading={isLoading}
+          loadingPosition="end"
           sx={{
             backgroundColor: "purple",
             ":hover": { backgroundColor: "#6366f1" },

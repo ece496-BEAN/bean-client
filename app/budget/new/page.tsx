@@ -1,5 +1,5 @@
 import React from "react";
-import { AddBudgetPage } from "@/components/addBudgetPage";
+import { AddBudgetPage } from "@/components/AddBudgetPage";
 import { BudgetAndCategoryPage } from "@/components/BudgetManagement";
 import BudgetProvider from "@/contexts/BudgetContext";
 import CategoryProvider from "@/contexts/CategoriesContext";
