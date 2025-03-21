@@ -184,12 +184,6 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                 ))}
               </ul>
             )}
-            <ConfirmDeleteModal
-              isOpen={isDeleteModalOpen}
-              onDelete={onDelete}
-              confirmDeleteItem={groupToDeleted}
-              onClose={handleCloseDeleteModal}
-            />
           </div>
         );
       })}
@@ -202,6 +196,12 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
         onRowsPerPageChange={(e) => {
           onRowsPerPageChange(parseInt(e.target.value, 10));
         }}
+      />
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onDelete={onDelete}
+        confirmDeleteItem={groupToDeleted}
+        onClose={handleCloseDeleteModal}
       />
     </div>
   );
