@@ -16,7 +16,6 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-import { set } from "date-fns";
 
 type CategoryOption = Category & { inputValue?: string };
 
@@ -132,13 +131,20 @@ export default function CategoryAutocomplete({
                   </Typography>
                 )}
               </Stack>
-
-              <Chip
-                label={option.legacy ? "Legacy" : "Active"}
-                color={option.legacy ? "default" : "primary"}
-                size="small"
-                variant="outlined"
-              />
+              <Stack direction="row" spacing={0.5}>
+                <Chip
+                  label={option.is_income_type ? "Income" : "Expense"}
+                  color={option.is_income_type ? "success" : "error"}
+                  size="small"
+                  variant="outlined"
+                />
+                <Chip
+                  label={option.legacy ? "Legacy" : "Active"}
+                  color={option.legacy ? "default" : "primary"}
+                  size="small"
+                  variant="outlined"
+                />
+              </Stack>
             </Stack>
           </li>
         )}

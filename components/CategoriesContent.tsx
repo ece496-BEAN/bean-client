@@ -303,6 +303,22 @@ function CategoriesContent() {
                 label="Filter Legacy"
               />
             </FormGroup>
+            <Typography variant="body2" className="font-bold mb-2">
+              Is Income Type
+            </Typography>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={isIncomeTypeFilter === true}
+                    indeterminate={isIncomeTypeFilter === false}
+                    onChange={handleIsIncomeTypeFilterChange}
+                    color="primary"
+                  />
+                }
+                label="Filter Income Type"
+              />
+            </FormGroup>
           </div>
         </Popover>
         <Button

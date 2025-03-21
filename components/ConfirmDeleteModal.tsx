@@ -47,6 +47,8 @@ export function ConfirmDeleteModal<T extends Item>({
 
   const handleCancelDelete = () => {
     setDeleteConfirmation(""); // Clear any typed confirmation
+    setDeleteError(false);
+
     onClose();
   };
   return (

@@ -28,6 +28,7 @@ import { Button, CircularProgress } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import "react-toastify/dist/ReactToastify.css";
+import CategorySelector from "./CategorySelector";
 
 interface AddOrEditTransactionModalProps {
   isOpen: boolean;
@@ -316,54 +317,37 @@ export function AddOrEditTransactionGroupModal({
                   />
                 </div>
                 <div>
-                  <Label htmlFor={`transaction-category-${index}`}>
-                    Category
-                  </Label>
-                  <Select
-                    onValueChange={(value) => {
-                      const updatedTransactions = [
-                        ...newTransactionGroup.transactions,
-                      ];
-                      if (
-                        mode === "edit" &&
-                        "category" in updatedTransactions[index]
-                      ) {
-                        updatedTransactions[index] = {
-                          ...updatedTransactions[index],
-                          category: {
-                            ...updatedTransactions[index].category,
-                            id: value,
-                          },
-                        };
-                      } else {
-                        updatedTransactions[index] = {
-                          ...updatedTransactions[index],
-                          category_uuid: value,
-                        };
-                      }
-                      setNewTransactionGroup({
-                        ...newTransactionGroup,
-                        transactions: updatedTransactions,
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          "category" in transaction
-                            ? transaction.category.name
-                            : "Select Category"
+                  <CategorySelector
+                    value={(transaction as ReadOnlyTransaction).category}
+                    onChange={(value) => {
+                      if (value) {
+                        const updatedTransactions = [
+                          ...newTransactionGroup.transactions,
+                        ];
+                        if (
+                          mode === "edit" &&
+                          "category" in updatedTransactions[index]
+                        ) {
+                          updatedTransactions[index] = {
+                            ...updatedTransactions[index],
+                            category: {
+                              ...updatedTransactions[index].category,
+                              id: value.id,
+                            },
+                          };
+                        } else {
+                          updatedTransactions[index] = {
+                            ...updatedTransactions[index],
+                            category_uuid: value.id,
+                          };
                         }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        setNewTransactionGroup({
+                          ...newTransactionGroup,
+                          transactions: updatedTransactions,
+                        });
+                      }
+                    }}
+                  />
                 </div>
                 <Button
                   type="button"
