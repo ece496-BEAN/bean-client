@@ -53,33 +53,20 @@ export function ExpenseChart() {
     function fetchTransactionData(
       expenses: boolean = true,
     ): ChartTransaction[] {
-      function stripIncome(str: string) {
-        const prefix = "income-";
-        if (str.startsWith(prefix)) {
-          return str.slice(prefix.length);
-        }
-        return str;
-      }
-
       const parsedTransactions: ChartTransaction[] = transactionGroups.results
         .flatMap((tx) =>
           tx.transactions
             .filter((t) =>
-              expenses
-                ? !t.category.name.startsWith("income-")
-                : t.category.name.startsWith("income-"),
+              expenses ? !t.category.is_income_type : t.category.is_income_type,
             )
             .map((t) => ({
               date: new Date(tx.date),
               amount: -t.amount,
-              category: expenses
-                ? t.category.name
-                : stripIncome(t.category.name),
+              category: t.category.name,
             })),
         )
         .sort((a, b) => d3.ascending(a.date, b.date));
 
-      console.log(parsedTransactions);
       return parsedTransactions;
     }
     async function fetchProjectionData(

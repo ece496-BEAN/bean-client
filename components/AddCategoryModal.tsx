@@ -24,6 +24,7 @@ interface AddCategoryModalProps {
 const defaultCategory: PartialByKeys<Category, "id" | "legacy"> = {
   name: "",
   description: "",
+  is_income_type: false,
 };
 
 export function AddCategoryModal({
