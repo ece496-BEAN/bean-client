@@ -58,8 +58,9 @@ export default function CategoryAutocomplete({
     toggleOpen(false);
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = async (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+  ) => {
     // Can't seem to get the type inferring working
     const newCategory = (await addCategory(dialogValue)) as Category;
     setDialogValue(newCategory);
@@ -161,70 +162,68 @@ export default function CategoryAutocomplete({
         className="overflow-y-hidden"
         fullWidth
       >
-        <form onSubmit={handleSubmit}>
-          <DialogTitle>Create New Category</DialogTitle>
-          <DialogContent className="!p-0">
-            <div className="p-4">
-              <TextField
-                autoFocus
-                margin="dense"
-                id="name"
-                label="Name"
-                type="text"
-                fullWidth
-                variant="outlined"
-                value={dialogValue.name}
-                onChange={(e) =>
-                  setDialogValue({ ...dialogValue, name: e.target.value })
-                }
-              />
+        <DialogTitle>Create New Category</DialogTitle>
+        <DialogContent className="!p-0">
+          <div className="p-4">
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label="Name"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={dialogValue.name}
+              onChange={(e) =>
+                setDialogValue({ ...dialogValue, name: e.target.value })
+              }
+            />
 
-              <TextField
-                margin="dense"
-                id="description"
-                label="Description (Optional)"
-                type="text"
-                fullWidth
-                variant="outlined"
-                value={dialogValue.description || ""}
-                onChange={(e) =>
-                  setDialogValue({
-                    ...dialogValue,
-                    description: e.target.value,
-                  })
-                }
-              />
-              <FormControlLabel
-                label={
-                  <Chip
-                    label={dialogValue.is_income_type ? "Income" : "Expense"}
-                    color={dialogValue.is_income_type ? "success" : "error"}
-                  />
-                }
-                control={
-                  <Switch
-                    name="is_income_type"
-                    checked={dialogValue.is_income_type}
-                    onChange={(e) =>
-                      setDialogValue({
-                        ...dialogValue,
-                        is_income_type: e.target.checked,
-                      })
-                    }
-                  />
-                }
-              />
-            </div>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose} variant="outlined">
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained">
-              Create
-            </Button>
-          </DialogActions>
-        </form>
+            <TextField
+              margin="dense"
+              id="description"
+              label="Description (Optional)"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={dialogValue.description || ""}
+              onChange={(e) =>
+                setDialogValue({
+                  ...dialogValue,
+                  description: e.target.value,
+                })
+              }
+            />
+            <FormControlLabel
+              label={
+                <Chip
+                  label={dialogValue.is_income_type ? "Income" : "Expense"}
+                  color={dialogValue.is_income_type ? "success" : "error"}
+                />
+              }
+              control={
+                <Switch
+                  name="is_income_type"
+                  checked={dialogValue.is_income_type}
+                  onChange={(e) =>
+                    setDialogValue({
+                      ...dialogValue,
+                      is_income_type: e.target.checked,
+                    })
+                  }
+                />
+              }
+            />
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} variant="contained">
+            Create
+          </Button>
+        </DialogActions>
       </Dialog>
     </Stack>
   );

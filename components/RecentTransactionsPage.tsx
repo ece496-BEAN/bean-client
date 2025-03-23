@@ -335,7 +335,7 @@ export function RecentTransactionsPage() {
     useState<TransactionGroup<ReadOnlyTransaction>>();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<Category["id"]>();
+  const [categoryFilter, setCategoryFilter] = useState<Category | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   // Don't automatically refetch on search
   useEffect(() => {
@@ -350,7 +350,7 @@ export function RecentTransactionsPage() {
       queryParams.search = searchTerm;
     }
     if (categoryFilter) {
-      queryParams.category_uuid = categoryFilter;
+      queryParams.category_uuid = categoryFilter.id;
     }
     if (currentPage >= 1) {
       // Pages for API start at 1, but the pages in the component start at 0
@@ -376,7 +376,7 @@ export function RecentTransactionsPage() {
   };
   const resetFilters = () => {
     setSearchTerm("");
-    setCategoryFilter(undefined);
+    setCategoryFilter(null);
     setStartDate(null);
     setEndDate(null);
     setCurrentPage((_) => 0);
@@ -447,6 +447,7 @@ export function RecentTransactionsPage() {
             setOrdering={setOrdering}
             setSearchTerm={setSearchTerm}
             setCategoryFilter={setCategoryFilter}
+            categoryFilter={categoryFilter}
             setStartDate={setStartDate}
             setEndDate={setEndDate}
             ordering={ordering}
@@ -501,7 +502,8 @@ interface TransactionListHeaderProps {
   refetch: () => void;
   setOrdering: React.Dispatch<React.SetStateAction<string>>;
   setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
-  setCategoryFilter: React.Dispatch<React.SetStateAction<string | undefined>>;
+  categoryFilter: Category | null;
+  setCategoryFilter: React.Dispatch<React.SetStateAction<Category | null>>;
   setStartDate: React.Dispatch<React.SetStateAction<Date | null>>;
   setEndDate: React.Dispatch<React.SetStateAction<Date | null>>;
   ordering: string;
@@ -517,6 +519,7 @@ function TransactionListHeader({
   refetch,
   setOrdering,
   setSearchTerm,
+  categoryFilter,
   setCategoryFilter,
   setStartDate,
   setEndDate,
@@ -575,11 +578,12 @@ function TransactionListHeader({
             </Grid2>
             <Grid2 size={12}>
               <CategorySelector
+                value={categoryFilter}
                 onChange={(category) => {
                   if (category) {
-                    setCategoryFilter(category.id);
+                    setCategoryFilter(category);
                   } else {
-                    setCategoryFilter(undefined);
+                    setCategoryFilter(null);
                   }
                 }}
               />
