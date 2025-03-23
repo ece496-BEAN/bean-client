@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Home,
   PieChart,
@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useTransactions } from "@/contexts/TransactionsContext";
+import { useCategories } from "@/contexts/CategoriesContext";
 
 export const NavigationBar: React.FC = () => {
   const router = useRouter();
@@ -20,6 +21,8 @@ export const NavigationBar: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { addTransactionGroup } = useTransactions();
+
+  const { categories, getCategories } = useCategories();
 
   // Handles the image upload process
   const handleImageUpload = async (
@@ -35,15 +38,25 @@ export const NavigationBar: React.FC = () => {
       formData.append("mimeType", file.type);
       formData.append("displayName", file.name);
 
+      formData.append(
+        "categories",
+        JSON.stringify(
+          categories
+            .filter((category) => !category.legacy && !category.is_income_type)
+            .map((category) => category.name),
+        ),
+      );
+
       const response = await fetch("/api/receipt-ocr", {
         method: "POST",
         body: formData,
       });
 
       const data = await response.json();
+      console.log("HI FRANK, PLEASE INTEGRATE THIS!!!");
       console.log(data);
       // TODO: Definitely need to display the dialog modal, as well as allow for the creation of DocumentScans instances (with image upload)
-      addTransactionGroup(data);
+      // addTransactionGroup(data);
 
       setLoading(false); // Reset loading state
 
@@ -114,7 +127,7 @@ export const NavigationBar: React.FC = () => {
             <BarChart className="w-6 h-6" />
           </Button>
         </li>
-        <li>
+        {/* <li>
           <Button
             variant="ghost"
             size="icon"
@@ -123,7 +136,7 @@ export const NavigationBar: React.FC = () => {
           >
             <Settings className="w-6 h-6" />
           </Button>
-        </li>
+        </li> */}
       </ul>
 
       {/* Hidden file input for image capture */}

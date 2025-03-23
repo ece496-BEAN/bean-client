@@ -185,7 +185,7 @@ export default function BudgetProvider({
       );
     },
     mutationFn: async (newBudget: Omit<Budget, "id">) => {
-      newBudget.items = newBudget.items.map((item) => {
+      newBudget.budget_items = newBudget.budget_items.map((item) => {
         if ("category" in item) {
           const { category, ...rest } = item;
           item = {
@@ -226,7 +226,7 @@ export default function BudgetProvider({
     },
     mutationFn: async (updatedBudget: Budget) => {
       // Convert ReadOnlyBudgetItem to WriteOnlyBudgetItem
-      updatedBudget.items = updatedBudget.items.map((item) => {
+      updatedBudget.budget_items = updatedBudget.budget_items.map((item) => {
         if ("id" in item) {
           const { id, category, budget_id, ...rest } = item;
           item = {

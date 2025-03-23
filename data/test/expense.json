@@ -1,0 +1,987 @@
+[
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": -140.1,
+    "category": "food",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": -36.09,
+    "category": "restaurants",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": -249.0,
+    "category": "utilities",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": -41.28,
+    "category": "entertainment",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": -321.73,
+    "category": "other",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": -377.2,
+    "category": "other",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": -145.34,
+    "category": "food",
+    "date": "2025-01-08T00:00:00"
+  },
+  {
+    "amount": -48.86,
+    "category": "restaurants",
+    "date": "2025-01-08T00:00:00"
+  },
+  {
+    "amount": -30.07,
+    "category": "entertainment",
+    "date": "2025-01-08T00:00:00"
+  },
+  {
+    "amount": -133.2,
+    "category": "food",
+    "date": "2025-01-15T00:00:00"
+  },
+  {
+    "amount": -48.44,
+    "category": "restaurants",
+    "date": "2025-01-15T00:00:00"
+  },
+  {
+    "amount": -41.53,
+    "category": "entertainment",
+    "date": "2025-01-15T00:00:00"
+  },
+  {
+    "amount": -102.57,
+    "category": "food",
+    "date": "2025-01-22T00:00:00"
+  },
+  {
+    "amount": -47.37,
+    "category": "restaurants",
+    "date": "2025-01-22T00:00:00"
+  },
+  {
+    "amount": -49.46,
+    "category": "entertainment",
+    "date": "2025-01-22T00:00:00"
+  },
+  {
+    "amount": -111.35,
+    "category": "food",
+    "date": "2025-01-29T00:00:00"
+  },
+  {
+    "amount": -36.23,
+    "category": "restaurants",
+    "date": "2025-01-29T00:00:00"
+  },
+  {
+    "amount": -46.01,
+    "category": "entertainment",
+    "date": "2025-01-29T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-02-01T00:00:00"
+  },
+  {
+    "amount": -243.09,
+    "category": "utilities",
+    "date": "2025-02-01T00:00:00"
+  },
+  {
+    "amount": -387.64,
+    "category": "other",
+    "date": "2025-02-01T00:00:00"
+  },
+  {
+    "amount": -126.98,
+    "category": "food",
+    "date": "2025-02-05T00:00:00"
+  },
+  {
+    "amount": -43.55,
+    "category": "restaurants",
+    "date": "2025-02-05T00:00:00"
+  },
+  {
+    "amount": -42.85,
+    "category": "entertainment",
+    "date": "2025-02-05T00:00:00"
+  },
+  {
+    "amount": -133.66,
+    "category": "food",
+    "date": "2025-02-12T00:00:00"
+  },
+  {
+    "amount": -31.97,
+    "category": "restaurants",
+    "date": "2025-02-12T00:00:00"
+  },
+  {
+    "amount": -45.22,
+    "category": "entertainment",
+    "date": "2025-02-12T00:00:00"
+  },
+  {
+    "amount": -114.47,
+    "category": "food",
+    "date": "2025-02-19T00:00:00"
+  },
+  {
+    "amount": -48.45,
+    "category": "restaurants",
+    "date": "2025-02-19T00:00:00"
+  },
+  {
+    "amount": -38.53,
+    "category": "entertainment",
+    "date": "2025-02-19T00:00:00"
+  },
+  {
+    "amount": -124.26,
+    "category": "food",
+    "date": "2025-02-26T00:00:00"
+  },
+  {
+    "amount": -35.91,
+    "category": "restaurants",
+    "date": "2025-02-26T00:00:00"
+  },
+  {
+    "amount": -35.75,
+    "category": "entertainment",
+    "date": "2025-02-26T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-03-01T00:00:00"
+  },
+  {
+    "amount": -225.64,
+    "category": "utilities",
+    "date": "2025-03-01T00:00:00"
+  },
+  {
+    "amount": -305.43,
+    "category": "other",
+    "date": "2025-03-01T00:00:00"
+  },
+  {
+    "amount": -117.55,
+    "category": "food",
+    "date": "2025-03-05T00:00:00"
+  },
+  {
+    "amount": -34.0,
+    "category": "restaurants",
+    "date": "2025-03-05T00:00:00"
+  },
+  {
+    "amount": -44.23,
+    "category": "entertainment",
+    "date": "2025-03-05T00:00:00"
+  },
+  {
+    "amount": -144.05,
+    "category": "food",
+    "date": "2025-03-12T00:00:00"
+  },
+  {
+    "amount": -35.13,
+    "category": "restaurants",
+    "date": "2025-03-12T00:00:00"
+  },
+  {
+    "amount": -36.72,
+    "category": "entertainment",
+    "date": "2025-03-12T00:00:00"
+  },
+  {
+    "amount": -101.23,
+    "category": "food",
+    "date": "2025-03-19T00:00:00"
+  },
+  {
+    "amount": -40.6,
+    "category": "restaurants",
+    "date": "2025-03-19T00:00:00"
+  },
+  {
+    "amount": -36.34,
+    "category": "entertainment",
+    "date": "2025-03-19T00:00:00"
+  },
+  {
+    "amount": -132.84,
+    "category": "food",
+    "date": "2025-03-26T00:00:00"
+  },
+  {
+    "amount": -49.36,
+    "category": "restaurants",
+    "date": "2025-03-26T00:00:00"
+  },
+  {
+    "amount": -46.49,
+    "category": "entertainment",
+    "date": "2025-03-26T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-04-01T00:00:00"
+  },
+  {
+    "amount": -285.27,
+    "category": "utilities",
+    "date": "2025-04-01T00:00:00"
+  },
+  {
+    "amount": -371.39,
+    "category": "other",
+    "date": "2025-04-01T00:00:00"
+  },
+  {
+    "amount": -135.62,
+    "category": "food",
+    "date": "2025-04-02T00:00:00"
+  },
+  {
+    "amount": -47.2,
+    "category": "restaurants",
+    "date": "2025-04-02T00:00:00"
+  },
+  {
+    "amount": -38.84,
+    "category": "entertainment",
+    "date": "2025-04-02T00:00:00"
+  },
+  {
+    "amount": -143.42,
+    "category": "food",
+    "date": "2025-04-09T00:00:00"
+  },
+  {
+    "amount": -46.1,
+    "category": "restaurants",
+    "date": "2025-04-09T00:00:00"
+  },
+  {
+    "amount": -40.05,
+    "category": "entertainment",
+    "date": "2025-04-09T00:00:00"
+  },
+  {
+    "amount": -128.23,
+    "category": "food",
+    "date": "2025-04-16T00:00:00"
+  },
+  {
+    "amount": -36.23,
+    "category": "restaurants",
+    "date": "2025-04-16T00:00:00"
+  },
+  {
+    "amount": -34.87,
+    "category": "entertainment",
+    "date": "2025-04-16T00:00:00"
+  },
+  {
+    "amount": -102.11,
+    "category": "food",
+    "date": "2025-04-23T00:00:00"
+  },
+  {
+    "amount": -41.49,
+    "category": "restaurants",
+    "date": "2025-04-23T00:00:00"
+  },
+  {
+    "amount": -42.88,
+    "category": "entertainment",
+    "date": "2025-04-23T00:00:00"
+  },
+  {
+    "amount": -120.34,
+    "category": "food",
+    "date": "2025-04-30T00:00:00"
+  },
+  {
+    "amount": -39.99,
+    "category": "restaurants",
+    "date": "2025-04-30T00:00:00"
+  },
+  {
+    "amount": -49.95,
+    "category": "entertainment",
+    "date": "2025-04-30T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-05-01T00:00:00"
+  },
+  {
+    "amount": -260.58,
+    "category": "utilities",
+    "date": "2025-05-01T00:00:00"
+  },
+  {
+    "amount": -351.94,
+    "category": "other",
+    "date": "2025-05-01T00:00:00"
+  },
+  {
+    "amount": -147.52,
+    "category": "food",
+    "date": "2025-05-07T00:00:00"
+  },
+  {
+    "amount": -30.54,
+    "category": "restaurants",
+    "date": "2025-05-07T00:00:00"
+  },
+  {
+    "amount": -49.69,
+    "category": "entertainment",
+    "date": "2025-05-07T00:00:00"
+  },
+  {
+    "amount": -115.43,
+    "category": "food",
+    "date": "2025-05-14T00:00:00"
+  },
+  {
+    "amount": -41.76,
+    "category": "restaurants",
+    "date": "2025-05-14T00:00:00"
+  },
+  {
+    "amount": -49.54,
+    "category": "entertainment",
+    "date": "2025-05-14T00:00:00"
+  },
+  {
+    "amount": -127.36,
+    "category": "food",
+    "date": "2025-05-21T00:00:00"
+  },
+  {
+    "amount": -45.72,
+    "category": "restaurants",
+    "date": "2025-05-21T00:00:00"
+  },
+  {
+    "amount": -42.18,
+    "category": "entertainment",
+    "date": "2025-05-21T00:00:00"
+  },
+  {
+    "amount": -123.29,
+    "category": "food",
+    "date": "2025-05-28T00:00:00"
+  },
+  {
+    "amount": -43.54,
+    "category": "restaurants",
+    "date": "2025-05-28T00:00:00"
+  },
+  {
+    "amount": -40.0,
+    "category": "entertainment",
+    "date": "2025-05-28T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-06-01T00:00:00"
+  },
+  {
+    "amount": -247.55,
+    "category": "utilities",
+    "date": "2025-06-01T00:00:00"
+  },
+  {
+    "amount": -318.42,
+    "category": "other",
+    "date": "2025-06-01T00:00:00"
+  },
+  {
+    "amount": -119.64,
+    "category": "food",
+    "date": "2025-06-04T00:00:00"
+  },
+  {
+    "amount": -30.35,
+    "category": "restaurants",
+    "date": "2025-06-04T00:00:00"
+  },
+  {
+    "amount": -44.93,
+    "category": "entertainment",
+    "date": "2025-06-04T00:00:00"
+  },
+  {
+    "amount": -148.39,
+    "category": "food",
+    "date": "2025-06-11T00:00:00"
+  },
+  {
+    "amount": -46.71,
+    "category": "restaurants",
+    "date": "2025-06-11T00:00:00"
+  },
+  {
+    "amount": -35.18,
+    "category": "entertainment",
+    "date": "2025-06-11T00:00:00"
+  },
+  {
+    "amount": -141.87,
+    "category": "food",
+    "date": "2025-06-18T00:00:00"
+  },
+  {
+    "amount": -45.26,
+    "category": "restaurants",
+    "date": "2025-06-18T00:00:00"
+  },
+  {
+    "amount": -48.91,
+    "category": "entertainment",
+    "date": "2025-06-18T00:00:00"
+  },
+  {
+    "amount": -138.79,
+    "category": "food",
+    "date": "2025-06-25T00:00:00"
+  },
+  {
+    "amount": -35.07,
+    "category": "restaurants",
+    "date": "2025-06-25T00:00:00"
+  },
+  {
+    "amount": -38.42,
+    "category": "entertainment",
+    "date": "2025-06-25T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-07-01T00:00:00"
+  },
+  {
+    "amount": -265.98,
+    "category": "utilities",
+    "date": "2025-07-01T00:00:00"
+  },
+  {
+    "amount": -327.71,
+    "category": "other",
+    "date": "2025-07-01T00:00:00"
+  },
+  {
+    "amount": -120.76,
+    "category": "food",
+    "date": "2025-07-02T00:00:00"
+  },
+  {
+    "amount": -41.3,
+    "category": "restaurants",
+    "date": "2025-07-02T00:00:00"
+  },
+  {
+    "amount": -33.17,
+    "category": "entertainment",
+    "date": "2025-07-02T00:00:00"
+  },
+  {
+    "amount": -106.48,
+    "category": "food",
+    "date": "2025-07-09T00:00:00"
+  },
+  {
+    "amount": -37.49,
+    "category": "restaurants",
+    "date": "2025-07-09T00:00:00"
+  },
+  {
+    "amount": -44.98,
+    "category": "entertainment",
+    "date": "2025-07-09T00:00:00"
+  },
+  {
+    "amount": -148.85,
+    "category": "food",
+    "date": "2025-07-16T00:00:00"
+  },
+  {
+    "amount": -33.87,
+    "category": "restaurants",
+    "date": "2025-07-16T00:00:00"
+  },
+  {
+    "amount": -42.82,
+    "category": "entertainment",
+    "date": "2025-07-16T00:00:00"
+  },
+  {
+    "amount": -101.26,
+    "category": "food",
+    "date": "2025-07-23T00:00:00"
+  },
+  {
+    "amount": -38.44,
+    "category": "restaurants",
+    "date": "2025-07-23T00:00:00"
+  },
+  {
+    "amount": -31.33,
+    "category": "entertainment",
+    "date": "2025-07-23T00:00:00"
+  },
+  {
+    "amount": -128.87,
+    "category": "food",
+    "date": "2025-07-30T00:00:00"
+  },
+  {
+    "amount": -36.24,
+    "category": "restaurants",
+    "date": "2025-07-30T00:00:00"
+  },
+  {
+    "amount": -41.54,
+    "category": "entertainment",
+    "date": "2025-07-30T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-08-01T00:00:00"
+  },
+  {
+    "amount": -220.64,
+    "category": "utilities",
+    "date": "2025-08-01T00:00:00"
+  },
+  {
+    "amount": -326.8,
+    "category": "other",
+    "date": "2025-08-01T00:00:00"
+  },
+  {
+    "amount": -111.17,
+    "category": "food",
+    "date": "2025-08-06T00:00:00"
+  },
+  {
+    "amount": -40.92,
+    "category": "restaurants",
+    "date": "2025-08-06T00:00:00"
+  },
+  {
+    "amount": -43.66,
+    "category": "entertainment",
+    "date": "2025-08-06T00:00:00"
+  },
+  {
+    "amount": -136.74,
+    "category": "food",
+    "date": "2025-08-13T00:00:00"
+  },
+  {
+    "amount": -48.72,
+    "category": "restaurants",
+    "date": "2025-08-13T00:00:00"
+  },
+  {
+    "amount": -43.52,
+    "category": "entertainment",
+    "date": "2025-08-13T00:00:00"
+  },
+  {
+    "amount": -137.9,
+    "category": "food",
+    "date": "2025-08-20T00:00:00"
+  },
+  {
+    "amount": -49.21,
+    "category": "restaurants",
+    "date": "2025-08-20T00:00:00"
+  },
+  {
+    "amount": -40.88,
+    "category": "entertainment",
+    "date": "2025-08-20T00:00:00"
+  },
+  {
+    "amount": -137.03,
+    "category": "food",
+    "date": "2025-08-27T00:00:00"
+  },
+  {
+    "amount": -48.11,
+    "category": "restaurants",
+    "date": "2025-08-27T00:00:00"
+  },
+  {
+    "amount": -33.74,
+    "category": "entertainment",
+    "date": "2025-08-27T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-09-01T00:00:00"
+  },
+  {
+    "amount": -287.12,
+    "category": "utilities",
+    "date": "2025-09-01T00:00:00"
+  },
+  {
+    "amount": -362.61,
+    "category": "other",
+    "date": "2025-09-01T00:00:00"
+  },
+  {
+    "amount": -123.03,
+    "category": "food",
+    "date": "2025-09-03T00:00:00"
+  },
+  {
+    "amount": -48.98,
+    "category": "restaurants",
+    "date": "2025-09-03T00:00:00"
+  },
+  {
+    "amount": -42.07,
+    "category": "entertainment",
+    "date": "2025-09-03T00:00:00"
+  },
+  {
+    "amount": -127.88,
+    "category": "food",
+    "date": "2025-09-10T00:00:00"
+  },
+  {
+    "amount": -40.26,
+    "category": "restaurants",
+    "date": "2025-09-10T00:00:00"
+  },
+  {
+    "amount": -30.86,
+    "category": "entertainment",
+    "date": "2025-09-10T00:00:00"
+  },
+  {
+    "amount": -132.67,
+    "category": "food",
+    "date": "2025-09-17T00:00:00"
+  },
+  {
+    "amount": -41.7,
+    "category": "restaurants",
+    "date": "2025-09-17T00:00:00"
+  },
+  {
+    "amount": -42.9,
+    "category": "entertainment",
+    "date": "2025-09-17T00:00:00"
+  },
+  {
+    "amount": -134.42,
+    "category": "food",
+    "date": "2025-09-24T00:00:00"
+  },
+  {
+    "amount": -44.15,
+    "category": "restaurants",
+    "date": "2025-09-24T00:00:00"
+  },
+  {
+    "amount": -32.65,
+    "category": "entertainment",
+    "date": "2025-09-24T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-10-01T00:00:00"
+  },
+  {
+    "amount": -120.78,
+    "category": "food",
+    "date": "2025-10-01T00:00:00"
+  },
+  {
+    "amount": -30.39,
+    "category": "restaurants",
+    "date": "2025-10-01T00:00:00"
+  },
+  {
+    "amount": -242.62,
+    "category": "utilities",
+    "date": "2025-10-01T00:00:00"
+  },
+  {
+    "amount": -44.15,
+    "category": "entertainment",
+    "date": "2025-10-01T00:00:00"
+  },
+  {
+    "amount": -305.09,
+    "category": "other",
+    "date": "2025-10-01T00:00:00"
+  },
+  {
+    "amount": -38000.09,
+    "category": "other",
+    "date": "2025-10-01T00:00:00"
+  },
+  {
+    "amount": -113.66,
+    "category": "food",
+    "date": "2025-10-08T00:00:00"
+  },
+  {
+    "amount": -49.92,
+    "category": "restaurants",
+    "date": "2025-10-08T00:00:00"
+  },
+  {
+    "amount": -49.99,
+    "category": "entertainment",
+    "date": "2025-10-08T00:00:00"
+  },
+  {
+    "amount": -131.57,
+    "category": "food",
+    "date": "2025-10-15T00:00:00"
+  },
+  {
+    "amount": -41.2,
+    "category": "restaurants",
+    "date": "2025-10-15T00:00:00"
+  },
+  {
+    "amount": -39.92,
+    "category": "entertainment",
+    "date": "2025-10-15T00:00:00"
+  },
+  {
+    "amount": -146.91,
+    "category": "food",
+    "date": "2025-10-22T00:00:00"
+  },
+  {
+    "amount": -43.49,
+    "category": "restaurants",
+    "date": "2025-10-22T00:00:00"
+  },
+  {
+    "amount": -42.6,
+    "category": "entertainment",
+    "date": "2025-10-22T00:00:00"
+  },
+  {
+    "amount": -111.13,
+    "category": "food",
+    "date": "2025-10-29T00:00:00"
+  },
+  {
+    "amount": -32.4,
+    "category": "restaurants",
+    "date": "2025-10-29T00:00:00"
+  },
+  {
+    "amount": -37.83,
+    "category": "entertainment",
+    "date": "2025-10-29T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-11-01T00:00:00"
+  },
+  {
+    "amount": -255.91,
+    "category": "utilities",
+    "date": "2025-11-01T00:00:00"
+  },
+  {
+    "amount": -364.8,
+    "category": "other",
+    "date": "2025-11-01T00:00:00"
+  },
+  {
+    "amount": -130.89,
+    "category": "food",
+    "date": "2025-11-05T00:00:00"
+  },
+  {
+    "amount": -34.55,
+    "category": "restaurants",
+    "date": "2025-11-05T00:00:00"
+  },
+  {
+    "amount": -43.97,
+    "category": "entertainment",
+    "date": "2025-11-05T00:00:00"
+  },
+  {
+    "amount": -136.46,
+    "category": "food",
+    "date": "2025-11-12T00:00:00"
+  },
+  {
+    "amount": -37.6,
+    "category": "restaurants",
+    "date": "2025-11-12T00:00:00"
+  },
+  {
+    "amount": -36.87,
+    "category": "entertainment",
+    "date": "2025-11-12T00:00:00"
+  },
+  {
+    "amount": -138.74,
+    "category": "food",
+    "date": "2025-11-19T00:00:00"
+  },
+  {
+    "amount": -32.71,
+    "category": "restaurants",
+    "date": "2025-11-19T00:00:00"
+  },
+  {
+    "amount": -48.28,
+    "category": "entertainment",
+    "date": "2025-11-19T00:00:00"
+  },
+  {
+    "amount": -105.4,
+    "category": "food",
+    "date": "2025-11-26T00:00:00"
+  },
+  {
+    "amount": -36.62,
+    "category": "restaurants",
+    "date": "2025-11-26T00:00:00"
+  },
+  {
+    "amount": -42.87,
+    "category": "entertainment",
+    "date": "2025-11-26T00:00:00"
+  },
+  {
+    "amount": -2000.0,
+    "category": "housing",
+    "date": "2025-12-01T00:00:00"
+  },
+  {
+    "amount": -290.83,
+    "category": "utilities",
+    "date": "2025-12-01T00:00:00"
+  },
+  {
+    "amount": -311.66,
+    "category": "other",
+    "date": "2025-12-01T00:00:00"
+  },
+  {
+    "amount": -117.8,
+    "category": "food",
+    "date": "2025-12-03T00:00:00"
+  },
+  {
+    "amount": -43.11,
+    "category": "restaurants",
+    "date": "2025-12-03T00:00:00"
+  },
+  {
+    "amount": -48.33,
+    "category": "entertainment",
+    "date": "2025-12-03T00:00:00"
+  },
+  {
+    "amount": -120.3,
+    "category": "food",
+    "date": "2025-12-10T00:00:00"
+  },
+  {
+    "amount": -49.74,
+    "category": "restaurants",
+    "date": "2025-12-10T00:00:00"
+  },
+  {
+    "amount": -43.85,
+    "category": "entertainment",
+    "date": "2025-12-10T00:00:00"
+  },
+  {
+    "amount": -124.33,
+    "category": "food",
+    "date": "2025-12-17T00:00:00"
+  },
+  {
+    "amount": -46.59,
+    "category": "restaurants",
+    "date": "2025-12-17T00:00:00"
+  },
+  {
+    "amount": -39.36,
+    "category": "entertainment",
+    "date": "2025-12-17T00:00:00"
+  },
+  {
+    "amount": -133.1,
+    "category": "food",
+    "date": "2025-12-24T00:00:00"
+  },
+  {
+    "amount": -47.97,
+    "category": "restaurants",
+    "date": "2025-12-24T00:00:00"
+  },
+  {
+    "amount": -47.85,
+    "category": "entertainment",
+    "date": "2025-12-24T00:00:00"
+  },
+  {
+    "amount": -135.47,
+    "category": "food",
+    "date": "2025-12-31T00:00:00"
+  },
+  {
+    "amount": -45.99,
+    "category": "restaurants",
+    "date": "2025-12-31T00:00:00"
+  },
+  {
+    "amount": -38.06,
+    "category": "entertainment",
+    "date": "2025-12-31T00:00:00"
+  }
+]

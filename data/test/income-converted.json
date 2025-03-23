@@ -1,0 +1,744 @@
+[
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-01-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-10000",
+        "category_uuid": "c3a7625a-9169-4bf8-9c7f-4967dd284b4d"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-01-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-01-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-450.73",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-01-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-196.24",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-01-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-179.86",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-01-15T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-01-29T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-02-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-465.69",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-02-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-187.88",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-02-12T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-02-26T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-03-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-439.37",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-03-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-166.67",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-03-12T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-03-26T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-04-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-435.86",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-04-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-199.11",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-04-09T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-04-23T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-05-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-406.35",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-05-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-189.73",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-05-07T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-05-21T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-06-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-432.29",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-06-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-174.63",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-06-04T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-06-18T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-07-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-478.58",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-07-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-194.47",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-07-02T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-07-16T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-07-30T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-08-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-470.33",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-08-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-180.75",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-08-13T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-08-27T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-09-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-485.19",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-09-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-157.57",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-09-10T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-09-24T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-10-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-455.16",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-10-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-163.21",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-10-08T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-10-22T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-11-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-433.29",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-11-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-172.18",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-11-05T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-11-19T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-12-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-456.93",
+        "category_uuid": "f52b3ba5-2468-4700-8739-27e75a6bf1fb"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-12-01T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-154.13",
+        "category_uuid": "b2d40c66-5a4d-4117-9ab1-fbff2eb71191"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-12-03T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-12-17T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  },
+  {
+    "name": "my transaction group name",
+    "description": "my transaction group description",
+    "source": null,
+    "date": "2025-12-31T00:00:00",
+    "transactions": [
+      {
+        "name": "my transaction name",
+        "description": "my transaction description",
+        "amount": "-2500",
+        "category_uuid": "76c66901-b548-413f-be00-90ea934af5b8"
+      }
+    ]
+  }
+]

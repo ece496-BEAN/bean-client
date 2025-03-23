@@ -11,14 +11,13 @@ interface AddBudgetPageProps {
 }
 
 export const AddBudgetPage = () => {
-  const { categories, isCategoriesLoading, categoriesQueryError } =
-    useCategories();
+  const { categoriesQueryError } = useCategories();
   const [budget, setBudget] = useState<Omit<Budget, "id">>({
     name: "",
     description: "",
     start_date: format(startOfMonth(Date.now()), "yyyy-MM-dd"),
     end_date: format(endOfMonth(Date.now()), "yyyy-MM-dd"),
-    items: [],
+    budget_items: [],
   });
   const handleBudgetChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -28,13 +27,12 @@ export const AddBudgetPage = () => {
       [e.target.name]: e.target.value,
     });
   };
-  const [, setTestCategory] = useState<string | null>(null);
 
   const addBudgetItem = () => {
     setBudget({
       ...budget,
-      items: [
-        ...budget.items,
+      budget_items: [
+        ...budget.budget_items,
         {
           category_uuid: "",
           allocation: 0,
