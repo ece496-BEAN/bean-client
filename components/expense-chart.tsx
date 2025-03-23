@@ -17,6 +17,8 @@ import {
   StackedDataPoint,
 } from "./charts/common";
 import { useTransactions } from "@/contexts/TransactionsContext";
+import { useBudgets } from "@/contexts/BudgetContext";
+import { ReadOnlyBudgetItem } from "@/lib/types";
 
 const TODO = -1;
 
@@ -31,6 +33,8 @@ export function ExpenseChart() {
   }, [jwt, router]);
 
   const { transactionGroups, getTransactionGroups } = useTransactions();
+
+  const { budgets } = useBudgets();
 
   const [expenseData, setExpenseData] = useState<StackedDataPoint[]>([]);
   const [incomeData, setIncomeData] = useState<StackedDataPoint[]>([]);
@@ -70,41 +74,53 @@ export function ExpenseChart() {
       return parsedTransactions;
     }
     async function fetchProjectionData(
-      endpoint: string,
+      expense: boolean,
       transactionsEndDate: Date,
     ): Promise<ChartTransaction[]> {
-      try {
-        const response = await fetch(endpoint);
-        type RawData = {
-          category: string;
-          budget: number;
-        };
-        const rawData: RawData[] = await response.json();
-
-        // the first of the next month after the last savings data point
-        const startDate = new Date(transactionsEndDate);
-        startDate.setDate(1);
-        startDate.setMonth(startDate.getMonth() + 1);
-
-        // Project the next 6 months of data
-        const projectedData: ChartTransaction[] = [];
-        for (let i = 0; i < 6; i++) {
-          const date = new Date(startDate);
-          date.setMonth(date.getMonth() + i);
-
-          const transactions: ChartTransaction[] = rawData.map((d) => ({
-            date: date,
-            amount: d.budget,
-            category: d.category,
-          }));
-
-          projectedData.push(...transactions);
-        }
-        return projectedData;
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
+      // First, find the right budget. We'll use the budget that includes the current date.
+      const budget = budgets.find(
+        (b) =>
+          new Date(b.start_date) <= new Date() &&
+          new Date(b.end_date) >= new Date(),
+      );
+      if (!budget) {
         return [];
       }
+      type RawData = {
+        category: string;
+        budget: number;
+      };
+      const rawData: RawData[] = (budget.budget_items as ReadOnlyBudgetItem[])
+        .filter((item) =>
+          expense
+            ? !item.category.is_income_type
+            : item.category.is_income_type,
+        )
+        .map((item) => ({
+          category: item.category.name,
+          budget: expense ? -item.allocation : item.allocation,
+        }));
+
+      // the first of the next month after the last savings data point
+      const startDate = new Date(transactionsEndDate);
+      startDate.setDate(1);
+      startDate.setMonth(startDate.getMonth() + 1);
+
+      // Project the next 6 months of data
+      const projectedData: ChartTransaction[] = [];
+      for (let i = 0; i < 6; i++) {
+        const date = new Date(startDate);
+        date.setMonth(date.getMonth() + i);
+
+        const transactions: ChartTransaction[] = rawData.map((d) => ({
+          date: date,
+          amount: d.budget,
+          category: d.category,
+        }));
+
+        projectedData.push(...transactions);
+      }
+      return projectedData;
     }
     async function fetchExpenseData(): Promise<ChartTransaction[]> {
       return fetchTransactionData();
@@ -113,7 +129,7 @@ export function ExpenseChart() {
     async function fetchBudgetData(
       expenseEndDate: Date,
     ): Promise<ChartTransaction[]> {
-      return fetchProjectionData("/api/user-data/budget", expenseEndDate);
+      return fetchProjectionData(true, expenseEndDate);
     }
 
     async function fetchIncomeData(): Promise<ChartTransaction[]> {
@@ -123,10 +139,7 @@ export function ExpenseChart() {
     async function fetchIncomeProjectionData(
       incomeEndDate: Date,
     ): Promise<ChartTransaction[]> {
-      return fetchProjectionData(
-        "/api/user-data/income-projection",
-        incomeEndDate,
-      );
+      return fetchProjectionData(false, incomeEndDate);
     }
 
     const expenseDataProm = fetchExpenseData();
@@ -191,7 +204,7 @@ export function ExpenseChart() {
         setSavingsData(cumulativeSavingsData);
       });
     });
-  }, [transactionGroups]);
+  }, [transactionGroups, budgets]);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">

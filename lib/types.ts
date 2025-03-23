@@ -70,7 +70,7 @@ export type Budget = {
   description?: string;
   start_date: string;
   end_date: string;
-  items: BudgetItem[];
+  budget_items: BudgetItem[];
 };
 
 export type ServerResponse<T> =

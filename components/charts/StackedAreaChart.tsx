@@ -17,14 +17,12 @@ import {
   keys,
   StackedAreasProps,
 } from "./common";
-import DollarAxisLeft from "./DollarAxisLeft"; // Import the new component
-import LegendToggle from "./LegendToggle"; // Import the new component
+import DollarAxisLeft from "./DollarAxisLeft";
+import LegendToggle from "./LegendToggle";
 
 const getDate = (d: StackedDataPoint) => new Date(d.date).valueOf();
 const getY0 = (d: SeriesPoint<StackedDataPoint>) => d[0];
-const getY1 = (d: SeriesPoint<StackedDataPoint>) => {
-  return d[1];
-};
+const getY1 = (d: SeriesPoint<StackedDataPoint>) => d[1];
 const bisectDate = bisector<StackedDataPoint, Date>(
   (d) => new Date(d.date),
 ).left;
@@ -51,7 +49,7 @@ export default function StackedAreaChart({
     legendButtonTop,
   } = dimensions;
 
-  // scales
+  // Scales
   const xScale = scaleTime<number>({
     range: [chartLeft, chartLeft + chartWidth],
     domain: [Math.min(...data.map(getDate)), Math.max(...data.map(getDate))],
@@ -59,7 +57,13 @@ export default function StackedAreaChart({
   const yScale = getYDollarScale(chartHeight, chartTop, data);
   const colorScale = getColorScale(data, colorPalette);
 
-  // tooltip handler
+  // Calculate the x-position for the projection start
+  const projectionDate = new Date(
+    data.length != 0 ? data[projectionDateIdx].date : 0,
+  );
+  const projectionX = xScale(projectionDate);
+
+  // Tooltip handler
   const handleTooltip = useCallback(
     (
       event:
@@ -91,13 +95,11 @@ export default function StackedAreaChart({
   );
 
   return (
-    // relative is important for the tooltip to be positioned correctly
-    // https://airbnb.io/visx/docs/tooltip#:~:text=If%20you%20would,the%20useTooltip()%20hook.
     <div style={{ position: "relative" }}>
       <svg width={width} height={height}>
         <AreaStack<StackedDataPoint>
           data={data}
-          keys={data.length != 0 ? keys(data) : []}
+          keys={data.length !== 0 ? keys(data) : []}
           value={(d, key) =>
             d.categories.find((e) => e.category === key)?.value ?? 0
           }
@@ -122,7 +124,6 @@ export default function StackedAreaChart({
                   <path
                     key={`stack2-${stack.key}`}
                     d={path(secondHalf) || ""}
-                    // stroke="transparent"
                     fill={colorShade(generateColorByIndex(i, colorPalette), 60)}
                   />
                 </g>
@@ -130,11 +131,32 @@ export default function StackedAreaChart({
             })
           }
         </AreaStack>
-        {tooltipData && <Tooltip />}
+
+        {/* Vertical dotted line and label */}
+        <g>
+          <line
+            x1={projectionX}
+            y1={chartTop}
+            x2={projectionX}
+            y2={chartTop + chartHeight}
+            stroke="black"
+            strokeWidth={1}
+            strokeDasharray="5,5"
+          />
+          <text
+            x={projectionX + 5}
+            y={chartTop + 20}
+            fontSize="12"
+            fill="black"
+          >
+            Projection Data
+          </text>
+        </g>
+
         {/* Rectangle that handles the tooltip events */}
         <Bar
-          x={chartLeft} // Position relative to the Group
-          y={chartTop} // Position relative to the Group
+          x={chartLeft}
+          y={chartTop}
           width={chartWidth}
           height={chartHeight}
           fill="transparent"
@@ -155,15 +177,11 @@ export default function StackedAreaChart({
         {tooltipData && tooltipLeft && (
           <g>
             <Line
-              from={{ x: tooltipLeft, y: chartTop }} // Position relative to the Group
-              to={{
-                x: tooltipLeft,
-                y: chartHeight,
-              }} // Position relative to the Group
+              from={{ x: tooltipLeft, y: chartTop }}
+              to={{ x: tooltipLeft, y: chartHeight }}
               stroke={"#0000005E"}
               strokeWidth={1}
               pointerEvents="none"
-              // strokeDasharray="5,2"
             />
           </g>
         )}
