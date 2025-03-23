@@ -6,6 +6,7 @@ import { usePlaidContext } from "@/contexts/PlaidContext";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useTransactions } from "@/contexts/TransactionsContext";
+import { useCategories } from "@/contexts/CategoriesContext";
 
 const PlaidLinkButton = () => {
   const {
@@ -16,16 +17,23 @@ const PlaidLinkButton = () => {
     fetchTransactions,
   } = usePlaidContext();
 
+  const { categories } = useCategories();
+
   const { addTransactionGroup } = useTransactions();
 
   const onSuccess = async (public_token: string, metadata: any) => {
     console.log("PlaidLink onSuccess called"); // Debugging log
     await exchangePublicToken(public_token);
+
+    const string_categories = categories
+      .filter((category) => !category.legacy && !category.is_income_type)
+      .map((category) => category.name);
+    console.log(string_categories);
     // Fetch transactions after successful exchange
-    const newTransactions = await fetchTransactions();
+    const newTransactions = await fetchTransactions(string_categories);
     for (const transactionGroup of newTransactions) {
-      console.log("Fetched transaction group:", transactionGroup); // Debugging log
-      addTransactionGroup(transactionGroup);
+      // console.log("Fetched transaction group:", transactionGroup); // Debugging log
+      console.log("FRANK: PLEASE INTEGRATE THIS!!!");
     }
   };
 

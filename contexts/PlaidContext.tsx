@@ -41,7 +41,9 @@ interface PlaidContextProps extends PlaidState {
   dispatch: Dispatch<PlaidAction>;
   generateLinkToken: (userId: string) => Promise<void>;
   exchangePublicToken: (publicToken: string) => Promise<void>;
-  fetchTransactions: () => Promise<TransactionGroup<Transaction>[]>;
+  fetchTransactions: (
+    categories: string[],
+  ) => Promise<TransactionGroup<Transaction>[]>;
 }
 
 const PlaidContext = createContext<PlaidContextProps | undefined>(undefined);
@@ -129,35 +131,41 @@ export const PlaidProvider: React.FC<{ children: ReactNode }> = ({
     [state.userId],
   );
 
-  const fetchTransactions = useCallback(async () => {
-    const transactions: TransactionGroup<Transaction>[] = [];
-    console.log("fetchTransactions called"); // Debugging log
-    if (!state.userId) {
-      dispatch({ type: "SET_ERROR", payload: "User ID is not set" });
-      return transactions;
-    }
-    try {
-      dispatch({ type: "SET_IS_LOADING", payload: true });
-      const response = await fetch(
-        `/api/plaid/transactions?userId=${state.userId}`,
-      );
-      const data = await response.json();
-      console.log("fetchTransactions response:", data); // Debugging log
-      if (data.error) {
-        console.error("Error fetching transactions:", data.error);
-        dispatch({ type: "SET_ERROR", payload: data.error });
-      } else {
-        dispatch({ type: "SET_TRANSACTIONS", payload: data.transactions });
-        transactions.push(...data.transactions);
+  const fetchTransactions = useCallback(
+    async (categories: string[]) => {
+      const transactions: TransactionGroup<Transaction>[] = [];
+      console.log("fetchTransactions called"); // Debugging log
+      if (!state.userId) {
+        dispatch({ type: "SET_ERROR", payload: "User ID is not set" });
+        return transactions;
       }
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-      dispatch({ type: "SET_ERROR", payload: "Failed to fetch transactions" });
-    } finally {
-      dispatch({ type: "SET_IS_LOADING", payload: false });
-    }
-    return transactions;
-  }, [state.userId]);
+      try {
+        dispatch({ type: "SET_IS_LOADING", payload: true });
+        const response = await fetch(
+          `/api/plaid/transactions?userId=${state.userId}&categories=${categories.join(",")}`,
+        );
+        const data = await response.json();
+        console.log("fetchTransactions response:", data); // Debugging log
+        if (data.error) {
+          console.error("Error fetching transactions:", data.error);
+          dispatch({ type: "SET_ERROR", payload: data.error });
+        } else {
+          dispatch({ type: "SET_TRANSACTIONS", payload: data.transactions });
+          transactions.push(...data.transactions);
+        }
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        dispatch({
+          type: "SET_ERROR",
+          payload: "Failed to fetch transactions",
+        });
+      } finally {
+        dispatch({ type: "SET_IS_LOADING", payload: false });
+      }
+      return transactions;
+    },
+    [state.userId],
+  );
 
   const contextValue: PlaidContextProps = {
     ...state,
