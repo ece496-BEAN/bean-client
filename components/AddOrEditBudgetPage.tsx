@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { Trash } from "lucide-react";
-
+import { getLocalMidnightDate } from "@/lib/utils";
 interface AddOrEditBudgetPageProps {
   editMode?: boolean;
   initial_budget?: Budget;
@@ -47,8 +47,6 @@ export const AddOrEditBudgetPage = ({
     },
   );
 
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({}); // Store errors by field name
   const [duplicateCategoryError, setDuplicateCategoryError] = useState(false);
   const [openClearConfirmation, setOpenClearConfirmation] = useState(false);
@@ -60,6 +58,7 @@ export const AddOrEditBudgetPage = ({
       [e.target.name]: e.target.value,
     });
   };
+
   const handleBudgetItemCategoryChange = (
     newValue: Category | null,
     index: number,
@@ -101,13 +100,25 @@ export const AddOrEditBudgetPage = ({
       end_date: format(endOfMonth(Date.now()), "yyyy-MM-dd"),
       budget_items: [],
     });
-    setStartDate(null);
-    setEndDate(null);
     setErrors({});
     setDuplicateCategoryError(false);
     setOpenClearConfirmation(false);
   };
-
+  const handleDateChange = (start: boolean, date: Date | null) => {
+    if (date) {
+      if (start) {
+        setBudget((prev_budget) => ({
+          ...prev_budget,
+          start_date: format(date, "yyyy-MM-dd"),
+        }));
+      } else {
+        setBudget((prev_budget) => ({
+          ...prev_budget,
+          end_date: format(date, "yyyy-MM-dd"),
+        }));
+      }
+    }
+  };
   const handleAddBudgetItem = () => {
     setBudget({
       ...budget,
@@ -129,11 +140,11 @@ export const AddOrEditBudgetPage = ({
     if (!budget.name) {
       newErrors.name = "Name is required.";
     }
-    if (!startDate) {
+    if (!budget.start_date) {
       newErrors.startDate = "Start Date is required";
     }
 
-    if (!endDate) {
+    if (!budget.end_date) {
       newErrors.endDate = "End Date is required.";
     }
 
@@ -219,14 +230,14 @@ export const AddOrEditBudgetPage = ({
 
               <DatePicker
                 label="Start Date"
-                value={startDate}
-                onChange={(newValue) => setStartDate(newValue)}
+                value={getLocalMidnightDate(budget.start_date)}
+                onChange={(date) => handleDateChange(true, date)}
               />
 
               <DatePicker
                 label="End Date"
-                value={endDate}
-                onChange={(newValue) => setEndDate(newValue)}
+                value={getLocalMidnightDate(budget.end_date)}
+                onChange={(date) => handleDateChange(false, date)}
               />
 
               <Typography variant="h6" sx={{ color: "grey" }} gutterBottom>

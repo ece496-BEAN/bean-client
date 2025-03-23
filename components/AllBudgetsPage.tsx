@@ -21,7 +21,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { DateRangePicker } from "@mui/x-date-pickers-pro";
+import { DateField, DateRangePicker } from "@mui/x-date-pickers-pro";
 import { format } from "date-fns";
 import { ExternalLink, Pencil, Search, Trash } from "lucide-react";
 import React, { useCallback, useContext, useEffect, useState } from "react";
@@ -31,6 +31,7 @@ import { PaginatedServerResponse, Budget } from "@/lib/types";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
+import { getLocalMidnightDate } from "@/lib/utils";
 
 interface AllBudgetsHeaderProps {
   isPaginatedBudgetsLoading: boolean;
@@ -275,8 +276,22 @@ const AllBudgetsTable = ({
               <TableRow key={budget.id}>
                 <TableCell>{budget.name}</TableCell>
                 <TableCell>{budget.description}</TableCell>
-                <TableCell>{budget.start_date}</TableCell>
-                <TableCell>{budget.end_date}</TableCell>
+                <TableCell sx={{ minWidth: "145px" }}>
+                  <DateField
+                    label="Start Date"
+                    defaultValue={getLocalMidnightDate(budget.start_date)}
+                    size="small"
+                    variant="outlined"
+                  />
+                </TableCell>
+                <TableCell sx={{ minWidth: "145px" }}>
+                  <DateField
+                    label="End Date"
+                    defaultValue={getLocalMidnightDate(budget.end_date)}
+                    size="small"
+                    variant="outlined"
+                  />
+                </TableCell>
                 <TableCell>
                   <IconButton
                     onClick={() => {

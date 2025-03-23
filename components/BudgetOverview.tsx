@@ -11,6 +11,8 @@ import {
   Button,
   CircularProgress,
   Chip,
+  Grid2,
+  Card,
 } from "@mui/material";
 import { Pencil } from "lucide-react";
 import { AddOrEditBudgetPage } from "@/components/AddOrEditBudgetPage";
@@ -93,73 +95,87 @@ function BudgetOverview() {
 
   return (
     <Box className="flex flex-col h-auto bg-gray-50 p-2">
-      <div className="flex justify-between mb-4">
-        {" "}
-        {/* Header */}
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{ color: "grey" }}
-          gutterBottom
+      <Card variant="outlined" sx={{ mb: 2, p: 2 }}>
+        <Grid2
+          container
+          direction="row"
+          justifyContent="space-between" // Align items to edges
+          sx={{ width: "100%" }}
+          paddingBottom={1}
         >
-          Budget Overview
-        </Typography>
-        <Stack direction="row" spacing={2} alignItems="center">
-          {" "}
-          {/* Right-aligned controls */}
-          <BudgetSelector
-            value={selectedBudget}
-            onChange={(budget: Budget | null) => {
-              if (budget) {
-                router.push(`/budget/${budget.id}`);
-              }
-            }}
+          <Grid2 size={12} paddingBottom={2}>
+            <Stack direction="row" spacing={0.5} justifyContent="space-between">
+              <Typography
+                variant="h4"
+                component="h1"
+                sx={{ color: "grey" }}
+                gutterBottom
+              >
+                Budget Overview
+              </Typography>
+              <Button
+                variant="outlined"
+                onClick={toggleEditMode}
+                startIcon={<Pencil />}
+              >
+                {editMode ? "Exit Edit Mode" : "Edit"}
+              </Button>
+            </Stack>
+          </Grid2>
+          <Grid2 size={12}>
+            <BudgetSelector
+              value={selectedBudget}
+              onChange={(budget: Budget | null) => {
+                if (budget) {
+                  router.push(`/budget/${budget.id}`);
+                }
+              }}
+            />
+          </Grid2>
+        </Grid2>
+        {editMode ? (
+          <AddOrEditBudgetPage
+            editMode={editMode}
+            initial_budget={selectedBudget}
           />
-          <Button
-            variant="outlined"
-            onClick={toggleEditMode}
-            startIcon={<Pencil />}
-          >
-            {editMode ? "Exit Edit Mode" : "Edit"}
-          </Button>
-        </Stack>
-      </div>
-      {editMode ? (
-        <AddOrEditBudgetPage
-          editMode={editMode}
-          initial_budget={selectedBudget}
-        />
-      ) : (
-        <div>
-          {(selectedBudget.budget_items as ReadOnlyBudgetItem[]).map((item) => {
-            const percentage = (item.allocation / totalAllocation) * 100;
-            return (
-              <Box key={item.id} sx={{ width: "100%", mb: 2 }}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="body2" sx={{ color: "grey" }}>
-                    {item.category.name} ({percentage.toFixed(2)}%)
-                  </Typography>
+        ) : (
+          <div>
+            {(selectedBudget.budget_items as ReadOnlyBudgetItem[]).map(
+              (item) => {
+                const percentage = (item.allocation / totalAllocation) * 100;
+                return (
+                  <Box key={item.id} sx={{ width: "100%", mb: 2 }}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography variant="body2" sx={{ color: "grey" }}>
+                        {item.category.name} ({percentage.toFixed(2)}%)
+                      </Typography>
 
-                  <Chip
-                    label={item.category.is_income_type ? "Income" : "Expense"}
-                    color={item.category.is_income_type ? "success" : "error"}
-                    size="small"
-                    variant="outlined"
-                  />
-                  <Chip
-                    label={item.category.legacy ? "Legacy" : "Active"}
-                    color={item.category.legacy ? "default" : "primary"}
-                    size="small"
-                    variant="outlined"
-                  />
-                </Stack>
+                      <Chip
+                        label={
+                          item.category.is_income_type ? "Income" : "Expense"
+                        }
+                        color={
+                          item.category.is_income_type ? "success" : "error"
+                        }
+                        size="small"
+                        variant="outlined"
+                      />
+                      <Chip
+                        label={item.category.legacy ? "Legacy" : "Active"}
+                        color={item.category.legacy ? "default" : "primary"}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </Stack>
 
-                <LinearProgress variant="determinate" value={percentage} />
-              </Box>
-            );
-          })}
-        </div>
-      )}
+                    <LinearProgress variant="determinate" value={percentage} />
+                  </Box>
+                );
+              },
+            )}
+          </div>
+        )}
+      </Card>
     </Box>
   );
 }
