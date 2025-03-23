@@ -489,8 +489,11 @@ function CategoriesContent() {
       </TableContainer>
       <TablePagination
         component="div"
+        showFirstButton
+        showLastButton
         count={totalCount}
         page={page}
+        rowsPerPageOptions={[5, 10, 25, 50]}
         onPageChange={(_, page) => handleChangePage(page)}
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}

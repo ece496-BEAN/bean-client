@@ -46,12 +46,8 @@ import {
   Popover,
   TextField,
   InputAdornment,
-  FormControlLabel,
-  FormGroup,
-  Checkbox,
   Grid2,
   Tooltip,
-  Box,
 } from "@mui/material";
 import { ArrowUpward, ArrowDownward, FilterList } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
@@ -189,8 +185,11 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
       })}
       <TablePagination
         component="div"
+        showFirstButton
+        showLastButton
         count={totalCount}
         page={pageNumber}
+        rowsPerPageOptions={[5, 10, 25, 50]}
         onPageChange={(_, newPage) => onPageChange(newPage)}
         rowsPerPage={pageSize}
         onRowsPerPageChange={(e) => {
@@ -294,7 +293,6 @@ export function RecentTransactionsPage() {
   const [ordering, setOrdering] = useState<string>("-date");
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
     if (categoriesQueryError) {

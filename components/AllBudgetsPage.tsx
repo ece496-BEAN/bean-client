@@ -294,7 +294,9 @@ const AllBudgetsTable = ({
       </TableContainer>
       <TablePagination // Add pagination
         component="div"
-        rowsPerPageOptions={[5, 10, 25]} // Customize options
+        showFirstButton
+        showLastButton
+        rowsPerPageOptions={[5, 10, 25, 50]}
         count={paginatedBudgets.count}
         rowsPerPage={rowsPerPage}
         page={page}
