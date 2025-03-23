@@ -55,7 +55,7 @@ function CategoriesContent() {
   } = useCategories();
   const [editingCategory, setEditingCategory] = useState<Category>();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
-  const [categoryToBeDeleted, setCategoryToDeleted] = useState<Category>();
+  const [categoryToBeDeleted, setCategoryToBeDeleted] = useState<Category>();
   const [searchQuery, setSearchQuery] = useState("");
   const [legacyFilter, setLegacyFilter] = useState<boolean | null>(null);
   const [isIncomeTypeFilter, setIsIncomeTypeFilter] = useState<boolean | null>(
@@ -180,11 +180,11 @@ function CategoriesContent() {
   };
   const handleDeleteConfirmation = (category: Category) => {
     setIsDeleteModalOpen(true);
-    setCategoryToDeleted(category);
+    setCategoryToBeDeleted(category);
   };
   const handleCloseDeleteModal = () => {
     setIsDeleteModalOpen(false);
-    setCategoryToDeleted(undefined);
+    setCategoryToBeDeleted(undefined);
   };
 
   // TODO: Make it refetch with the proper query parameters other than pages

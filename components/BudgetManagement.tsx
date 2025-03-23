@@ -66,7 +66,7 @@ export function BudgetAndCategoryPage({
     switch (selectedTab) {
       case 0:
         if (!currentBudgetUUID) return "No Active Budget Detected";
-        return `Budget ${currentBudgetUUID} Details`;
+        return "Budget Overview";
       case 1:
         return "Add Budget";
       case 2:

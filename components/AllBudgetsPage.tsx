@@ -30,6 +30,7 @@ import { JwtContext } from "@/app/lib/jwt-provider";
 import { PaginatedServerResponse, Budget } from "@/lib/types";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 
 interface AllBudgetsHeaderProps {
   isPaginatedBudgetsLoading: boolean;
@@ -48,6 +49,7 @@ interface AllBudgetsTableProps {
   setPage: (page: number) => void;
   rowsPerPage: number;
   setRowsPerPage: (pageSize: number) => void;
+  handleDeleteConfirmation: (budget: Budget) => void;
 }
 const AllBudgetsHeader = ({
   isPaginatedBudgetsLoading,
@@ -226,6 +228,7 @@ const AllBudgetsTable = ({
   setRowsPerPage,
   paginatedBudgets,
   isPaginatedBudgetsLoading,
+  handleDeleteConfirmation,
 }: AllBudgetsTableProps) => {
   const router = useRouter();
   const handleChangePage = useCallback(
@@ -283,7 +286,7 @@ const AllBudgetsTable = ({
                       <Pencil className="text-blue-500 ml-2 hover:text-blue-700" />
                     }
                   </IconButton>
-                  <IconButton onClick={() => console.log("Placeholder Delete")}>
+                  <IconButton onClick={() => handleDeleteConfirmation(budget)}>
                     {<Trash className="text-red-500 ml-2 hover:text-red-700" />}
                   </IconButton>
                 </TableCell>
@@ -313,10 +316,23 @@ function AllBudgetsPage() {
     paginatedBudgetsQueryError: error,
     refetchPaginatedBudgets: refetch,
     getBudgets,
+    deleteBudget,
   } = useBudgets();
-
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [budgetToBeDeleted, setBudgetToBeDeleted] = useState<
+    Budget | undefined
+  >(undefined);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const handleDeleteConfirmation = (budget: Budget) => {
+    setIsDeleteModalOpen(true);
+    setBudgetToBeDeleted(budget);
+  };
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setBudgetToBeDeleted(undefined);
+  };
+
   useEffect(() => {
     if (error) {
       toast.error(`Error Loading Budgets: ${error?.message}`, {
@@ -343,6 +359,13 @@ function AllBudgetsPage() {
         isPaginatedBudgetsLoading={isLoading}
         paginatedBudgets={budgets}
         paginatedBudgetsError={error}
+        handleDeleteConfirmation={handleDeleteConfirmation}
+      />
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        confirmDeleteItem={budgetToBeDeleted}
+        onDelete={deleteBudget}
+        onClose={handleCloseDeleteModal}
       />
       <ToastContainer />
     </>

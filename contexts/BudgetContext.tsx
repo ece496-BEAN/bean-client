@@ -50,7 +50,7 @@ type BudgetContextType = {
     options?: { no_page?: boolean },
   ) => void;
   getSelectedBudget: (uuid: string) => void;
-  addBudget: (budget: Budget) => Promise<Budget>;
+  addBudget: (budget: Omit<Budget, "id">) => Promise<Budget>;
   editBudget: (budget: Budget) => Promise<Budget>;
   deleteBudget: (budgetId: string) => Promise<void>;
 };
@@ -283,7 +283,7 @@ export default function BudgetProvider({
   const { mutateAsync: deleteBudgetMutateAsync } = deleteBudgetMutation;
 
   const addBudget = useCallback(
-    async (budget: Budget) => {
+    async (budget: Omit<Budget, "id">) => {
       return await addBudgetMutateAsync(budget);
     },
     [addBudgetMutateAsync],

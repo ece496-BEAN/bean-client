@@ -15,13 +15,6 @@ import {
 } from "lucide-react";
 import { Resizable } from "re-resizable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import { useRouter } from "next/navigation";
 import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
@@ -29,7 +22,6 @@ import {
   TransactionGroupQueryParameters,
   useTransactions,
 } from "@/contexts/TransactionsContext";
-import { usePlaidContext } from "@/contexts/PlaidContext";
 import {
   Category,
   TransactionGroup,

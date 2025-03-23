@@ -12,6 +12,7 @@ import {
   Chip,
   CircularProgress,
   FormControlLabel,
+  Grid2,
   Stack,
   Switch,
   Typography,
@@ -22,11 +23,15 @@ type CategoryOption = Category & { inputValue?: string };
 interface CategoryAutocompleteProps {
   value?: CategoryOption | null; // Allow external control of the value to set initial value (useful for editing existing data)
   onChange: (category: Category | null) => void; // Callback to update external state
+  error?: boolean;
+  helperText?: React.ReactNode;
 }
 
 export default function CategoryAutocomplete({
   value,
   onChange,
+  error,
+  helperText,
 }: CategoryAutocompleteProps) {
   const { categories, addCategory, isCategoriesLoading } = useCategories();
   const categoryOptions: CategoryOption[] = categories;
@@ -59,7 +64,7 @@ export default function CategoryAutocomplete({
   };
 
   const handleSubmit = async (
-    event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    _: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     // Can't seem to get the type inferring working
     const newCategory = (await addCategory(dialogValue)) as Category;
@@ -118,38 +123,50 @@ export default function CategoryAutocomplete({
         }}
         renderOption={(props, option) => (
           <li {...props} key={option.id}>
-            <Stack
+            <Grid2
+              container
               direction="row"
               alignItems="center"
               justifyContent="space-between" // Align items to edges
               sx={{ width: "100%" }}
             >
-              <Stack direction="column" alignItems="flex-start" spacing={0.2}>
-                <Typography variant="body1">{option.name}</Typography>
-                {option.description && (
-                  <Typography variant="caption" color="text.secondary">
-                    {option.description}
-                  </Typography>
-                )}
-              </Stack>
-              <Stack direction="row" spacing={0.5}>
-                <Chip
-                  label={option.is_income_type ? "Income" : "Expense"}
-                  color={option.is_income_type ? "success" : "error"}
-                  size="small"
-                  variant="outlined"
-                />
-                <Chip
-                  label={option.legacy ? "Legacy" : "Active"}
-                  color={option.legacy ? "default" : "primary"}
-                  size="small"
-                  variant="outlined"
-                />
-              </Stack>
-            </Stack>
+              <Grid2>
+                <Stack direction="column" alignItems="flex-start" spacing={0.2}>
+                  <Typography variant="body1">{option.name}</Typography>
+                  {option.description && (
+                    <Typography variant="caption" color="text.secondary">
+                      {option.description}
+                    </Typography>
+                  )}
+                </Stack>
+              </Grid2>
+              <Grid2>
+                <Stack direction="row" spacing={0.5}>
+                  <Chip
+                    label={option.is_income_type ? "Income" : "Expense"}
+                    color={option.is_income_type ? "success" : "error"}
+                    size="small"
+                    variant="outlined"
+                  />
+                  <Chip
+                    label={option.legacy ? "Legacy" : "Active"}
+                    color={option.legacy ? "default" : "primary"}
+                    size="small"
+                    variant="outlined"
+                  />
+                </Stack>
+              </Grid2>
+            </Grid2>
           </li>
         )}
-        renderInput={(params) => <TextField {...params} label="Categories" />}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Categories"
+            error={error}
+            helperText={helperText}
+          />
+        )}
         loading={loading}
         loadingText={<CircularProgress />}
         clearOnBlur
