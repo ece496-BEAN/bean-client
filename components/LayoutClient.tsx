@@ -10,6 +10,7 @@ import TransactionProvider from "@/contexts/TransactionsContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LocalizationProvider } from "@mui/x-date-pickers-pro";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
+import CategoryProvider from "@/contexts/CategoriesContext";
 
 function LayoutClient({ children }: { children: ReactNode }) {
   // login & survey page -> no navigation bar
@@ -24,7 +25,9 @@ function LayoutClient({ children }: { children: ReactNode }) {
         <QueryClientProvider client={queryClient}>
           {showNavigationBar && (
             <TransactionProvider>
-              <NavigationBar />
+              <CategoryProvider>
+                <NavigationBar />
+              </CategoryProvider>
             </TransactionProvider>
           )}
 
