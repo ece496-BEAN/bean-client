@@ -2,10 +2,6 @@ import { NextResponse, NextRequest } from "next/server";
 import * as plaid from "plaid";
 import { getAccessToken, plaidClient } from "../lib/plaid-server";
 import { DEV_USER_ID } from "@/lib/plaid";
-import {
-  mapPlaidToBeanTransactionCategory,
-  PlaidPrimaryTransactionCategory,
-} from "@/lib/data-mapping";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -30,9 +26,6 @@ export async function GET(req: NextRequest) {
     const userId = req.nextUrl.searchParams.get("userId") || DEV_USER_ID;
     const categories =
       req.nextUrl.searchParams.get("categories")?.split(",") || [];
-    console.log(
-      `Fetching transactions for user ${userId} with categories ${categories}`,
-    );
     const tokenData = getAccessToken(userId);
 
     if (!tokenData) {
@@ -76,7 +69,19 @@ export async function GET(req: NextRequest) {
       hasMore = data.has_more;
     }
 
-    console.log(added);
+    // Get a list of all the plaid transactions
+    const plaidCategories = new Set(
+      added.map((txn) => txn.personal_finance_category?.detailed ?? "other"),
+    );
+    const plaidTransactions = Array.from(plaidCategories);
+    const beanCategories = categories;
+
+    const categoryMapping: Record<string, string> = await fetch(
+      `${req.nextUrl.origin}/api/llm-cat-conversion?source_categories=${plaidTransactions.join(
+        ",",
+      )}&destination_categories=${beanCategories.join(",")}`,
+    ).then((res) => res.json());
+    console.log("Category mapping:", categoryMapping);
 
     // Convert the Plaid transaction type to our internal format
     const processed_transactions: TransactionGroup[] = added.map(
@@ -90,12 +95,16 @@ export async function GET(req: NextRequest) {
             name: txn.name,
             description: txn.name,
             amount: txn.amount,
-            category: txn.personal_finance_category?.primary ?? "other",
+            category: txn.personal_finance_category?.detailed
+              ? (categoryMapping[txn.personal_finance_category.detailed] ??
+                "other")
+              : "other",
           },
         ],
       }),
     );
-    return NextResponse.json({ transactions: processed_transactions });
+    console.log("Processed transactions:", processed_transactions);
+    return NextResponse.json(processed_transactions);
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Failed to fetch transactions" });
