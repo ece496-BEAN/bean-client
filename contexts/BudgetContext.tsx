@@ -144,8 +144,12 @@ export default function BudgetProvider({
     isPlaceholderData: isSelectedBudgetPlaceholderData,
   } = useQuery({
     queryKey: ["budgets", selectedBudgetUUID],
-    queryFn: () =>
-      fetchBudgets({}, { uuid: selectedBudgetUUID! }) as Promise<Budget>,
+    queryFn: () => {
+      if (!selectedBudgetUUID) {
+        throw new Error("No budget UUID Provided");
+      }
+      return fetchBudgets({}, { uuid: selectedBudgetUUID }) as Promise<Budget>;
+    },
     placeholderData: keepPreviousData,
     enabled: !!selectedBudgetUUID,
   });

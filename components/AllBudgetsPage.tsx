@@ -50,6 +50,8 @@ interface AllBudgetsTableProps {
   rowsPerPage: number;
   setRowsPerPage: (pageSize: number) => void;
   handleDeleteConfirmation: (budget: Budget) => void;
+  getSelectedBudget: (id: string) => void;
+  handleEditBudget: (budget: Budget) => void;
 }
 const AllBudgetsHeader = ({
   isPaginatedBudgetsLoading,
@@ -229,6 +231,8 @@ const AllBudgetsTable = ({
   paginatedBudgets,
   isPaginatedBudgetsLoading,
   handleDeleteConfirmation,
+  getSelectedBudget,
+  handleEditBudget,
 }: AllBudgetsTableProps) => {
   const router = useRouter();
   const handleChangePage = useCallback(
@@ -275,13 +279,16 @@ const AllBudgetsTable = ({
                 <TableCell>{budget.end_date}</TableCell>
                 <TableCell>
                   <IconButton
-                    onClick={() => router.push(`/budget/${budget.id}`)}
+                    onClick={() => {
+                      getSelectedBudget(budget.id);
+                      router.push(`/budget/${budget.id}`);
+                    }}
                   >
                     {<ExternalLink />}
                   </IconButton>
                 </TableCell>
                 <TableCell align="center">
-                  <IconButton onClick={() => console.log("Placeholder Edit")}>
+                  <IconButton onClick={() => handleEditBudget(budget)}>
                     {
                       <Pencil className="text-blue-500 ml-2 hover:text-blue-700" />
                     }
@@ -317,7 +324,9 @@ function AllBudgetsPage() {
     refetchPaginatedBudgets: refetch,
     getBudgets,
     deleteBudget,
+    getSelectedBudget,
   } = useBudgets();
+  const router = useRouter();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [budgetToBeDeleted, setBudgetToBeDeleted] = useState<
     Budget | undefined
@@ -331,6 +340,10 @@ function AllBudgetsPage() {
   const handleCloseDeleteModal = () => {
     setIsDeleteModalOpen(false);
     setBudgetToBeDeleted(undefined);
+  };
+  const handleEditBudget = (budget: Budget) => {
+    getSelectedBudget(budget.id);
+    router.push(`/budget/${budget.id}/?edit=true`);
   };
 
   useEffect(() => {
@@ -360,6 +373,8 @@ function AllBudgetsPage() {
         paginatedBudgets={budgets}
         paginatedBudgetsError={error}
         handleDeleteConfirmation={handleDeleteConfirmation}
+        getSelectedBudget={getSelectedBudget}
+        handleEditBudget={handleEditBudget}
       />
       <ConfirmDeleteModal
         isOpen={isDeleteModalOpen}

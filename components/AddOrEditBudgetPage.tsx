@@ -25,17 +25,27 @@ import {
 import { DatePicker } from "@mui/x-date-pickers";
 import { Trash } from "lucide-react";
 
-export const AddBudgetPage = () => {
+interface AddOrEditBudgetPageProps {
+  editMode?: boolean;
+  initial_budget?: Budget;
+}
+export const AddOrEditBudgetPage = ({
+  editMode,
+  initial_budget,
+}: AddOrEditBudgetPageProps) => {
   const { categoriesQueryError } = useCategories();
-  const { addBudget } = useBudgets();
+  const { addBudget, editBudget } = useBudgets();
   const router = useRouter();
-  const [budget, setBudget] = useState<Omit<Budget, "id">>({
-    name: "",
-    description: "",
-    start_date: format(startOfMonth(Date.now()), "yyyy-MM-dd"),
-    end_date: format(endOfMonth(Date.now()), "yyyy-MM-dd"),
-    budget_items: [],
-  });
+  const [budget, setBudget] = useState<Budget>(
+    initial_budget || {
+      id: "",
+      name: "",
+      description: "",
+      start_date: format(startOfMonth(Date.now()), "yyyy-MM-dd"),
+      end_date: format(endOfMonth(Date.now()), "yyyy-MM-dd"),
+      budget_items: [],
+    },
+  );
 
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -84,6 +94,7 @@ export const AddBudgetPage = () => {
   };
   const handleClearConfirmed = () => {
     setBudget({
+      id: budget.id, // Preserve the ID
       name: "",
       description: "",
       start_date: format(startOfMonth(Date.now()), "yyyy-MM-dd"),
@@ -159,9 +170,9 @@ export const AddBudgetPage = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (validateForm()) {
-      console.log(`Attempting to add budget: ${JSON.stringify(budget)}`);
-      const new_budget = await addBudget(budget);
-      console.log(`Added budget: ${JSON.stringify(new_budget)}`);
+      const new_budget = editMode
+        ? await editBudget(budget)
+        : await addBudget(budget);
       router.push(`/budget/${new_budget.id}/`);
     }
   };
@@ -182,7 +193,7 @@ export const AddBudgetPage = () => {
             sx={{ color: "grey" }}
             gutterBottom
           >
-            Add New Budget
+            {editMode ? `Edit Budget ${budget.id}` : `Add New Budget`}
           </Typography>
 
           <form onSubmit={handleSubmit}>

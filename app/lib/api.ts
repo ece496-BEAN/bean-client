@@ -17,7 +17,7 @@ export function fetchApiSingle(
   token?: string,
 ): Promise<Response>;
 
-export function fetchApiSingle(
+export async function fetchApiSingle(
   endpoint: string,
   method: string,
   dataOrToken?: object | string,
@@ -40,19 +40,28 @@ export function fetchApiSingle(
       headers["Authorization"] = `Bearer ${maybeToken}`;
     }
   }
-
+  const fetchOptions: RequestInit = {
+    method: method,
+    headers,
+  };
   if (data) {
-    return fetch(url, {
-      method: method,
-      headers,
-      body: JSON.stringify(data),
-    });
-  } else {
-    return fetch(url, {
-      method: method,
-      headers,
-    });
+    fetchOptions.body = JSON.stringify(data);
   }
+
+  const response = await fetch(url, fetchOptions);
+
+  if (!response.ok && response.status !== 401) {
+    let errorMessage = `HTTP error! Status: ${response.status}`;
+    try {
+      const errorBody = await response.json();
+      errorMessage += ` - ${JSON.stringify(errorBody)}`;
+    } catch (e) {
+      // If response is not JSON, just use the status text
+      errorMessage += ` - ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
+  }
+  return response;
 }
 
 export function fetchApi(
@@ -82,7 +91,6 @@ export async function fetchApi(
   } else {
     response = await fetchApiSingle(endpoint, method, data, jwt.access);
   }
-
   if (response.status !== 401) {
     return response;
   } else if (jwt.access === undefined) {

@@ -186,9 +186,12 @@ export default function TransactionProvider({
   } = useQuery({
     queryKey: ["transaction-groups", selectedTransactionGroupUUID],
     queryFn: () => {
+      if (!selectedTransactionGroupUUID) {
+        throw new Error("No transaction group UUID provided.");
+      }
       return fetchTransactionGroups(
         {},
-        { uuid: selectedTransactionGroupUUID! },
+        { uuid: selectedTransactionGroupUUID },
       ) as Promise<TransactionGroup<ReadOnlyTransaction>>;
     },
     enabled: !!selectedTransactionGroupUUID && !!jwt, // Only fetch if uuid is set and jwt is available
