@@ -5,13 +5,6 @@ import { format } from "date-fns";
 import { Trash, X } from "lucide-react";
 // import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
 
 import { Label } from "@/components/ui/label";
@@ -227,9 +220,9 @@ export function AddOrEditTransactionGroupModal({
       <DialogTitle className="flex justify-between items-center bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
         <div>
           {mode === "add" ? (
-            <h2 className="text-2xl font-bold">Add New Transaction Group</h2>
+            <h2 className="text-2xl font-bold">Add New Transaction</h2>
           ) : (
-            <h2 className="text-2xl font-bold">Edit Transaction Group</h2>
+            <h2 className="text-2xl font-bold">Edit Transaction</h2>
           )}
         </div>
         <IconButton
@@ -251,7 +244,7 @@ export function AddOrEditTransactionGroupModal({
                 name="name"
                 value={newTransactionGroup.name}
                 onChange={handleTransactionGroupChange}
-                placeholder="Transaction Group Name"
+                placeholder="Transaction Name"
               />
             </div>
             <div>
@@ -261,7 +254,7 @@ export function AddOrEditTransactionGroupModal({
                 name="description"
                 value={newTransactionGroup.description}
                 onChange={handleTransactionGroupChange}
-                placeholder="Transaction Group description"
+                placeholder="Transaction Description"
               />
             </div>
             <div>
@@ -275,7 +268,7 @@ export function AddOrEditTransactionGroupModal({
                 required
               />
             </div>
-            <h3>Transactions</h3>
+            <h3>Items</h3>
             {newTransactionGroup.transactions.map((transaction, index) => (
               <div
                 key={index}
@@ -363,7 +356,7 @@ export function AddOrEditTransactionGroupModal({
       </DialogContent>
       <div className="flex flex-col space-y-1">
         <Button type="button" variant="contained" onClick={addTransaction}>
-          Add Transaction
+          Add Item
         </Button>
         <Button
           type="submit"
@@ -378,7 +371,7 @@ export function AddOrEditTransactionGroupModal({
             }
           }}
         >
-          Submit Transaction Group
+          Submit Transaction
         </Button>
       </div>
       <ToastContainer />
