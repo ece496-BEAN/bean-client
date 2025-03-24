@@ -4,6 +4,7 @@ import { fetchApi } from "@/app/lib/api";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import {
   Budget,
+  Category,
   NonPaginatedServerResponse,
   PaginatedServerResponse,
   ServerResponse,
@@ -194,7 +195,7 @@ export default function BudgetProvider({
           const { category, ...rest } = item;
           item = {
             ...rest,
-            category_uuid: item.category.id,
+            category_uuid: category.id,
           };
         }
         // Round to 2 Decimal Places since server cannot handle more than 2 decimal places
@@ -236,7 +237,14 @@ export default function BudgetProvider({
           item = {
             ...rest,
             uuid: id,
-            category_uuid: item.category.id,
+            category_uuid: category.id,
+          };
+        }
+        if ("category" in item) {
+          const { category, ...rest } = item;
+          item = {
+            ...rest,
+            category_uuid: (category as Category).id,
           };
         }
         item.allocation = parseFloat(item.allocation.toFixed(2));

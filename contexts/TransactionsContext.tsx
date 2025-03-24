@@ -18,6 +18,7 @@ import {
   ReadOnlyTransaction,
   Transaction,
   isArrayType,
+  Category,
 } from "@/lib/types";
 
 interface TransactionsContextType {
@@ -282,6 +283,10 @@ export default function TransactionProvider({
             const { id, category, group_id, ...rest } = transaction;
 
             transaction = { ...rest, uuid: id, category_uuid: category.id };
+          }
+          if ("category" in transaction) {
+            const { category, ...rest } = transaction;
+            transaction = { ...rest, category_uuid: (category as Category).id };
           }
           if ("amount" in transaction) {
             transaction.amount = parseFloat(

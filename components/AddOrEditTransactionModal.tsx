@@ -5,7 +5,16 @@ import { format } from "date-fns";
 import { Trash, X } from "lucide-react";
 // import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
+import {
+  Box,
+  Card,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 import { Label } from "@/components/ui/label";
 import {
@@ -22,6 +31,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import "react-toastify/dist/ReactToastify.css";
 import CategorySelector from "./CategorySelector";
+import { DatePicker, DateTimePicker } from "@mui/x-date-pickers";
 
 interface AddOrEditTransactionModalProps {
   isOpen: boolean;
@@ -71,8 +81,7 @@ export function AddOrEditTransactionGroupModal({
     const date = new Date(dateString);
     return format(date, "yyyy-MM-dd'T'HH:mm:ss"); // Correct format for datetime-local
   };
-
-  const [formErrors, setFormErrors] = useState<string[]>([]); // Array of error messages
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({}); // Store errors by field name
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (mode === "add" && initialTransactionGroupMemoized) {
@@ -105,6 +114,14 @@ export function AddOrEditTransactionGroupModal({
       });
     }
   }, [categoriesQueryError]);
+  const handleDateChange = (date: Date | null) => {
+    if (date) {
+      setNewTransactionGroup({
+        ...newTransactionGroup,
+        date: date.toISOString(),
+      });
+    }
+  };
   const handleTransactionGroupChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -150,67 +167,53 @@ export function AddOrEditTransactionGroupModal({
   };
 
   const onModalClose = () => {
-    setFormErrors([]); // Clear errors when closing modal
+    setFormErrors({}); // Clear errors when closing modal
     setNewTransactionGroup(defaultTransactionGroup); // Reset form state
     onClose();
   };
 
   const validateForm = () => {
-    const errors: string[] = [];
+    const newErrors: Record<string, string> = {};
     if (!newTransactionGroup.name) {
-      errors.push("Name is required");
+      newErrors.name = "Transaction Group Name is required";
     }
     newTransactionGroup.transactions.forEach((transaction, index) => {
       if (!transaction.name) {
-        errors.push(`Transaction ${index + 1}: Name is required`);
+        newErrors[`transaction[${index}].name`] = `Name is required`;
       }
       if (isNaN(transaction.amount) || transaction.amount === 0) {
         // Check for valid amount
-        errors.push(
-          `Transaction ${index + 1}-amount: Valid amount is required`,
-        );
+        newErrors[`transaction[${index}].amount`] = `Valid amount is required`;
       }
       if (!("category" in transaction) && !("category_uuid" in transaction)) {
-        errors.push(`Transaction ${index + 1}-category: Category is required`);
+        newErrors[`transaction[${index + 1}].category`] =
+          `Category is required`;
       }
       if ("category" in transaction && !transaction.category.id) {
-        errors.push(`Transaction ${index + 1}-category: Category is required`);
+        newErrors[`transaction[${index + 1}].category`] =
+          `Category is required`;
       }
       if (
         "category_uuid" in transaction &&
         transaction.category_uuid === "0-0-0-0-0"
       ) {
-        errors.push(`Transaction ${index + 1}-category: Category is required`);
+        newErrors[`transaction[${index + 1}].category`] =
+          `Category is required`;
       }
     });
-    return errors;
+    setFormErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const errors = validateForm();
-
-    if (errors.length > 0) {
-      setFormErrors(errors);
-      return; // Prevent form submission if there are errors
+    if (validateForm()) {
+      await onSave(newTransactionGroup); // Call onSave if no errors
+      onModalClose();
     }
-    await onSave(newTransactionGroup); // Call onSave if no errors
-
-    setFormErrors([]); // Clear errors after submission
-
-    onModalClose();
   };
 
-  useEffect(() => {
-    // Display toast notifications for each form error:
-    formErrors.forEach((error) => {
-      toast.error(error, {
-        position: "bottom-left",
-      });
-    });
-
-    // After displaying toasts, you can clear formErrors here or when errors are fixed.
-  }, [formErrors]);
   useEffect(() => {
     if (isTransactionGroupError) {
       toast.error(
@@ -237,16 +240,15 @@ export function AddOrEditTransactionGroupModal({
       onClose={onModalClose}
       scroll="paper"
       fullWidth={true}
+      maxWidth={false}
       className="overflow-y-hidden"
     >
       <DialogTitle className="flex justify-between items-center bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
-        <div>
-          {mode === "add" ? (
-            <h2 className="text-2xl font-bold">Add New Transaction</h2>
-          ) : (
-            <h2 className="text-2xl font-bold">Edit Transaction</h2>
-          )}
-        </div>
+        {mode === "add" ? (
+          <h2 className="text-2xl font-bold">Add New Transaction</h2>
+        ) : (
+          <h2 className="text-2xl font-bold">Edit Transaction</h2>
+        )}
         <IconButton
           aria-label="close"
           className="ml-auto"
@@ -257,82 +259,74 @@ export function AddOrEditTransactionGroupModal({
         </IconButton>
       </DialogTitle>
       <DialogContent dividers={true}>
-        <div>
+        <Card className="p-4">
           <form ref={formRef} onSubmit={handleSubmit} className="space-y-2">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={newTransactionGroup.name}
-                onChange={handleTransactionGroupChange}
-                placeholder="Transaction Name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                name="description"
-                value={newTransactionGroup.description}
-                onChange={handleTransactionGroupChange}
-                placeholder="Transaction Description"
-              />
-            </div>
-            <div>
-              <Label htmlFor="date">Date</Label>
-              <Input
-                id="date"
-                name="date"
-                type="datetime-local"
-                value={newTransactionGroup.date}
-                onChange={handleTransactionGroupChange}
-                required
-              />
-            </div>
-            <h3>Items</h3>
+            <TextField
+              id="name"
+              name="name"
+              label="Transaction Name"
+              fullWidth
+              error={!!formErrors.name}
+              helperText={formErrors.name}
+              value={newTransactionGroup.name}
+              onChange={handleTransactionGroupChange}
+            />
+            <TextField
+              id="description"
+              name="description"
+              label="Transaction Description"
+              fullWidth
+              multiline
+              value={newTransactionGroup.description}
+              onChange={handleTransactionGroupChange}
+            />
+            <DateTimePicker
+              name="date"
+              label="Date"
+              value={new Date(newTransactionGroup.date)}
+              onChange={(date) => handleDateChange(date)}
+            />
+            <Typography variant="h6" sx={{ color: "grey" }} gutterBottom>
+              Budget Items
+            </Typography>{" "}
             {newTransactionGroup.transactions.map((transaction, index) => (
-              <div
-                key={index}
-                className="flex flex-col border border-solid border-indigo-600"
-              >
-                <div>
-                  <Label htmlFor={`transaction-name-${index}`}>Name</Label>
-                  <Input
-                    id={`transaction-name-${index}`}
-                    type="text"
-                    name="name"
-                    value={transaction.name}
-                    onChange={(e) => handleTransactionChange(e, index)}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor={`transaction-description-${index}`}>
-                    Description
-                  </Label>
-                  <Input
-                    id={`transaction-description-${index}`}
-                    type="text"
-                    name="description"
-                    value={transaction.description || ""}
-                    onChange={(e) => handleTransactionChange(e, index)}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor={`transaction-amount-${index}`}>Amount</Label>
-                  <Input
-                    id={`transaction-amount-${index}`}
-                    type="number"
-                    step="0.01"
-                    name="amount"
-                    value={transaction.amount}
-                    onChange={(e) => handleTransactionChange(e, index)}
-                  />
-                </div>
+              <Card key={index} className="flex flex-col p-4 space-y-2">
+                <TextField
+                  fullWidth
+                  id={`transaction-name-${index}`}
+                  name="name"
+                  label="Name"
+                  error={!!formErrors[`transaction[${index}].name`]}
+                  helperText={formErrors[`transaction[${index}].name`] || ""}
+                  value={transaction.name}
+                  onChange={(e) => handleTransactionChange(e, index)}
+                />
+                <TextField
+                  fullWidth
+                  id={`transaction-description-${index}`}
+                  name="description"
+                  label="Description"
+                  value={transaction.description || ""}
+                  onChange={(e) => handleTransactionChange(e, index)}
+                />
+                <TextField
+                  fullWidth
+                  id={`transaction-amount-${index}`}
+                  type="number"
+                  slotProps={{ htmlInput: { step: 0.01 } }}
+                  name="amount"
+                  label="Amount"
+                  value={transaction.amount}
+                  error={!!formErrors[`transaction[${index}].amount`]}
+                  helperText={formErrors[`transaction[${index}].amount`] || ""}
+                  onChange={(e) => handleTransactionChange(e, index)}
+                />
                 <div>
                   <CategorySelector
+                    error={!!formErrors[`transaction[${index + 1}].category`]}
+                    helperText={
+                      formErrors[`transaction[${index + 1}].category`] || ""
+                    }
                     value={(transaction as ReadOnlyTransaction).category}
                     onChange={(value) => {
                       if (value) {
@@ -365,16 +359,16 @@ export function AddOrEditTransactionGroupModal({
                   />
                 </div>
                 <Button
-                  type="button"
+                  variant="outlined"
+                  color="error"
                   onClick={() => removeTransaction(index)}
-                  className="text-red-500 hover:text-red-700"
                 >
                   <Trash className="h-4 w-4" />
                 </Button>
-              </div>
+              </Card>
             ))}
           </form>
-        </div>
+        </Card>
       </DialogContent>
       <div className="flex flex-col space-y-1">
         <Button type="button" variant="contained" onClick={addTransaction}>

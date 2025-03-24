@@ -154,7 +154,6 @@ export const AddOrEditBudgetPage = ({
 
     const categoryCounts: Record<string, number> = {};
     (budget.budget_items || []).forEach((item, index) => {
-      console.log(`Budget Item ${index}: ${JSON.stringify(item)}`);
       if ("category" in item) {
         const categoryID = item.category.id;
 
