@@ -1,11 +1,13 @@
 import { NextResponse, NextRequest } from "next/server";
-import {
-  RemovedTransaction,
-  Transaction,
-  TransactionsSyncRequest,
-} from "plaid";
+import * as plaid from "plaid";
 import { getAccessToken, plaidClient } from "../lib/plaid-server";
 import { DEV_USER_ID } from "@/lib/plaid";
+import {
+  ReadOnlyTransaction,
+  Transaction,
+  TransactionGroup,
+  WriteOnlyTransaction,
+} from "@/lib/types";
 import {
   mapPlaidToBeanTransactionCategory,
   PlaidPrimaryTransactionCategory,
@@ -15,9 +17,13 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function GET(req: NextRequest) {
   try {
-    // Get the userId from the request, e.g., from query parameters
+    // Get the userId and categories from the request, e.g., from query parameters
     const userId = req.nextUrl.searchParams.get("userId") || DEV_USER_ID;
-    console.log(`Fetching transactions for user ${userId}`);
+    const categories =
+      req.nextUrl.searchParams.get("categories")?.split(",") || [];
+    console.log(
+      `Fetching transactions for user ${userId} with categories ${categories}`,
+    );
     const tokenData = getAccessToken(userId);
 
     if (!tokenData) {
@@ -30,14 +36,14 @@ export async function GET(req: NextRequest) {
 
     let cursor = null;
     // New transaction updates since "cursor"
-    let added: Transaction[] = [];
-    let modified: Transaction[] = [];
+    let added: plaid.Transaction[] = [];
+    let modified: plaid.Transaction[] = [];
     // Removed transaction ids
-    let removed: RemovedTransaction[] = [];
+    let removed: plaid.RemovedTransaction[] = [];
     let hasMore = true;
     // Iterate through each page of new transaction updates for item
     while (hasMore) {
-      const request: TransactionsSyncRequest = {
+      const request: plaid.TransactionsSyncRequest = {
         access_token: ACCESS_TOKEN,
       };
       const response = await plaidClient.transactionsSync(request);
@@ -61,25 +67,33 @@ export async function GET(req: NextRequest) {
       hasMore = data.has_more;
     }
 
-    // Convert the Plaid transaction type to our internal format
-    const processed_transactions = added.map((txn: Transaction) => ({
-      id: txn.transaction_id,
-      description: txn.name,
-      amount: txn.amount,
-      date: txn.date,
-      category: mapPlaidToBeanTransactionCategory(
-        PlaidPrimaryTransactionCategory[
-          (txn.personal_finance_category
-            ?.primary as keyof typeof PlaidPrimaryTransactionCategory) ??
-            PlaidPrimaryTransactionCategory.OTHER
-        ],
-      ),
-    }));
+    console.log(added);
 
-    // const compareTxnsByDateAscending = (a: Transaction, b: Transaction) =>
-    //   new Date(a.date).getTime() - new Date(b.date).getTime();
-    // const sorted_by_date = [...added]
-    //   .sort(compareTxnsByDateAscending);
+    // Convert the Plaid transaction type to our internal format
+    const processed_transactions: Omit<TransactionGroup<Transaction>, "id">[] =
+      added.map((txn: plaid.Transaction) => ({
+        name: txn.name,
+        description: txn.name ?? "",
+        source: null,
+        date: txn.date,
+        transactions: [
+          {
+            name: txn.name,
+            description: txn.name,
+            amount: txn.amount,
+            // TODO(Fred): Map the Plaid category to our internal category
+            id: "", // Placeholder value (doesn't need to be set as it's ignored during POST)
+            group_id: "", // Placeholder value (doesn't need to be set as it's ignored during POST)
+            category: {
+              id: "", // Placeholder value (will be replaced during category mapping)
+              name: txn.personal_finance_category?.primary ?? "OTHER",
+              description: "",
+              is_income_type: false,
+              legacy: false,
+            },
+          },
+        ],
+      }));
     return NextResponse.json({ transactions: processed_transactions });
   } catch (error) {
     console.error(error);

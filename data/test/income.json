@@ -1,0 +1,267 @@
+[
+  {
+    "amount": 10000.0,
+    "category": "initial value",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": 450.73,
+    "category": "side hustle",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": 196.24,
+    "category": "stock dividends",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": 179.86,
+    "category": "stock dividends",
+    "date": "2025-01-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-01-15T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-01-29T00:00:00"
+  },
+  {
+    "amount": 465.69,
+    "category": "side hustle",
+    "date": "2025-02-01T00:00:00"
+  },
+  {
+    "amount": 187.88,
+    "category": "stock dividends",
+    "date": "2025-02-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-02-12T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-02-26T00:00:00"
+  },
+  {
+    "amount": 439.37,
+    "category": "side hustle",
+    "date": "2025-03-01T00:00:00"
+  },
+  {
+    "amount": 166.67,
+    "category": "stock dividends",
+    "date": "2025-03-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-03-12T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-03-26T00:00:00"
+  },
+  {
+    "amount": 435.86,
+    "category": "side hustle",
+    "date": "2025-04-01T00:00:00"
+  },
+  {
+    "amount": 199.11,
+    "category": "stock dividends",
+    "date": "2025-04-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-04-09T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-04-23T00:00:00"
+  },
+  {
+    "amount": 406.35,
+    "category": "side hustle",
+    "date": "2025-05-01T00:00:00"
+  },
+  {
+    "amount": 189.73,
+    "category": "stock dividends",
+    "date": "2025-05-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-05-07T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-05-21T00:00:00"
+  },
+  {
+    "amount": 432.29,
+    "category": "side hustle",
+    "date": "2025-06-01T00:00:00"
+  },
+  {
+    "amount": 174.63,
+    "category": "stock dividends",
+    "date": "2025-06-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-06-04T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-06-18T00:00:00"
+  },
+  {
+    "amount": 478.58,
+    "category": "side hustle",
+    "date": "2025-07-01T00:00:00"
+  },
+  {
+    "amount": 194.47,
+    "category": "stock dividends",
+    "date": "2025-07-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-07-02T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-07-16T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-07-30T00:00:00"
+  },
+  {
+    "amount": 470.33,
+    "category": "side hustle",
+    "date": "2025-08-01T00:00:00"
+  },
+  {
+    "amount": 180.75,
+    "category": "stock dividends",
+    "date": "2025-08-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-08-13T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-08-27T00:00:00"
+  },
+  {
+    "amount": 485.19,
+    "category": "side hustle",
+    "date": "2025-09-01T00:00:00"
+  },
+  {
+    "amount": 157.57,
+    "category": "stock dividends",
+    "date": "2025-09-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-09-10T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-09-24T00:00:00"
+  },
+  {
+    "amount": 455.16,
+    "category": "side hustle",
+    "date": "2025-10-01T00:00:00"
+  },
+  {
+    "amount": 163.21,
+    "category": "stock dividends",
+    "date": "2025-10-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-10-08T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-10-22T00:00:00"
+  },
+  {
+    "amount": 433.29,
+    "category": "side hustle",
+    "date": "2025-11-01T00:00:00"
+  },
+  {
+    "amount": 172.18,
+    "category": "stock dividends",
+    "date": "2025-11-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-11-05T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-11-19T00:00:00"
+  },
+  {
+    "amount": 456.93,
+    "category": "side hustle",
+    "date": "2025-12-01T00:00:00"
+  },
+  {
+    "amount": 154.13,
+    "category": "stock dividends",
+    "date": "2025-12-01T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-12-03T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-12-17T00:00:00"
+  },
+  {
+    "amount": 2500.0,
+    "category": "salary",
+    "date": "2025-12-31T00:00:00"
+  }
+]

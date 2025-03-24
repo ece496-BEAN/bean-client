@@ -3,8 +3,8 @@
 // export default function Page() {
 //   return <LoginPage />
 // }
-
-import { RecentTransactionsPage } from "@/components/recent-transactions-page";
+import React from "react";
+import { RecentTransactionsPage } from "@/components/RecentTransactionsPage";
 import CategoryProvider from "@/contexts/CategoriesContext";
 import TransactionsProvider from "@/contexts/TransactionsContext";
 

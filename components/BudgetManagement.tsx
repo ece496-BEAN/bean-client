@@ -22,7 +22,7 @@ export function BudgetAndCategoryPage({
   const path = usePathname();
 
   const routes = {
-    currentBudget: currentBudgetUUID
+    budgetDetails: currentBudgetUUID
       ? `/budget/${currentBudgetUUID}`
       : "/budget/current", // Conditional route
     addBudget: "/budget/new",
@@ -30,15 +30,12 @@ export function BudgetAndCategoryPage({
     categories: "/categories",
   };
   const [selectedTab, setSelectedTab] = useState(() => {
-    if (
-      path.startsWith(routes.currentBudget) ||
-      path.startsWith("/budget/current")
-    )
-      return 0;
+    if (path === routes.allBudgets) return 2;
     if (path.startsWith(routes.addBudget)) return 1;
-    if (path.startsWith(routes.allBudgets)) return 2;
+
+    if (path.startsWith(routes.budgetDetails)) return 0;
     if (path.startsWith(routes.categories)) return 3;
-    return 0; // Default to Current Budget,
+    return 0; // Default to Budget Details,
   });
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -46,7 +43,6 @@ export function BudgetAndCategoryPage({
   };
 
   useEffect(() => {
-    console.log("Check if login");
     if (!jwt) {
       router.push("/login"); // Redirect to login if JWT is not set
     }
@@ -55,17 +51,25 @@ export function BudgetAndCategoryPage({
   useEffect(() => {
     // Sync selectedTab with router.pathname when it changes
     let newIndex = 0;
-    if (path.startsWith("/budget/current")) newIndex = 0;
-    else if (path.startsWith("/budget/new")) newIndex = 1;
-    else if (path.startsWith("/budget")) newIndex = 2;
-    else if (path.startsWith("/categories")) newIndex = 3;
+    if (path === routes.allBudgets) newIndex = 2;
+    if (path.startsWith(routes.addBudget)) newIndex = 1;
+
+    if (path.startsWith(routes.budgetDetails)) newIndex = 0;
+    if (path.startsWith(routes.categories)) newIndex = 3;
     setSelectedTab(newIndex);
-  }, [path]);
+  }, [
+    path,
+    routes.addBudget,
+    routes.allBudgets,
+    routes.budgetDetails,
+    routes.categories,
+  ]);
 
   const currentPage = () => {
     switch (selectedTab) {
       case 0:
-        return "Current Budget";
+        if (!currentBudgetUUID) return "No Active Budget Detected";
+        return "Budget Overview";
       case 1:
         return "Add Budget";
       case 2:
@@ -90,9 +94,9 @@ export function BudgetAndCategoryPage({
             variant="scrollable"
           >
             <Tab
-              label="Current Budget"
+              label="Budget Details"
               component={Link}
-              href={routes.currentBudget}
+              href={routes.budgetDetails}
             />
             <Tab label="Add Budget" component={Link} href={routes.addBudget} />
             <Tab

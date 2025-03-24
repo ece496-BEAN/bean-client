@@ -8,22 +8,13 @@ import {
   Search,
   TrendingDown,
   TrendingUp,
-  Plus,
   Trash,
   ChevronRight,
   ChevronDown,
   Pencil,
 } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Resizable } from "re-resizable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import { useRouter } from "next/navigation";
 import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
@@ -31,12 +22,10 @@ import {
   TransactionGroupQueryParameters,
   useTransactions,
 } from "@/contexts/TransactionsContext";
-import { usePlaidContext } from "@/contexts/PlaidContext";
 import {
   Category,
   TransactionGroup,
   ReadOnlyTransaction,
-  isArrayType,
   Transaction,
 } from "@/lib/types";
 import { JwtContext } from "@/app/lib/jwt-provider";
@@ -46,13 +35,19 @@ import {
   Button,
   TablePagination,
   IconButton,
+  Popover,
+  TextField,
+  InputAdornment,
+  Grid2,
+  Tooltip,
 } from "@mui/material";
-import { ArrowUpward, ArrowDownward } from "@mui/icons-material";
+import { ArrowUpward, ArrowDownward, FilterList } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
-import { AddOrEditTransactionGroupModal } from "@/components/add-edit-transaction-group-modal";
+import { AddOrEditTransactionGroupModal } from "@/components/AddOrEditTransactionModal";
 import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
+import CategorySelector from "@/components/CategorySelector";
 
 interface TransactionSummaryProps {
   totalIncome: number;
@@ -154,8 +149,6 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                     className="p-2 border rounded mb-2"
                   >
                     <div className="flex justify-between items-center">
-                      {" "}
-                      {/* Transaction details */}
                       <div>
                         <p className="font-medium">{transaction.name}</p>
                         <p className="text-sm text-gray-500">
@@ -168,9 +161,9 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                         )}
                       </div>
                       <span
-                        className={`font-semibold ${transaction.amount < 0 ? "text-green-600" : "text-red-600"}`}
+                        className={`font-semibold ${transaction.category.is_income_type ? "text-green-600" : "text-red-600"}`}
                       >
-                        {transaction.amount < 0
+                        {transaction.category.is_income_type
                           ? `+${Math.abs(transaction.amount).toFixed(2)}`
                           : `-${Math.abs(transaction.amount).toFixed(2)}`}
                       </span>
@@ -179,24 +172,27 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                 ))}
               </ul>
             )}
-            <ConfirmDeleteModal
-              isOpen={isDeleteModalOpen}
-              onDelete={onDelete}
-              confirmDeleteItem={groupToDeleted}
-              onClose={handleCloseDeleteModal}
-            />
           </div>
         );
       })}
       <TablePagination
         component="div"
+        showFirstButton
+        showLastButton
         count={totalCount}
         page={pageNumber}
+        rowsPerPageOptions={[5, 10, 25, 50]}
         onPageChange={(_, newPage) => onPageChange(newPage)}
         rowsPerPage={pageSize}
         onRowsPerPageChange={(e) => {
           onRowsPerPageChange(parseInt(e.target.value, 10));
         }}
+      />
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onDelete={onDelete}
+        confirmDeleteItem={groupToDeleted}
+        onClose={handleCloseDeleteModal}
       />
     </div>
   );
@@ -281,8 +277,7 @@ export function RecentTransactionsPage() {
     getTransactionGroups,
   } = useTransactions();
 
-  const { categories, categoriesQueryError, refetchCategories } =
-    useCategories();
+  const { categoriesQueryError, refetchCategories } = useCategories();
   const [jwt] = useContext(JwtContext);
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState<number>(0);
@@ -306,9 +301,10 @@ export function RecentTransactionsPage() {
   useEffect(() => {
     if (transactionQueryError) {
       toast.error(
-        `Error loading transactions: ${transactionQueryError.message}, {
-        position: "bottom-left",
-      }`,
+        `Error loading transactions: ${transactionQueryError.message}`,
+        {
+          position: "bottom-left",
+        },
       );
     }
   }, [transactionQueryError]);
@@ -329,7 +325,7 @@ export function RecentTransactionsPage() {
     useState<TransactionGroup<ReadOnlyTransaction>>();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<Category["id"]>();
+  const [categoryFilter, setCategoryFilter] = useState<Category | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   // Don't automatically refetch on search
   useEffect(() => {
@@ -344,7 +340,7 @@ export function RecentTransactionsPage() {
       queryParams.search = searchTerm;
     }
     if (categoryFilter) {
-      queryParams.category_uuid = categoryFilter;
+      queryParams.category_uuid = categoryFilter.id;
     }
     if (currentPage >= 1) {
       // Pages for API start at 1, but the pages in the component start at 0
@@ -370,7 +366,7 @@ export function RecentTransactionsPage() {
   };
   const resetFilters = () => {
     setSearchTerm("");
-    setCategoryFilter(undefined);
+    setCategoryFilter(null);
     setStartDate(null);
     setEndDate(null);
     setCurrentPage((_) => 0);
@@ -378,12 +374,18 @@ export function RecentTransactionsPage() {
     setOrdering("-date");
     getTransactionGroups({});
   };
+
   const handleOpenEditModal = (
     groupToEdit: TransactionGroup<ReadOnlyTransaction>,
   ) => {
     setIsAddModalOpen(true); // Open the same modal
     setIsEditing(true); // Make sure it's in edit mode
     setTransactionToEdit(groupToEdit);
+  };
+  const handleOpenAddModal = () => {
+    setIsAddModalOpen(true);
+    setIsEditing(false); // Reset mode
+    setTransactionToEdit(undefined); // Clear transactionToEdit after closing
   };
   const handleCloseAddModal = () => {
     setIsAddModalOpen(false);
@@ -428,72 +430,24 @@ export function RecentTransactionsPage() {
 
         <Card className="bg-white shadow-lg">
           <TransactionListHeader
-            setIsAddModalOpen={setIsAddModalOpen}
-            refetchData={refetchData}
             applyFilters={applyFilters}
+            resetFilters={resetFilters}
             isLoading={isTransactionGroupLoading}
+            refetch={refetchData}
+            setOrdering={setOrdering}
+            setSearchTerm={setSearchTerm}
+            setCategoryFilter={setCategoryFilter}
+            categoryFilter={categoryFilter}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            ordering={ordering}
+            searchTerm={searchTerm}
+            startDate={startDate}
+            endDate={endDate}
+            handleOpenAddModal={handleOpenAddModal}
           />
+
           <CardContent>
-            <div className="flex flex-col md:flex-row gap-4 mb-4">
-              <IconButton
-                onClick={() => {
-                  setOrdering((prev) => {
-                    if (prev === "-date") {
-                      return "date";
-                    } else {
-                      return "-date";
-                    }
-                  });
-                }}
-              >
-                {ordering === "date" ? <ArrowUpward /> : <ArrowDownward />}
-              </IconButton>
-              <div className="relative flex-grow">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search transactions"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-              <Select
-                value={categoryFilter || "All"}
-                onValueChange={(value) => {
-                  if (value === "All") {
-                    setCategoryFilter(undefined);
-                  } else {
-                    setCategoryFilter(value);
-                  }
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="All">All</SelectItem>
-                </SelectContent>
-              </Select>
-              <DateRangePicker
-                localeText={{ start: "Start Date", end: "End Date" }}
-                value={[startDate, endDate]}
-                onChange={(newValue) => {
-                  if (newValue[0]) {
-                    setStartDate(newValue[0]);
-                  }
-                  if (newValue[1]) {
-                    setEndDate(newValue[1]);
-                  }
-                }}
-              />
-              <Button onClick={resetFilters}>Clear Filters</Button>
-            </div>
             {isTransactionGroupLoading ? (
               <CircularProgress />
             ) : (
@@ -532,44 +486,177 @@ export function RecentTransactionsPage() {
   );
 }
 interface TransactionListHeaderProps {
-  setIsAddModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  refetchData: () => void;
   applyFilters: () => void;
+  resetFilters: () => void;
   isLoading: boolean;
+  refetch: () => void;
+  setOrdering: React.Dispatch<React.SetStateAction<string>>;
+  setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
+  categoryFilter: Category | null;
+  setCategoryFilter: React.Dispatch<React.SetStateAction<Category | null>>;
+  setStartDate: React.Dispatch<React.SetStateAction<Date | null>>;
+  setEndDate: React.Dispatch<React.SetStateAction<Date | null>>;
+  ordering: string;
+  searchTerm: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  handleOpenAddModal: () => void;
 }
 function TransactionListHeader({
-  setIsAddModalOpen,
-  refetchData,
   applyFilters,
+  resetFilters,
   isLoading,
+  refetch,
+  setOrdering,
+  setSearchTerm,
+  categoryFilter,
+  setCategoryFilter,
+  setStartDate,
+  setEndDate,
+  ordering,
+  searchTerm,
+  startDate,
+  endDate,
+  handleOpenAddModal,
 }: TransactionListHeaderProps) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const filterMenuOpen = Boolean(anchorEl);
+
+  const handleFilterMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleFilterMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSearchClick = () => {
+    applyFilters();
+  };
   return (
-    <CardHeader className="pb-2">
-      <div className="flex justify-between items-center">
-        <CardTitle className="text-lg font-semibold text-gray-700">
-          Transaction List
-        </CardTitle>
-        <Button onClick={() => setIsAddModalOpen(true)} variant="contained">
-          <Plus className="w-4 h-4 mr-2" />
+    <Grid2
+      container
+      spacing={1}
+      className="flex flex-col h-auto bg-gray-50 p-4"
+    >
+      <Popover
+        open={filterMenuOpen}
+        anchorEl={anchorEl}
+        onClose={handleFilterMenuClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+      >
+        <Resizable>
+          <Grid2 container spacing={1} className="p-4">
+            <Grid2 size={12}>
+              <DateRangePicker
+                localeText={{ start: "Start Date", end: "End Date" }}
+                value={[startDate, endDate]}
+                onChange={(newValue) => {
+                  if (newValue[0]) {
+                    setStartDate(newValue[0]);
+                  }
+                  if (newValue[1]) {
+                    setEndDate(newValue[1]);
+                  }
+                }}
+              />
+            </Grid2>
+            <Grid2 size={12}>
+              <CategorySelector
+                value={categoryFilter}
+                onChange={(category) => {
+                  if (category) {
+                    setCategoryFilter(category);
+                  } else {
+                    setCategoryFilter(null);
+                  }
+                }}
+              />
+            </Grid2>
+            <Grid2 size={12}>
+              <Button onClick={resetFilters}>Clear Filters</Button>
+            </Grid2>
+          </Grid2>
+        </Resizable>
+      </Popover>
+      <Grid2>
+        <IconButton
+          onClick={() => {
+            setOrdering((prev) => {
+              if (prev === "-date") {
+                return "date";
+              } else {
+                return "-date";
+              }
+            });
+          }}
+        >
+          {ordering === "date" ? <ArrowUpward /> : <ArrowDownward />}
+        </IconButton>
+      </Grid2>
+      <Grid2 size={{ xs: 10, sm: 10, md: 8, lg: 8 }}>
+        <TextField
+          label="Search"
+          variant="outlined"
+          fullWidth
+          value={searchTerm}
+          onChange={handleSearchChange}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Tooltip title="Filter">
+                    <IconButton edge="start" onClick={handleFilterMenuOpen}>
+                      <FilterList />
+                    </IconButton>
+                  </Tooltip>
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Tooltip title="Search">
+                    <IconButton onClick={handleSearchClick} edge="end">
+                      <Search />
+                    </IconButton>
+                  </Tooltip>
+                </InputAdornment>
+              ),
+            },
+          }}
+          size="small"
+        />
+      </Grid2>
+      <Grid2>
+        <Button
+          variant="contained"
+          onClick={handleOpenAddModal}
+          sx={{
+            backgroundColor: "purple",
+            ":hover": { backgroundColor: "#6366f1" },
+          }}
+        >
           Add Transaction
         </Button>
+      </Grid2>
+      <Grid2>
         <Button
-          onClick={applyFilters}
+          variant="contained"
+          onClick={refetch}
           loading={isLoading}
           loadingPosition="end"
-          variant="contained"
-        >
-          Search
-        </Button>
-        <Button
-          onClick={refetchData}
-          loading={isLoading}
-          loadingPosition="end"
-          variant="contained"
+          sx={{
+            backgroundColor: "purple",
+            ":hover": { backgroundColor: "#6366f1" },
+          }}
         >
           Refresh
         </Button>
-      </div>
-    </CardHeader>
+      </Grid2>
+    </Grid2>
   );
 }

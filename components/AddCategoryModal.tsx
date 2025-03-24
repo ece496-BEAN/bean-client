@@ -2,10 +2,17 @@
 
 import React, { useState, FormEvent, useEffect, useRef } from "react";
 import { Trash, X } from "lucide-react";
-// import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
+import {
+  Chip,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  IconButton,
+  Switch,
+} from "@mui/material";
 
 import { Label } from "@/components/ui/label";
 import { Category, PartialByKeys } from "@/lib/types";
@@ -17,13 +24,16 @@ interface AddCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (
-    transaction: PartialByKeys<Category, "id" | "legacy">[],
-  ) => Promise<void>;
+    category:
+      | PartialByKeys<Category, "id" | "legacy">[]
+      | PartialByKeys<Category, "id" | "legacy">,
+  ) => Promise<Category[] | Category>;
 }
 
 const defaultCategory: PartialByKeys<Category, "id" | "legacy"> = {
   name: "",
   description: "",
+  is_income_type: false,
 };
 
 export function AddCategoryModal({
@@ -45,10 +55,17 @@ export function AddCategoryModal({
     index: number,
   ) => {
     const updatedCategories = [...newCategories];
-    updatedCategories[index] = {
-      ...updatedCategories[index],
-      [e.target.name]: e.target.value,
-    } as PartialByKeys<Category, "id" | "legacy">;
+    if (e.target.name !== "is_income_type") {
+      updatedCategories[index] = {
+        ...updatedCategories[index],
+        [e.target.name]: e.target.value,
+      } as PartialByKeys<Category, "id" | "legacy">;
+    } else {
+      updatedCategories[index] = {
+        ...updatedCategories[index],
+        [e.target.name]: (e.target as HTMLInputElement).checked,
+      } as PartialByKeys<Category, "id" | "legacy">;
+    }
     setNewCategories(updatedCategories);
   };
 
@@ -153,6 +170,23 @@ export function AddCategoryModal({
                     name="description"
                     value={category.description || ""}
                     onChange={(e) => handleCategoryChange(e, index)}
+                  />
+                </div>
+                <div>
+                  <FormControlLabel
+                    label={
+                      <Chip
+                        label={category.is_income_type ? "Income" : "Expense"}
+                        color={category.is_income_type ? "success" : "error"}
+                      />
+                    }
+                    control={
+                      <Switch
+                        name="is_income_type"
+                        checked={category.is_income_type}
+                        onChange={(e) => handleCategoryChange(e, index)}
+                      />
+                    }
                   />
                 </div>
                 <Button

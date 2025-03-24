@@ -8,7 +8,12 @@ import {
   PaginatedServerResponse,
   ServerResponse,
 } from "@/lib/types";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import React, {
   createContext,
   useState,
@@ -22,16 +27,19 @@ type BudgetContextType = {
   isBudgetsLoading: boolean;
   budgetsQueryError: Error | null;
   refetchBudgets: () => void;
+  isBudgetPlaceholderData: boolean;
 
   paginatedBudgets: PaginatedServerResponse<Budget>;
   isPaginatedBudgetsLoading: boolean;
   paginatedBudgetsQueryError: Error | null;
   refetchPaginatedBudgets: () => void;
+  isPaginatedBudgetPlaceholderData: boolean;
 
   selectedBudget: Budget | undefined;
   isSelectedBudgetLoading: boolean;
   selectedBudgetQueryError: Error | null;
   refetchSelectedBudget: () => void;
+  isSelectedBudgetPlaceholderData: boolean;
 
   mutationError: Error | null;
   getBudgets: (
@@ -42,9 +50,9 @@ type BudgetContextType = {
     options?: { no_page?: boolean },
   ) => void;
   getSelectedBudget: (uuid: string) => void;
-  addBudget: (budget: Budget) => void;
-  editBudget: (budget: Budget) => void;
-  deleteBudget: (budgetId: string) => void;
+  addBudget: (budget: Omit<Budget, "id">) => Promise<Budget>;
+  editBudget: (budget: Budget) => Promise<Budget>;
+  deleteBudget: (budgetId: string) => Promise<void>;
 };
 
 export type BudgetQueryParameters = {
@@ -105,9 +113,11 @@ export default function BudgetProvider({
     isLoading: isBudgetsLoading,
     error: budgetsQueryError,
     refetch: refetchBudgets,
+    isPlaceholderData: isBudgetPlaceholderData,
   } = useQuery({
     queryKey: ["budgets", queryOptions],
     queryFn: () => fetchBudgets(queryOptions),
+    placeholderData: keepPreviousData,
     enabled: !!jwt,
   });
 
@@ -117,9 +127,11 @@ export default function BudgetProvider({
     isLoading: isPaginatedBudgetsLoading,
     error: paginatedBudgetsQueryError,
     refetch: refetchPaginatedBudgets,
+    isPlaceholderData: isPaginatedBudgetPlaceholderData,
   } = useQuery({
     queryKey: ["budgets", paginatedQueryOptions],
     queryFn: () => fetchBudgets(paginatedQueryOptions),
+    placeholderData: keepPreviousData,
     enabled: !!jwt, // Only fetch when jwt is available
   });
 
@@ -129,10 +141,16 @@ export default function BudgetProvider({
     isLoading: isSelectedBudgetLoading,
     error: selectedBudgetQueryError,
     refetch: refetchSelectedBudget,
+    isPlaceholderData: isSelectedBudgetPlaceholderData,
   } = useQuery({
     queryKey: ["budgets", selectedBudgetUUID],
-    queryFn: () =>
-      fetchBudgets({}, { uuid: selectedBudgetUUID! }) as Promise<Budget>,
+    queryFn: () => {
+      if (!selectedBudgetUUID) {
+        throw new Error("No budget UUID Provided");
+      }
+      return fetchBudgets({}, { uuid: selectedBudgetUUID }) as Promise<Budget>;
+    },
+    placeholderData: keepPreviousData,
     enabled: !!selectedBudgetUUID,
   });
 
@@ -171,7 +189,7 @@ export default function BudgetProvider({
       );
     },
     mutationFn: async (newBudget: Omit<Budget, "id">) => {
-      newBudget.items = newBudget.items.map((item) => {
+      newBudget.budget_items = newBudget.budget_items.map((item) => {
         if ("category" in item) {
           const { category, ...rest } = item;
           item = {
@@ -183,7 +201,14 @@ export default function BudgetProvider({
         item.allocation = parseFloat(item.allocation.toFixed(2));
         return item;
       });
-      return await fetchApi(jwt, setAndStoreJwt, "budgets/", "POST", newBudget);
+      const response = await fetchApi(
+        jwt,
+        setAndStoreJwt,
+        "budgets/",
+        "POST",
+        newBudget,
+      );
+      return (await response.json()) as Budget;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -205,7 +230,7 @@ export default function BudgetProvider({
     },
     mutationFn: async (updatedBudget: Budget) => {
       // Convert ReadOnlyBudgetItem to WriteOnlyBudgetItem
-      updatedBudget.items = updatedBudget.items.map((item) => {
+      updatedBudget.budget_items = updatedBudget.budget_items.map((item) => {
         if ("id" in item) {
           const { id, category, budget_id, ...rest } = item;
           item = {
@@ -218,13 +243,14 @@ export default function BudgetProvider({
 
         return item;
       });
-      return await fetchApi(
+      const response = await fetchApi(
         jwt,
         setAndStoreJwt,
         `budgets/${updatedBudget.id}/`,
         "PUT",
         updatedBudget,
       );
+      return (await response.json()) as Budget;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -244,12 +270,7 @@ export default function BudgetProvider({
       );
     },
     mutationFn: async (budgetId: string) => {
-      return await fetchApi(
-        jwt,
-        setAndStoreJwt,
-        `budgets/${budgetId}/`,
-        "DELETE",
-      );
+      await fetchApi(jwt, setAndStoreJwt, `budgets/${budgetId}/`, "DELETE");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -266,15 +287,15 @@ export default function BudgetProvider({
   const { mutateAsync: deleteBudgetMutateAsync } = deleteBudgetMutation;
 
   const addBudget = useCallback(
-    async (budget: Budget) => {
-      await addBudgetMutateAsync(budget);
+    async (budget: Omit<Budget, "id">) => {
+      return await addBudgetMutateAsync(budget);
     },
     [addBudgetMutateAsync],
   );
 
   const editBudget = useCallback(
     async (budget: Budget) => {
-      await editBudgetMutateAsync(budget);
+      return await editBudgetMutateAsync(budget);
     },
     [editBudgetMutateAsync],
   );
@@ -302,6 +323,7 @@ export default function BudgetProvider({
     isBudgetsLoading,
     budgetsQueryError,
     refetchBudgets,
+    isBudgetPlaceholderData,
     paginatedBudgets: useMemo(() => {
       return (
         (paginatedBudgets as PaginatedServerResponse<Budget>) ||
@@ -311,10 +333,12 @@ export default function BudgetProvider({
     isPaginatedBudgetsLoading,
     paginatedBudgetsQueryError,
     refetchPaginatedBudgets,
+    isPaginatedBudgetPlaceholderData,
     selectedBudget,
     isSelectedBudgetLoading,
     selectedBudgetQueryError,
     refetchSelectedBudget,
+    isSelectedBudgetPlaceholderData,
     getBudgets,
     getSelectedBudget,
     addBudget,

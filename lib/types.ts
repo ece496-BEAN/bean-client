@@ -37,6 +37,7 @@ export type Category = {
   name: DefaultTransactionCategory | string;
   description?: string;
   legacy: boolean;
+  is_income_type: boolean;
 };
 
 export type TransactionGroup<T extends Transaction> = {
@@ -69,7 +70,7 @@ export type Budget = {
   description?: string;
   start_date: string;
   end_date: string;
-  items: BudgetItem[];
+  budget_items: BudgetItem[];
 };
 
 export type ServerResponse<T> =

@@ -5,13 +5,6 @@ import { format } from "date-fns";
 import { Trash, X } from "lucide-react";
 // import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
 
 import { Label } from "@/components/ui/label";
@@ -28,6 +21,7 @@ import { Button, CircularProgress } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import "react-toastify/dist/ReactToastify.css";
+import CategorySelector from "./CategorySelector";
 
 interface AddOrEditTransactionModalProps {
   isOpen: boolean;
@@ -36,7 +30,7 @@ interface AddOrEditTransactionModalProps {
   onClose: () => void;
   onSave: (
     transaction: PartialByKeys<TransactionGroup<Transaction>, "id">,
-  ) => Promise<void>;
+  ) => Promise<TransactionGroup<ReadOnlyTransaction>>;
 }
 
 const defaultTransactionGroup: Omit<TransactionGroup<Transaction>, "id"> = {
@@ -226,9 +220,9 @@ export function AddOrEditTransactionGroupModal({
       <DialogTitle className="flex justify-between items-center bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
         <div>
           {mode === "add" ? (
-            <h2 className="text-2xl font-bold">Add New Transaction Group</h2>
+            <h2 className="text-2xl font-bold">Add New Transaction</h2>
           ) : (
-            <h2 className="text-2xl font-bold">Edit Transaction Group</h2>
+            <h2 className="text-2xl font-bold">Edit Transaction</h2>
           )}
         </div>
         <IconButton
@@ -250,7 +244,7 @@ export function AddOrEditTransactionGroupModal({
                 name="name"
                 value={newTransactionGroup.name}
                 onChange={handleTransactionGroupChange}
-                placeholder="Transaction Group Name"
+                placeholder="Transaction Name"
               />
             </div>
             <div>
@@ -260,7 +254,7 @@ export function AddOrEditTransactionGroupModal({
                 name="description"
                 value={newTransactionGroup.description}
                 onChange={handleTransactionGroupChange}
-                placeholder="Transaction Group description"
+                placeholder="Transaction Description"
               />
             </div>
             <div>
@@ -274,7 +268,7 @@ export function AddOrEditTransactionGroupModal({
                 required
               />
             </div>
-            <h3>Transactions</h3>
+            <h3>Items</h3>
             {newTransactionGroup.transactions.map((transaction, index) => (
               <div
                 key={index}
@@ -316,54 +310,37 @@ export function AddOrEditTransactionGroupModal({
                   />
                 </div>
                 <div>
-                  <Label htmlFor={`transaction-category-${index}`}>
-                    Category
-                  </Label>
-                  <Select
-                    onValueChange={(value) => {
-                      const updatedTransactions = [
-                        ...newTransactionGroup.transactions,
-                      ];
-                      if (
-                        mode === "edit" &&
-                        "category" in updatedTransactions[index]
-                      ) {
-                        updatedTransactions[index] = {
-                          ...updatedTransactions[index],
-                          category: {
-                            ...updatedTransactions[index].category,
-                            id: value,
-                          },
-                        };
-                      } else {
-                        updatedTransactions[index] = {
-                          ...updatedTransactions[index],
-                          category_uuid: value,
-                        };
-                      }
-                      setNewTransactionGroup({
-                        ...newTransactionGroup,
-                        transactions: updatedTransactions,
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          "category" in transaction
-                            ? transaction.category.name
-                            : "Select Category"
+                  <CategorySelector
+                    value={(transaction as ReadOnlyTransaction).category}
+                    onChange={(value) => {
+                      if (value) {
+                        const updatedTransactions = [
+                          ...newTransactionGroup.transactions,
+                        ];
+                        if (
+                          mode === "edit" &&
+                          "category" in updatedTransactions[index]
+                        ) {
+                          updatedTransactions[index] = {
+                            ...updatedTransactions[index],
+                            category: {
+                              ...updatedTransactions[index].category,
+                              id: value.id,
+                            },
+                          };
+                        } else {
+                          updatedTransactions[index] = {
+                            ...updatedTransactions[index],
+                            category_uuid: value.id,
+                          };
                         }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        setNewTransactionGroup({
+                          ...newTransactionGroup,
+                          transactions: updatedTransactions,
+                        });
+                      }
+                    }}
+                  />
                 </div>
                 <Button
                   type="button"
@@ -379,7 +356,7 @@ export function AddOrEditTransactionGroupModal({
       </DialogContent>
       <div className="flex flex-col space-y-1">
         <Button type="button" variant="contained" onClick={addTransaction}>
-          Add Transaction
+          Add Item
         </Button>
         <Button
           type="submit"
@@ -394,7 +371,7 @@ export function AddOrEditTransactionGroupModal({
             }
           }}
         >
-          Submit Transaction Group
+          Submit Transaction
         </Button>
       </div>
       <ToastContainer />

@@ -2,7 +2,12 @@
 
 import React, { useMemo } from "react";
 import { createContext, useCallback, useContext, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { fetchApi } from "@/app/lib/api";
 import {
@@ -20,12 +25,14 @@ interface TransactionsContextType {
   >;
   isTransactionGroupsLoading: boolean;
   transactionGroupsQueryError: Error | null;
+  isTransactionGroupsPlaceholderData: boolean;
 
   paginatedTransactionGroups: PaginatedServerResponse<
     TransactionGroup<ReadOnlyTransaction>
   >;
   isPaginatedTransactionGroupsLoading: boolean;
   paginatedTransactionGroupsQueryError: Error | null;
+  isPaginatedTransactionGroupsPlaceholderData: boolean;
 
   mutationError: Error | null;
   getTransactionGroups: (
@@ -38,10 +45,10 @@ interface TransactionsContextType {
 
   addTransactionGroup: (
     newGroup: Omit<TransactionGroup<Transaction>, "id">,
-  ) => Promise<void>;
+  ) => Promise<TransactionGroup<ReadOnlyTransaction>>;
   editTransactionGroup: (
     editedGroup: TransactionGroup<Transaction>,
-  ) => Promise<void>;
+  ) => Promise<TransactionGroup<ReadOnlyTransaction>>;
   deleteTransactionGroup: (groupId: string) => Promise<void>;
   refetchTransactions: () => void;
 
@@ -57,6 +64,7 @@ export type TransactionGroupQueryParameters = {
   date_after?: string;
   date_before?: string;
   category_uuid?: string;
+  category_type_is_income?: boolean;
   search?: string;
   page?: number;
   page_size?: number;
@@ -120,9 +128,11 @@ export default function TransactionProvider({
     isLoading: isTransactionGroupsLoading,
     error: transactionGroupsQueryError,
     refetch: refetchTransactions,
+    isPlaceholderData: isTransactionGroupsPlaceholderData,
   } = useQuery({
     queryKey: ["transaction-groups", queryOptions],
     queryFn: () => fetchTransactionGroups(queryOptions),
+    placeholderData: keepPreviousData,
     enabled: !!jwt, // Only fetch when jwt is available
   });
 
@@ -132,9 +142,11 @@ export default function TransactionProvider({
     isLoading: isPaginatedTransactionGroupsLoading,
     error: paginatedTransactionGroupsQueryError,
     refetch: refetchPaginatedTransactionGroups,
+    isPlaceholderData: isPaginatedTransactionGroupsPlaceholderData,
   } = useQuery({
     queryKey: ["transaction-groups", paginatedQueryOptions],
     queryFn: () => fetchTransactionGroups(paginatedQueryOptions),
+    placeholderData: keepPreviousData,
     enabled: !!jwt, // Only fetch when jwt is available
   });
 
@@ -174,9 +186,12 @@ export default function TransactionProvider({
   } = useQuery({
     queryKey: ["transaction-groups", selectedTransactionGroupUUID],
     queryFn: () => {
+      if (!selectedTransactionGroupUUID) {
+        throw new Error("No transaction group UUID provided.");
+      }
       return fetchTransactionGroups(
         {},
-        { uuid: selectedTransactionGroupUUID! },
+        { uuid: selectedTransactionGroupUUID },
       ) as Promise<TransactionGroup<ReadOnlyTransaction>>;
     },
     enabled: !!selectedTransactionGroupUUID && !!jwt, // Only fetch if uuid is set and jwt is available
@@ -209,13 +224,14 @@ export default function TransactionProvider({
         return transaction;
       });
 
-      return fetchApi(
+      const response = await fetchApi(
         jwt,
         setAndStoreJwt,
         "transaction-groups/",
         "POST",
         newGroup,
       );
+      return (await response.json()) as TransactionGroup<ReadOnlyTransaction>;
     },
 
     onSuccess: () => {
@@ -253,13 +269,14 @@ export default function TransactionProvider({
           return transaction;
         });
 
-      return fetchApi(
+      const response = await fetchApi(
         jwt,
         setAndStoreJwt,
         `transaction-groups/${editedTransactionGroup.id}/`,
         "PUT",
         editedTransactionGroup,
       );
+      return (await response.json()) as TransactionGroup<ReadOnlyTransaction>;
     },
 
     onSuccess: () => {
@@ -281,7 +298,7 @@ export default function TransactionProvider({
       );
     },
     mutationFn: async (groupId: string) => {
-      return await fetchApi(
+      await fetchApi(
         jwt,
         setAndStoreJwt,
         `transaction-groups/${groupId}/`,
@@ -306,14 +323,14 @@ export default function TransactionProvider({
 
   const addTransactionGroup = useCallback(
     async (transactionGroup: Omit<TransactionGroup<Transaction>, "id">) => {
-      await addTransactionGroupMutateAsync(transactionGroup);
+      return await addTransactionGroupMutateAsync(transactionGroup);
     },
     [addTransactionGroupMutateAsync],
   );
 
   const editTransactionGroup = useCallback(
     async (transactionGroup: TransactionGroup<Transaction>) => {
-      await editTransactionGroupMutateAsync(transactionGroup);
+      return await editTransactionGroupMutateAsync(transactionGroup);
     },
     [editTransactionGroupMutateAsync],
   );
@@ -360,6 +377,7 @@ export default function TransactionProvider({
     ),
     isTransactionGroupsLoading,
     transactionGroupsQueryError,
+    isTransactionGroupsPlaceholderData,
     paginatedTransactionGroups: useMemo(
       () =>
         (paginatedTransactionGroups as PaginatedServerResponse<
@@ -369,6 +387,7 @@ export default function TransactionProvider({
     ),
     isPaginatedTransactionGroupsLoading,
     paginatedTransactionGroupsQueryError,
+    isPaginatedTransactionGroupsPlaceholderData,
     mutationError,
     addTransactionGroup,
     editTransactionGroup,

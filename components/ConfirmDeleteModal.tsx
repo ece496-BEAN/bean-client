@@ -32,21 +32,23 @@ export function ConfirmDeleteModal<T extends Item>({
   onClose,
 }: ConfirmDeleteModalProps<T>) {
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
-  const [deleteError, setDeleteError] = useState(false); // State for error
+  const [deleteError, setDeleteError] = useState("");
 
   const handleConfirmDelete = () => {
     if (confirmDeleteItem && deleteConfirmation === confirmDeleteItem.name) {
       onDelete(confirmDeleteItem.id);
       setDeleteConfirmation("");
-      setDeleteError(false);
+      setDeleteError("");
       onClose();
     } else if (confirmDeleteItem) {
-      setDeleteError(true);
+      setDeleteError("Item name does not match");
     }
   };
 
   const handleCancelDelete = () => {
     setDeleteConfirmation(""); // Clear any typed confirmation
+    setDeleteError("");
+
     onClose();
   };
   return (
@@ -67,13 +69,8 @@ export function ConfirmDeleteModal<T extends Item>({
           margin="normal"
           value={deleteConfirmation}
           onChange={(e) => setDeleteConfirmation(e.target.value)}
-          error={deleteError}
-          helperText={
-            deleteError && (
-              <FormHelperText error>Item name does not match</FormHelperText>
-            )
-          }
-          slotProps={{ formHelperText: { style: { color: red[500] } } }}
+          error={!!deleteError}
+          helperText={deleteError}
         />
       </DialogContent>
       <DialogActions sx={{ padding: "1rem 1.5rem" }}>
