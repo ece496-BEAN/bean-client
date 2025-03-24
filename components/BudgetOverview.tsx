@@ -137,6 +137,9 @@ function BudgetOverview() {
           <AddOrEditBudgetPage
             editMode={editMode}
             initial_budget={selectedBudget}
+            onSubmit={() => {
+              setEditMode(false);
+            }}
           />
         ) : (
           <div>

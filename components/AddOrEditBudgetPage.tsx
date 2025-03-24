@@ -33,10 +33,12 @@ import { getLocalMidnightDate } from "@/lib/utils";
 interface AddOrEditBudgetPageProps {
   editMode?: boolean;
   initial_budget?: Budget;
+  onSubmit?: () => void;
 }
 export const AddOrEditBudgetPage = ({
   editMode,
   initial_budget,
+  onSubmit,
 }: AddOrEditBudgetPageProps) => {
   const { categoriesQueryError } = useCategories();
   const { addBudget, editBudget } = useBudgets();
@@ -187,6 +189,10 @@ export const AddOrEditBudgetPage = ({
       const new_budget = editMode
         ? await editBudget({ ...budget, id: budget.id! })
         : await addBudget(budget);
+      // Handles the extra submit behavior provided by parent component
+      if (onSubmit) {
+        onSubmit();
+      }
       router.push(`/budget/${new_budget.id}/`);
     }
   };

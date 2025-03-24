@@ -5,6 +5,8 @@ import { Trash, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 import {
+  Box,
+  Card,
   Chip,
   Dialog,
   DialogContent,
@@ -12,6 +14,7 @@ import {
   FormControlLabel,
   IconButton,
   Switch,
+  TextField,
 } from "@mui/material";
 
 import { Label } from "@/components/ui/label";
@@ -141,37 +144,28 @@ export function AddCategoryModal({
         </IconButton>
       </DialogTitle>
       <DialogContent dividers={true}>
-        <div>
+        <Box>
           <form ref={formRef} onSubmit={handleSubmit} className="space-y-2">
-            <h3>Categories</h3>
             {newCategories.map((category, index) => (
-              <div
-                key={index}
-                className="flex flex-col border border-solid border-indigo-600"
-              >
-                <div>
-                  <Label htmlFor={`category-name-${index}`}>Name</Label>
-                  <Input
-                    id={`category-name-${index}`}
-                    type="text"
-                    name="name"
-                    value={category.name}
-                    onChange={(e) => handleCategoryChange(e, index)}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor={`category-description-${index}`}>
-                    Description
-                  </Label>
-                  <Input
-                    id={`category-description-${index}`}
-                    type="text"
-                    name="description"
-                    value={category.description || ""}
-                    onChange={(e) => handleCategoryChange(e, index)}
-                  />
-                </div>
+              <Card key={index} className="flex flex-col p-4 space-y-2">
+                <TextField
+                  id={`category-name-${index}`}
+                  name="name"
+                  label="Name"
+                  variant="outlined"
+                  fullWidth
+                  value={category.name}
+                  onChange={(e) => handleCategoryChange(e, index)}
+                />
+                <TextField
+                  id={`category-description-${index}`}
+                  name="description"
+                  label="Description (Optional)"
+                  variant="outlined"
+                  fullWidth
+                  value={category.description}
+                  onChange={(e) => handleCategoryChange(e, index)}
+                />
                 <div>
                   <FormControlLabel
                     label={
@@ -192,14 +186,15 @@ export function AddCategoryModal({
                 <Button
                   type="button"
                   onClick={() => removeCategory(index)}
-                  className="text-red-500 hover:text-red-700"
+                  variant="outlined"
+                  color="error"
                 >
                   <Trash className="h-4 w-4" />
                 </Button>
-              </div>
+              </Card>
             ))}
           </form>
-        </div>
+        </Box>
       </DialogContent>
       <div className="flex flex-col space-y-1">
         <Button type="button" variant="contained" onClick={addCategory}>

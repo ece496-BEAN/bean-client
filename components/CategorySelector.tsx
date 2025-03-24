@@ -33,6 +33,7 @@ export default function CategoryAutocomplete({
   error,
   helperText,
 }: CategoryAutocompleteProps) {
+  const [formError, setFormError] = React.useState<string | null>(null);
   const { categories, addCategory, isCategoriesLoading } = useCategories();
   const categoryOptions: CategoryOption[] = categories;
   const [open, toggleOpen] = React.useState(false);
@@ -60,17 +61,27 @@ export default function CategoryAutocomplete({
       description: "",
       is_income_type: false,
     });
+    setFormError(null);
     toggleOpen(false);
   };
 
+  const validateForm = () => {
+    if (!dialogValue.name) {
+      setFormError("Name is required");
+      return false;
+    }
+    return true;
+  };
   const handleSubmit = async (
     _: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
-    // Can't seem to get the type inferring working
-    const newCategory = (await addCategory(dialogValue)) as Category;
-    setDialogValue(newCategory);
-    onChange(newCategory); // Send value to parent component
-    handleClose();
+    if (validateForm()) {
+      // Can't seem to get the type inferring working
+      const newCategory = (await addCategory(dialogValue)) as Category;
+      setDialogValue(newCategory);
+      onChange(newCategory); // Send value to parent component
+      handleClose();
+    }
   };
 
   const filter = createFilterOptions<CategoryOption>();
@@ -191,6 +202,8 @@ export default function CategoryAutocomplete({
               fullWidth
               variant="outlined"
               value={dialogValue.name}
+              error={!!formError}
+              helperText={formError || ""}
               onChange={(e) =>
                 setDialogValue({ ...dialogValue, name: e.target.value })
               }

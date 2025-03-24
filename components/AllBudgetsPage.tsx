@@ -23,7 +23,7 @@ import {
 } from "@mui/material";
 import { DateField, DateRangePicker } from "@mui/x-date-pickers-pro";
 import { format } from "date-fns";
-import { ExternalLink, Pencil, Search, Trash } from "lucide-react";
+import { ExternalLink, Pencil, Trash } from "lucide-react";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { JwtContext } from "@/app/lib/jwt-provider";
@@ -32,6 +32,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { getLocalMidnightDate } from "@/lib/utils";
+import { Search } from "@mui/icons-material";
 
 interface AllBudgetsHeaderProps {
   isPaginatedBudgetsLoading: boolean;

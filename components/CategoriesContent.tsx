@@ -24,6 +24,9 @@ import {
   Typography,
   Checkbox,
   FormGroup,
+  Grid2,
+  Tab,
+  LinearProgress,
 } from "@mui/material";
 import { Pencil, Trash, Check, X } from "lucide-react";
 import {
@@ -250,35 +253,13 @@ function CategoriesContent() {
 
   const { results: categories, count: totalCount } = paginatedCategories;
   return (
-    <Box className="flex flex-col h-auto bg-gray-50">
-      <div className="flex items-center space-x-4 mb-4">
-        <TextField
-          label="Search"
-          variant="outlined"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          slotProps={{
-            input: {
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={handleSearchClick} edge="end">
-                    <Search />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            },
-          }}
-          size="small"
-        />
-        <Button
-          variant="outlined"
-          onClick={handleFilterMenuOpen}
-          startIcon={<FilterList />}
-          size="small"
-        >
-          Filter
-        </Button>
-
+    <>
+      {" "}
+      <Grid2
+        container
+        spacing={1}
+        className="flex flex-col h-auto bg-gray-50 p-4"
+      >
         <Popover
           open={filterMenuOpen}
           anchorEl={anchorEl}
@@ -321,29 +302,141 @@ function CategoriesContent() {
             </FormGroup>
           </div>
         </Popover>
-        <Button
-          variant="contained"
-          onClick={handleOpenAddModal}
-          sx={{
-            backgroundColor: "purple",
-            ":hover": { backgroundColor: "#6366f1" },
-          }}
-        >
-          Add New Categories
-        </Button>
-        <Button
-          variant="contained"
-          onClick={refetchPaginatedCategories}
-          loading={isLoading}
-          loadingPosition="end"
-          sx={{
-            backgroundColor: "purple",
-            ":hover": { backgroundColor: "#6366f1" },
-          }}
-        >
-          Refresh
-        </Button>
-      </div>
+        <Grid2 size={{ xs: 12, sm: 12, md: 8, lg: 8 }}>
+          <TextField
+            fullWidth
+            label="Search"
+            variant="outlined"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <IconButton onClick={handleFilterMenuOpen} edge="start">
+                      <FilterList />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={handleSearchClick} edge="end">
+                      <Search />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
+            size="small"
+          />
+        </Grid2>
+        <Grid2>
+          <Button
+            variant="contained"
+            onClick={handleOpenAddModal}
+            sx={{
+              backgroundColor: "purple",
+              ":hover": { backgroundColor: "#6366f1" },
+            }}
+          >
+            Add New Categories
+          </Button>
+        </Grid2>
+        <Grid2>
+          <Button
+            variant="contained"
+            onClick={refetchPaginatedCategories}
+            loading={isLoading}
+            loadingPosition="end"
+            sx={{
+              backgroundColor: "purple",
+              ":hover": { backgroundColor: "#6366f1" },
+            }}
+          >
+            Refresh
+          </Button>
+        </Grid2>
+      </Grid2>
+      <CategoriesTable
+        handleEditClick={handleEditClick}
+        handleSortClick={handleSortClick}
+        sortDirection={sortDirection}
+        categories={categories}
+        editingCategory={editingCategory}
+        handleValueChange={handleValueChange}
+        handleSaveClick={handleSaveClick}
+        handleCancelClick={handleCancelClick}
+        handleDeleteConfirmation={handleDeleteConfirmation}
+        totalCount={totalCount}
+        handleChangePage={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        handleChangeRowsPerPage={handleChangeRowsPerPage}
+        page={page}
+        isLoading={isLoading}
+      />
+      <AddCategoryModal
+        isOpen={isAddModalOpen}
+        onClose={handleCloseAddModal}
+        onSave={addCategory}
+      />
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        confirmDeleteItem={categoryToBeDeleted}
+        onDelete={deleteCategory}
+        onClose={handleCloseDeleteModal}
+      />
+      <ToastContainer />
+    </>
+  );
+}
+interface CategoriesHeaderProps {}
+const CategoriesHeader = ({}: CategoriesHeaderProps) => {};
+interface CategoriesTableProps {
+  handleEditClick: (category: Category) => void;
+  handleSortClick: (direction: "asc" | "desc") => void;
+  sortDirection: "asc" | "desc";
+  categories: Category[];
+  editingCategory: Category | undefined;
+  handleValueChange: (
+    field: "name" | "description" | "legacy" | "is_income_type",
+    value: string | boolean,
+  ) => void;
+  handleSaveClick: (category: Category) => void;
+  handleCancelClick: () => void;
+  handleDeleteConfirmation: (category: Category) => void;
+  totalCount: number;
+  handleChangePage: (newPage: number) => void;
+  rowsPerPage: number;
+  handleChangeRowsPerPage: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  page: number;
+  isLoading: boolean;
+}
+const CategoriesTable = ({
+  handleEditClick,
+  categories,
+  handleSortClick,
+  sortDirection,
+  editingCategory,
+  handleValueChange,
+  handleSaveClick,
+  handleCancelClick,
+  handleDeleteConfirmation,
+  handleChangePage,
+  rowsPerPage,
+  handleChangeRowsPerPage,
+  page,
+  totalCount,
+  isLoading,
+}: CategoriesTableProps) => {
+  if (isLoading) {
+    return (
+      <Box sx={{ width: "100%" }}>
+        <LinearProgress />
+      </Box>
+    );
+  }
+  return (
+    <Box className="flex flex-col h-auto bg-gray-50">
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -368,6 +461,7 @@ function CategoriesContent() {
               </TableCell>
               <TableCell>Description</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Type</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -498,19 +592,7 @@ function CategoriesContent() {
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
-      <ToastContainer />
-      <AddCategoryModal
-        isOpen={isAddModalOpen}
-        onClose={handleCloseAddModal}
-        onSave={addCategory}
-      />
-      <ConfirmDeleteModal
-        isOpen={isDeleteModalOpen}
-        confirmDeleteItem={categoryToBeDeleted}
-        onDelete={deleteCategory}
-        onClose={handleCloseDeleteModal}
-      />
     </Box>
   );
-}
+};
 export default CategoriesContent;
