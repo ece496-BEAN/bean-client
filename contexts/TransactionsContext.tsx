@@ -17,6 +17,7 @@ import {
   PaginatedServerResponse,
   ReadOnlyTransaction,
   Transaction,
+  isArrayType,
 } from "@/lib/types";
 
 interface TransactionsContextType {
@@ -45,7 +46,10 @@ interface TransactionsContextType {
 
   addTransactionGroup: (
     newGroup: Omit<TransactionGroup<Transaction>, "id">,
-  ) => Promise<TransactionGroup<ReadOnlyTransaction>>;
+  ) => Promise<
+    | TransactionGroup<ReadOnlyTransaction>
+    | TransactionGroup<ReadOnlyTransaction>[]
+  >;
   editTransactionGroup: (
     editedGroup: TransactionGroup<Transaction>,
   ) => Promise<TransactionGroup<ReadOnlyTransaction>>;
@@ -204,31 +208,52 @@ export default function TransactionProvider({
             ),
       );
     },
-    mutationFn: async (newGroup: Omit<TransactionGroup<Transaction>, "id">) => {
+    mutationFn: async (
+      newGroup:
+        | Omit<TransactionGroup<Transaction>, "id">
+        | Omit<TransactionGroup<Transaction>, "id">[],
+    ) => {
       // Modify ReadOnlyTransaction to a WriteOnlyTransaction
-      newGroup.transactions = newGroup.transactions.map((transaction) => {
-        if ("category" in transaction) {
-          const { category, ...rest } = transaction;
 
-          transaction = { ...rest, category_uuid: category.id };
+      const processTransaction = (transaction: any) => {
+        let updatedTransaction = { ...transaction };
+        if ("category" in updatedTransaction) {
+          const { category, ...rest } = updatedTransaction;
+          updatedTransaction = { ...rest, category_uuid: category.id };
         }
-        if ("amount" in transaction) {
-          // Round to 2 Decimal Places since server cannot handle more than 2 decimal places
-          transaction.amount = parseFloat(
-            parseFloat(transaction.amount.toString()).toFixed(2),
+        // Round to 2 Decimal Places since server cannot handle more than 2 decimal places
+        if ("amount" in updatedTransaction) {
+          updatedTransaction.amount = parseFloat(
+            parseFloat(updatedTransaction.amount.toString()).toFixed(2),
           );
         }
-        return transaction;
-      });
+        return updatedTransaction;
+      };
+      const processGroup = (
+        group: Omit<TransactionGroup<Transaction>, "id">,
+      ) => {
+        return {
+          ...group,
+          transactions: group.transactions.map(processTransaction),
+        };
+      };
+
+      const processedGroup = isArrayType(newGroup)
+        ? newGroup.map((group) => processGroup(group))
+        : processGroup(newGroup);
 
       const response = await fetchApi(
         jwt,
         setAndStoreJwt,
         "transaction-groups/",
         "POST",
-        newGroup,
+        processedGroup,
       );
-      return (await response.json()) as TransactionGroup<ReadOnlyTransaction>;
+      const data = await response.json();
+      if (isArrayType(data)) {
+        return data as TransactionGroup<ReadOnlyTransaction>[];
+      }
+      return data as TransactionGroup<ReadOnlyTransaction>;
     },
 
     onSuccess: () => {
@@ -329,7 +354,11 @@ export default function TransactionProvider({
     deleteTransactionGroupMutation;
 
   const addTransactionGroup = useCallback(
-    async (transactionGroup: Omit<TransactionGroup<Transaction>, "id">) => {
+    async (
+      transactionGroup:
+        | Omit<TransactionGroup<Transaction>, "id">
+        | Omit<TransactionGroup<Transaction>, "id">[],
+    ) => {
       return await addTransactionGroupMutateAsync(transactionGroup);
     },
     [addTransactionGroupMutateAsync],

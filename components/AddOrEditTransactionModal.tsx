@@ -30,7 +30,10 @@ interface AddOrEditTransactionModalProps {
   onClose: () => void;
   onSave: (
     transaction: PartialByKeys<TransactionGroup<Transaction>, "id">,
-  ) => Promise<TransactionGroup<ReadOnlyTransaction>>;
+  ) => Promise<
+    | TransactionGroup<ReadOnlyTransaction>
+    | TransactionGroup<ReadOnlyTransaction>[]
+  >;
 }
 
 const defaultTransactionGroup: Omit<TransactionGroup<Transaction>, "id"> = {

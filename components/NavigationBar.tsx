@@ -66,7 +66,7 @@ export const NavigationBar: React.FC = () => {
 
       await fetchApiFormData(jwt, setAndStoreJwt, "images/", "POST", formData);
 
-      return addedTransactionGroup;
+      return addedTransactionGroup as TransactionGroup<ReadOnlyTransaction>;
     } catch (error) {
       toast.error(`Error creating document scan: ${error as Error}`, {
         position: "bottom-left",
