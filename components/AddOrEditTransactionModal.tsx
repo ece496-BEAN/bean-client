@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, FormEvent, useEffect, useRef } from "react";
+import React, { useState, FormEvent, useEffect, useRef, useMemo } from "react";
 import { format } from "date-fns";
 import { Trash, X } from "lucide-react";
 // import { Button } from "@/components/ui/button";
@@ -48,6 +48,11 @@ export function AddOrEditTransactionGroupModal({
   initialTransactionGroup,
   onSave,
 }: AddOrEditTransactionModalProps) {
+  const initialTransactionGroupMemoized = useMemo(
+    () => initialTransactionGroup,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [initialTransactionGroup?.name],
+  );
   const { categories, categoriesQueryError } = useCategories();
   const {
     getSelectedTransactionGroup: getTransactionGroup,
@@ -58,6 +63,7 @@ export function AddOrEditTransactionGroupModal({
   const [newTransactionGroup, setNewTransactionGroup] = useState<
     PartialByKeys<TransactionGroup<Transaction>, "id">
   >(initialTransactionGroup ?? defaultTransactionGroup);
+
   const formatDateForInput = (dateString: string) => {
     const date = new Date(dateString);
     return format(date, "yyyy-MM-dd'T'HH:mm:ss"); // Correct format for datetime-local
@@ -65,6 +71,14 @@ export function AddOrEditTransactionGroupModal({
 
   const [formErrors, setFormErrors] = useState<string[]>([]); // Array of error messages
   const formRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (mode === "add" && initialTransactionGroupMemoized) {
+      setNewTransactionGroup({
+        ...initialTransactionGroupMemoized,
+        date: formatDateForInput(initialTransactionGroupMemoized.date),
+      });
+    }
+  }, [mode, initialTransactionGroupMemoized]);
   // Fetches transaction group data from backend for specified transaction group when in edit mode
   useEffect(() => {
     if (mode === "edit" && initialTransactionGroup?.id) {
@@ -101,7 +115,7 @@ export function AddOrEditTransactionGroupModal({
       ...newTransactionGroup,
       transactions: [
         ...newTransactionGroup.transactions,
-        { name: "", description: "", amount: 0, category_uuid: "" },
+        { name: "", description: "", amount: 0, category_uuid: "0-0-0-0-0" },
       ],
     });
   };
@@ -153,11 +167,16 @@ export function AddOrEditTransactionGroupModal({
           `Transaction ${index + 1}-amount: Valid amount is required`,
         );
       }
-
+      if (!("category" in transaction) && !("category_uuid" in transaction)) {
+        errors.push(`Transaction ${index + 1}-category: Category is required`);
+      }
       if ("category" in transaction && !transaction.category.id) {
         errors.push(`Transaction ${index + 1}-category: Category is required`);
       }
-      if ("category_uuid" in transaction && !transaction.category_uuid) {
+      if (
+        "category_uuid" in transaction &&
+        transaction.category_uuid === "0-0-0-0-0"
+      ) {
         errors.push(`Transaction ${index + 1}-category: Category is required`);
       }
     });

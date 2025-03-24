@@ -186,12 +186,9 @@ export default function TransactionProvider({
   } = useQuery({
     queryKey: ["transaction-groups", selectedTransactionGroupUUID],
     queryFn: () => {
-      if (!selectedTransactionGroupUUID) {
-        throw new Error("No transaction group UUID provided.");
-      }
       return fetchTransactionGroups(
         {},
-        { uuid: selectedTransactionGroupUUID },
+        { uuid: selectedTransactionGroupUUID! },
       ) as Promise<TransactionGroup<ReadOnlyTransaction>>;
     },
     enabled: !!selectedTransactionGroupUUID && !!jwt, // Only fetch if uuid is set and jwt is available
@@ -304,9 +301,19 @@ export default function TransactionProvider({
         `transaction-groups/${groupId}/`,
         "DELETE",
       );
+      return groupId;
     },
 
-    onSuccess: () => {
+    onSuccess: (groupId) => {
+      console.log(
+        `selectedTransactionGroupUUID: ${selectedTransactionGroupUUID}`,
+      );
+
+      if (selectedTransactionGroupUUID === groupId) {
+        console.log(`Selected Transaction Group ${groupId} Deleted`);
+        console.log(`It matches ${selectedTransactionGroupUUID}`);
+        setSelectedTransactionGroupUUID(undefined);
+      }
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
         queryKey: ["transaction-groups"],

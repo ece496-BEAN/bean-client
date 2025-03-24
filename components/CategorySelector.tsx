@@ -100,7 +100,7 @@ export default function CategoryAutocomplete({
               inputValue: params.inputValue,
               name: `Add "${params.inputValue}"`, // Display in options
               // Placeholder values (will be overwritten later)
-              id: params.inputValue,
+              id: "0-0-0-0-0",
               legacy: false,
               is_income_type: false,
             });

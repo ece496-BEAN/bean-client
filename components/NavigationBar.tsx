@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import {
   Home,
   PieChart,
@@ -14,15 +14,76 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useCategories } from "@/contexts/CategoriesContext";
+import { AddOrEditTransactionGroupModal } from "@/components/AddOrEditTransactionModal";
+import {
+  DocumentScans,
+  PartialByKeys,
+  ReadOnlyTransaction,
+  Transaction,
+  TransactionGroup,
+} from "@/lib/types";
+import { JwtContext } from "@/app/lib/jwt-provider";
+import { fetchApi, fetchApiFormData } from "@/app/lib/api";
+import { toast, ToastContainer } from "react-toastify";
 
 export const NavigationBar: React.FC = () => {
   const router = useRouter();
+  const [jwt, setAndStoreJwt] = useContext(JwtContext);
   const [image, setImage] = useState<string | null>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [ocrResult, setOcrResult] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { addTransactionGroup } = useTransactions();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newTransaction, setNewTransaction] =
+    useState<TransactionGroup<ReadOnlyTransaction>>();
 
-  const { categories, getCategories } = useCategories();
+  const { categories } = useCategories();
+
+  const handleAddTransaction = async (
+    transactionGroup: PartialByKeys<TransactionGroup<Transaction>, "id">,
+  ): Promise<TransactionGroup<ReadOnlyTransaction>> => {
+    // Create Document Scans and upload images
+    try {
+      const response = await fetchApi(
+        jwt,
+        setAndStoreJwt,
+        "document-scans/",
+        "POST",
+        { ocr_result: ocrResult },
+      );
+      const documentScans = (await response.json()) as DocumentScans;
+      const documentScanId = documentScans.id;
+
+      // Update the transaction group with the newly created document scan's ID
+      transactionGroup.source = documentScanId;
+      const addedTransactionGroup = await addTransactionGroup(transactionGroup);
+
+      const formData = new FormData();
+      formData.append("image", imageFile as Blob);
+      formData.append("source", documentScanId);
+
+      await fetchApiFormData(jwt, setAndStoreJwt, "images/", "POST", formData);
+
+      return addedTransactionGroup;
+    } catch (error) {
+      toast.error(`Error creating document scan: ${error as Error}`, {
+        position: "bottom-left",
+      });
+      throw error; // Re-throw the error to ensure proper handling
+    }
+  };
+  const handleOpenAddModal = (
+    groupToAdd: TransactionGroup<ReadOnlyTransaction>,
+  ) => {
+    setIsAddModalOpen(true); // Open the same modal
+    setNewTransaction(groupToAdd);
+  };
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+    setNewTransaction(undefined); // Clear newTransaction after closing
+  };
 
   // Handles the image upload process
   const handleImageUpload = async (
@@ -30,6 +91,7 @@ export const NavigationBar: React.FC = () => {
   ) => {
     const file = event.target.files?.[0];
     if (file) {
+      setImageFile(file); // Set image file
       setImage(URL.createObjectURL(file)); // Set image URL for optional display
       setLoading(true); // Indicate loading state
 
@@ -53,11 +115,36 @@ export const NavigationBar: React.FC = () => {
       });
 
       const data = await response.json();
-      console.log("HI FRANK, PLEASE INTEGRATE THIS!!!");
+      setOcrResult(JSON.stringify(data, null, 2));
       console.log(data);
+
       // TODO: Definitely need to display the dialog modal, as well as allow for the creation of DocumentScans instances (with image upload)
       // addTransactionGroup(data);
+      // Need to remap the categories of the data object since the category fields are only strings from the OCR API
+      data.transactions = data.transactions.map((transaction: any) => {
+        const { category, ...rest } = transaction; // Strip away the `category` string field
+        // Search for a corresponding category instance in the categories array
+        const category_instance = categories.find(
+          // We really fucked up the types with the data object since category is set as a string for some reason, so I need to set it as any for now
+          (c) => c.name === category,
+        );
 
+        if (category_instance) {
+          transaction = {
+            ...rest,
+            category: category_instance,
+          };
+        } else {
+          transaction = {
+            ...rest,
+          };
+        }
+        if (transaction.amount < 0) {
+          transaction.amount = transaction.amount * -1;
+        }
+        return transaction;
+      });
+      handleOpenAddModal(data);
       setLoading(false); // Reset loading state
 
       // Reset the input value to allow the same file to be uploaded again
@@ -165,6 +252,14 @@ export const NavigationBar: React.FC = () => {
           <div className="text-white">Processing...</div>
         </div>
       )}
+      <AddOrEditTransactionGroupModal
+        isOpen={isAddModalOpen}
+        onClose={handleCloseAddModal}
+        initialTransactionGroup={newTransaction}
+        mode="add"
+        onSave={handleAddTransaction}
+      />
+      <ToastContainer />
     </nav>
   );
 };

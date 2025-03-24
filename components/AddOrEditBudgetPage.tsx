@@ -1,6 +1,11 @@
 "use client";
 import { useCategories } from "@/contexts/CategoriesContext";
-import { Budget, Category, ReadOnlyBudgetItem } from "@/lib/types";
+import {
+  Budget,
+  Category,
+  PartialByKeys,
+  ReadOnlyBudgetItem,
+} from "@/lib/types";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import React, { FormEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -36,9 +41,8 @@ export const AddOrEditBudgetPage = ({
   const { categoriesQueryError } = useCategories();
   const { addBudget, editBudget } = useBudgets();
   const router = useRouter();
-  const [budget, setBudget] = useState<Budget>(
+  const [budget, setBudget] = useState<PartialByKeys<Budget, "id">>(
     initial_budget || {
-      id: "",
       name: "",
       description: "",
       start_date: format(startOfMonth(Date.now()), "yyyy-MM-dd"),
@@ -125,7 +129,7 @@ export const AddOrEditBudgetPage = ({
       budget_items: [
         ...budget.budget_items,
         {
-          category_uuid: "",
+          category_uuid: "0-0-0-0-0",
           allocation: 0,
         },
       ],
@@ -182,7 +186,7 @@ export const AddOrEditBudgetPage = ({
     event.preventDefault();
     if (validateForm()) {
       const new_budget = editMode
-        ? await editBudget(budget)
+        ? await editBudget({ ...budget, id: budget.id! })
         : await addBudget(budget);
       router.push(`/budget/${new_budget.id}/`);
     }
