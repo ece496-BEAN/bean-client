@@ -640,7 +640,7 @@ function TransactionListHeader({
           variant="contained"
           onClick={handleOpenAddModal}
           sx={{
-            backgroundColor: "purple",
+            backgroundColor: "#7b25cd",
             ":hover": { backgroundColor: "#6366f1" },
           }}
         >
@@ -654,7 +654,7 @@ function TransactionListHeader({
           loading={isLoading}
           loadingPosition="end"
           sx={{
-            backgroundColor: "purple",
+            backgroundColor: "#7b25cd",
             ":hover": { backgroundColor: "#6366f1" },
           }}
         >
