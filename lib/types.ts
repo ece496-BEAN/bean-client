@@ -58,7 +58,7 @@ export type TransactionGroup<T extends Transaction> = {
   id: UUID; // UUID
   name: string;
   description?: string;
-  source: string | null;
+  source: UUID | null;
   date: string;
   transactions: T[];
 };
