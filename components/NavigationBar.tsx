@@ -25,6 +25,8 @@ import {
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { fetchApi, fetchApiFormData } from "@/app/lib/api";
 import { toast, ToastContainer } from "react-toastify";
+import { useDocumentScans } from "@/contexts/DocumentScansContext";
+import { useDocumentScansImage } from "@/contexts/DocumentScansImageContext";
 
 export const NavigationBar: React.FC = () => {
   const router = useRouter();
@@ -40,20 +42,14 @@ export const NavigationBar: React.FC = () => {
     useState<TransactionGroup<ReadOnlyTransaction>>();
 
   const { categories } = useCategories();
-
+  const { addDocumentScans } = useDocumentScans();
+  const { addDocumentScansImage } = useDocumentScansImage();
   const handleAddTransaction = async (
     transactionGroup: PartialByKeys<TransactionGroup<Transaction>, "id">,
   ): Promise<TransactionGroup<ReadOnlyTransaction>> => {
     // Create Document Scans and upload images
     try {
-      const response = await fetchApi(
-        jwt,
-        setAndStoreJwt,
-        "document-scans/",
-        "POST",
-        { ocr_result: ocrResult },
-      );
-      const documentScans = (await response.json()) as DocumentScans;
+      const documentScans = await addDocumentScans({ ocr_result: ocrResult });
       const documentScanId = documentScans.id;
 
       // Update the transaction group with the newly created document scan's ID
@@ -64,7 +60,7 @@ export const NavigationBar: React.FC = () => {
       formData.append("image", imageFile as Blob);
       formData.append("source", documentScanId);
 
-      await fetchApiFormData(jwt, setAndStoreJwt, "images/", "POST", formData);
+      await addDocumentScansImage(formData);
 
       return addedTransactionGroup as TransactionGroup<ReadOnlyTransaction>;
     } catch (error) {
