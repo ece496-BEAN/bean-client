@@ -51,6 +51,7 @@ export type Category = {
   description?: string;
   legacy: boolean;
   is_income_type: boolean;
+  color: string; // #RRGGBB or #RRGGBBAA format
 };
 
 export type TransactionGroup<T extends Transaction> = {

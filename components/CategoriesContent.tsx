@@ -44,6 +44,7 @@ import {
   ArrowDownward,
 } from "@mui/icons-material";
 import { AddCategoryModal } from "@/components/AddCategoryModal";
+import { MuiColorInput } from "mui-color-input";
 
 function CategoriesContent() {
   const {
@@ -243,7 +244,7 @@ function CategoriesContent() {
   };
 
   const handleValueChange = (
-    field: "name" | "description" | "legacy" | "is_income_type",
+    field: "name" | "description" | "legacy" | "is_income_type" | "color",
     value: string | boolean,
   ) => {
     if (editingCategory) {
@@ -398,7 +399,7 @@ interface CategoriesTableProps {
   categories: Category[];
   editingCategory: Category | undefined;
   handleValueChange: (
-    field: "name" | "description" | "legacy" | "is_income_type",
+    field: "name" | "description" | "legacy" | "is_income_type" | "color",
     value: string | boolean,
   ) => void;
   handleSaveClick: (category: Category) => void;
@@ -462,6 +463,7 @@ const CategoriesTable = ({
               <TableCell>Description</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Type</TableCell>
+              <TableCell>Color</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -492,6 +494,7 @@ const CategoriesTable = ({
                     category.description || ""
                   )}
                 </TableCell>
+
                 <TableCell>
                   {editingCategory?.id === category.id ? (
                     <FormControlLabel
@@ -550,6 +553,22 @@ const CategoriesTable = ({
                       color={category.legacy ? "default" : "primary"}
                     />
                   )}
+                </TableCell>
+                <TableCell>
+                  <MuiColorInput
+                    name="color"
+                    label="Color"
+                    disabled={editingCategory?.id !== category.id}
+                    sx={{ minWidth: "235px" }}
+                    value={
+                      editingCategory?.id === category.id
+                        ? editingCategory.color
+                        : category.color
+                    }
+                    onChange={(color) => {
+                      handleValueChange("color", color);
+                    }}
+                  />
                 </TableCell>
                 <TableCell>
                   {editingCategory?.id === category.id ? (

@@ -49,7 +49,7 @@ export default function BudgetAutocomplete({
           return filtered;
         }}
         disablePortal
-        id="combo-box-demo"
+        id="budget-autocomplete"
         options={budgetOptions}
         getOptionLabel={(option: BudgetOptions) => {
           if (typeof option === "string") {
