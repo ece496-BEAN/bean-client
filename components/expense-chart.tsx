@@ -1,11 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import { useRouter } from "next/navigation";
-import { JwtContext } from "@/app/lib/jwt-provider";
 import StackedAreaChart from "./charts/StackedAreaChart";
 import * as d3 from "d3";
 import { expenseColors, incomeColors } from "@/lib/colors";
@@ -19,19 +17,11 @@ import {
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useBudgets } from "@/contexts/BudgetContext";
 import { ReadOnlyBudgetItem } from "@/lib/types";
+import { HeaderBanner } from "@/components/HeaderBanner";
 
 const TODO = -1;
 
 export function ExpenseChart() {
-  const router = useRouter(); // Add this line
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
-
-  useEffect(() => {
-    if (!jwt) {
-      router.push("/login"); // Redirect to login if JWT is not set
-    }
-  }, [jwt, router]);
-
   const { transactionGroups, getTransactionGroups } = useTransactions();
 
   const { budgets } = useBudgets();
@@ -208,9 +198,7 @@ export function ExpenseChart() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
-        <h1 className="text-2xl font-bold">Savings and Expense Graphs</h1>
-      </header>
+      <HeaderBanner headerText="Savings and Expense Graphs" showAccountMenu />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-0">
         <Card className="bg-white shadow-lg col-span-full lg:col-span-2">

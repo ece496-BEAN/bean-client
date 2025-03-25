@@ -24,9 +24,8 @@ import {
 import { DateField, DateRangePicker } from "@mui/x-date-pickers-pro";
 import { format } from "date-fns";
 import { ExternalLink, Pencil, Trash } from "lucide-react";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { JwtContext } from "@/app/lib/jwt-provider";
 import { PaginatedServerResponse, ReadOnlyBudget } from "@/lib/types";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -64,7 +63,6 @@ const AllBudgetsHeader = ({
   rowsPerPage,
   setRowsPerPage,
 }: AllBudgetsHeaderProps) => {
-  const [jwt] = useContext(JwtContext);
   const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,12 +71,6 @@ const AllBudgetsHeader = ({
 
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
-
-  useEffect(() => {
-    if (!jwt) {
-      router.push("/login"); // Redirect to login if JWT is not set
-    }
-  }, [jwt, router]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);

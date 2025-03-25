@@ -22,6 +22,7 @@ import { JwtContext } from "@/app/lib/jwt-provider";
 import { useCurrentBudget } from "@/contexts/CurrentBudgetContext";
 import { useBudgets } from "@/contexts/BudgetContext";
 import { RingChart } from "./charts/RingChart";
+import { HeaderBanner } from "@/components/HeaderBanner";
 
 export function MainPage() {
   const [jwt, setAndStoreJwt] = useContext(JwtContext);
@@ -161,9 +162,7 @@ export function MainPage() {
         </div>
       ) : (
         <>
-          <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
-            <h1 className="text-2xl font-bold">Financial Dashboard</h1>
-          </header>
+          <HeaderBanner headerText="Financial Dashboard" showAccountMenu />
 
           <main className="flex-grow p-4 overflow-y-auto">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

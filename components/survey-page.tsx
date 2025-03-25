@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { HeaderBanner } from "./HeaderBanner";
 
 type Question = {
   id: number;
@@ -57,9 +58,7 @@ export function SurveyPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
-        <h1 className="text-2xl font-bold">Financial Survey</h1>
-      </header>
+      <HeaderBanner headerText="Financial Survey" showAccountMenu />
 
       <main className="flex-grow p-4 flex flex-col items-center justify-center">
         <Card className="w-full max-w-lg bg-white shadow-lg">

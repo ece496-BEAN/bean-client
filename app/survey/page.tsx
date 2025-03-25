@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { GeneratedSubcategories } from "../api/budget-chat/generate-subcategories/route";
+import { HeaderBanner } from "@/components/HeaderBanner";
 
 type QuestionType = "single" | "multiple" | "singleWithOther" | "number";
 
@@ -141,9 +142,7 @@ export default function SurveyPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4 sticky top-0 z-10">
-        <h1 className="text-2xl font-bold">Financial Survey</h1>
-      </header>
+      <HeaderBanner headerText="Financial Survey" showAccountMenu />
 
       <main className="flex-grow p-4 overflow-y-auto">
         <div className="max-w-lg mx-auto space-y-6">
