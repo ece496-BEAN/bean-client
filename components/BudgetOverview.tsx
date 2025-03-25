@@ -2,7 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useBudgets } from "@/contexts/BudgetContext"; // Import your Budget context
-import { Budget, Category, ReadOnlyBudgetItem } from "@/lib/types";
+import {
+  Budget,
+  Category,
+  ReadOnlyBudget,
+  ReadOnlyBudgetItem,
+} from "@/lib/types";
 import {
   Box,
   Typography,
@@ -125,7 +130,7 @@ function BudgetOverview() {
           <Grid2 size={12}>
             <BudgetSelector
               value={selectedBudget}
-              onChange={(budget: Budget | null) => {
+              onChange={(budget: ReadOnlyBudget | null) => {
                 if (budget) {
                   router.push(`/budget/${budget.id}`);
                 }
@@ -137,6 +142,9 @@ function BudgetOverview() {
           <AddOrEditBudgetPage
             editMode={editMode}
             initial_budget={selectedBudget}
+            onSubmit={() => {
+              setEditMode(false);
+            }}
           />
         ) : (
           <div>

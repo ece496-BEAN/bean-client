@@ -7,7 +7,9 @@ import {
   Category,
   NonPaginatedServerResponse,
   PaginatedServerResponse,
+  ReadOnlyBudget,
   ServerResponse,
+  WriteOnlyBudget,
 } from "@/lib/types";
 import {
   keepPreviousData,
@@ -24,19 +26,19 @@ import React, {
 } from "react";
 
 type BudgetContextType = {
-  budgets: NonPaginatedServerResponse<Budget>;
+  budgets: NonPaginatedServerResponse<ReadOnlyBudget>;
   isBudgetsLoading: boolean;
   budgetsQueryError: Error | null;
   refetchBudgets: () => void;
   isBudgetPlaceholderData: boolean;
 
-  paginatedBudgets: PaginatedServerResponse<Budget>;
+  paginatedBudgets: PaginatedServerResponse<ReadOnlyBudget>;
   isPaginatedBudgetsLoading: boolean;
   paginatedBudgetsQueryError: Error | null;
   refetchPaginatedBudgets: () => void;
   isPaginatedBudgetPlaceholderData: boolean;
 
-  selectedBudget: Budget | undefined;
+  selectedBudget: ReadOnlyBudget | undefined;
   isSelectedBudgetLoading: boolean;
   selectedBudgetQueryError: Error | null;
   refetchSelectedBudget: () => void;
@@ -51,8 +53,8 @@ type BudgetContextType = {
     options?: { no_page?: boolean },
   ) => void;
   getSelectedBudget: (uuid: string) => void;
-  addBudget: (budget: Omit<Budget, "id">) => Promise<Budget>;
-  editBudget: (budget: Budget) => Promise<Budget>;
+  addBudget: (budget: Omit<Budget, "id">) => Promise<ReadOnlyBudget>;
+  editBudget: (budget: Budget) => Promise<ReadOnlyBudget>;
   deleteBudget: (budgetId: string) => Promise<void>;
 };
 
@@ -94,13 +96,13 @@ export default function BudgetProvider({
       if (options?.uuid) {
         const url = `budgets/${options.uuid}/`;
         const response = await fetchApi(jwt, setAndStoreJwt, url, "GET");
-        const data: Budget = await response.json();
+        const data: ReadOnlyBudget = await response.json();
         return data;
       }
       const queryString = new URLSearchParams(queryOptions).toString();
       const url = `budgets/?${queryString}`;
       const response = await fetchApi(jwt, setAndStoreJwt, url, "GET");
-      const data: ServerResponse<Budget> = await response.json();
+      const data: ServerResponse<ReadOnlyBudget> = await response.json();
 
       return data;
     } catch (err) {
@@ -149,7 +151,10 @@ export default function BudgetProvider({
       if (!selectedBudgetUUID) {
         throw new Error("No budget UUID Provided");
       }
-      return fetchBudgets({}, { uuid: selectedBudgetUUID }) as Promise<Budget>;
+      return fetchBudgets(
+        {},
+        { uuid: selectedBudgetUUID },
+      ) as Promise<ReadOnlyBudget>;
     },
     placeholderData: keepPreviousData,
     enabled: !!selectedBudgetUUID,
@@ -209,7 +214,7 @@ export default function BudgetProvider({
         "POST",
         newBudget,
       );
-      return (await response.json()) as Budget;
+      return (await response.json()) as ReadOnlyBudget;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -254,11 +259,11 @@ export default function BudgetProvider({
       const response = await fetchApi(
         jwt,
         setAndStoreJwt,
-        `budgets/${updatedBudget.id}/`,
+        `budgets/${(updatedBudget as ReadOnlyBudget).id}/`,
         "PUT",
         updatedBudget,
       );
-      return (await response.json()) as Budget;
+      return (await response.json()) as ReadOnlyBudget;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -326,7 +331,7 @@ export default function BudgetProvider({
   );
   const value = {
     budgets: useMemo(() => {
-      return (budgets as NonPaginatedServerResponse<Budget>) || [];
+      return (budgets as NonPaginatedServerResponse<ReadOnlyBudget>) || [];
     }, [budgets]),
     isBudgetsLoading,
     budgetsQueryError,
@@ -334,7 +339,7 @@ export default function BudgetProvider({
     isBudgetPlaceholderData,
     paginatedBudgets: useMemo(() => {
       return (
-        (paginatedBudgets as PaginatedServerResponse<Budget>) ||
+        (paginatedBudgets as PaginatedServerResponse<ReadOnlyBudget>) ||
         defaultPaginatedBudget
       );
     }, [paginatedBudgets, defaultPaginatedBudget]),

@@ -1,16 +1,16 @@
 import * as React from "react";
 import TextField from "@mui/material/TextField";
 import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
-import { Budget } from "@/lib/types"; // Import your types
+import { ReadOnlyBudget } from "@/lib/types"; // Import your types
 import { CircularProgress, Grid2, Stack, Typography } from "@mui/material";
 import { useBudgets } from "@/contexts/BudgetContext";
 import { DateField } from "@mui/x-date-pickers";
 
-type BudgetOptions = Budget & { inputValue?: string };
+type BudgetOptions = ReadOnlyBudget & { inputValue?: string };
 
 interface BudgetAutocompleteProps {
   value?: BudgetOptions | null; // Allow external control of the value to set initial value (useful for editing existing data)
-  onChange: (category: Budget | null) => void; // Callback to update external state
+  onChange: (category: ReadOnlyBudget | null) => void; // Callback to update external state
   error?: boolean;
   helperText?: React.ReactNode;
 }

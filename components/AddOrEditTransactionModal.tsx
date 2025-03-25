@@ -274,7 +274,7 @@ export function AddOrEditTransactionGroupModal({
             <TextField
               id="description"
               name="description"
-              label="Transaction Description"
+              label="Transaction Description (Optional)"
               fullWidth
               multiline
               value={newTransactionGroup.description}
@@ -305,7 +305,7 @@ export function AddOrEditTransactionGroupModal({
                   fullWidth
                   id={`transaction-description-${index}`}
                   name="description"
-                  label="Description"
+                  label="Description (Optional)"
                   value={transaction.description || ""}
                   onChange={(e) => handleTransactionChange(e, index)}
                 />

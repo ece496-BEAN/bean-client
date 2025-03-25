@@ -23,15 +23,16 @@ import {
 } from "@mui/material";
 import { DateField, DateRangePicker } from "@mui/x-date-pickers-pro";
 import { format } from "date-fns";
-import { ExternalLink, Pencil, Search, Trash } from "lucide-react";
+import { ExternalLink, Pencil, Trash } from "lucide-react";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { JwtContext } from "@/app/lib/jwt-provider";
-import { PaginatedServerResponse, Budget } from "@/lib/types";
+import { PaginatedServerResponse, ReadOnlyBudget } from "@/lib/types";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import { getLocalMidnightDate } from "@/lib/utils";
+import { Search } from "@mui/icons-material";
 
 interface AllBudgetsHeaderProps {
   isPaginatedBudgetsLoading: boolean;
@@ -43,16 +44,16 @@ interface AllBudgetsHeaderProps {
   setRowsPerPage: (pageSize: number) => void;
 }
 interface AllBudgetsTableProps {
-  paginatedBudgets: PaginatedServerResponse<Budget>;
+  paginatedBudgets: PaginatedServerResponse<ReadOnlyBudget>;
   isPaginatedBudgetsLoading: boolean;
   paginatedBudgetsError: Error | null;
   page: number;
   setPage: (page: number) => void;
   rowsPerPage: number;
   setRowsPerPage: (pageSize: number) => void;
-  handleDeleteConfirmation: (budget: Budget) => void;
+  handleDeleteConfirmation: (budget: ReadOnlyBudget) => void;
   getSelectedBudget: (id: string) => void;
-  handleEditBudget: (budget: Budget) => void;
+  handleEditBudget: (budget: ReadOnlyBudget) => void;
 }
 const AllBudgetsHeader = ({
   isPaginatedBudgetsLoading,
@@ -344,11 +345,11 @@ function AllBudgetsPage() {
   const router = useRouter();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [budgetToBeDeleted, setBudgetToBeDeleted] = useState<
-    Budget | undefined
+    ReadOnlyBudget | undefined
   >(undefined);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const handleDeleteConfirmation = (budget: Budget) => {
+  const handleDeleteConfirmation = (budget: ReadOnlyBudget) => {
     setIsDeleteModalOpen(true);
     setBudgetToBeDeleted(budget);
   };
@@ -356,7 +357,7 @@ function AllBudgetsPage() {
     setIsDeleteModalOpen(false);
     setBudgetToBeDeleted(undefined);
   };
-  const handleEditBudget = (budget: Budget) => {
+  const handleEditBudget = (budget: ReadOnlyBudget) => {
     getSelectedBudget(budget.id);
     router.push(`/budget/${budget.id}/?edit=true`);
   };

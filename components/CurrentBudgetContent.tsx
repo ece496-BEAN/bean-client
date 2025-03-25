@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCurrentBudget } from "@/contexts/CurrentBudgetContext";
 import { Box, Button, Typography } from "@mui/material";
 import Link from "next/link";
-import { Budget } from "@/lib/types";
+import { Budget, ReadOnlyBudget } from "@/lib/types";
 import BudgetSelector from "@/components/BudgetSelector";
 
 function CurrentBudgetContent() {
@@ -26,7 +26,7 @@ function CurrentBudgetContent() {
         Current Budget Content
       </Typography>
       <BudgetSelector
-        onChange={(budget: Budget | null) => {
+        onChange={(budget: ReadOnlyBudget | null) => {
           if (budget) {
             router.push(`/budget/${budget.id}`);
           }
