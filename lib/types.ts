@@ -64,27 +64,38 @@ export type TransactionGroup<T extends Transaction> = {
 
 export type WriteOnlyBudgetItem = {
   uuid?: UUID; // UUID
-  allocation: number; // 2 decimal places
+  allocation: number; // Up to 2 decimal places
   category_uuid: UUID; // UUID
 };
 
 export type ReadOnlyBudgetItem = {
   id: UUID; // UUID
   budget_id: UUID; // UUID
-  allocation: number; // 2 decimal places
+  allocation: number; // Up to 2 decimal places
   category: Category;
+  allocation_used: number; // Up to 2 decimal places
 };
 
 export type BudgetItem = WriteOnlyBudgetItem | ReadOnlyBudgetItem;
 
-export type Budget = {
+export type ReadOnlyBudget = {
   id: UUID; // UUID
   name: string;
   description?: string;
   start_date: string;
   end_date: string;
-  budget_items: BudgetItem[];
+  budget_items: ReadOnlyBudgetItem[];
+  total_allocation: number; // Up to 2 decimal places
+  total_used: number; // Up to 2 decimal places
 };
+export type WriteOnlyBudget = {
+  name: string;
+  description?: string;
+  start_date: string;
+  end_date: string;
+  budget_items: WriteOnlyBudgetItem[];
+};
+export type Budget = WriteOnlyBudget | ReadOnlyBudget;
 
 export type ServerResponse<T> =
   | PaginatedServerResponse<T>

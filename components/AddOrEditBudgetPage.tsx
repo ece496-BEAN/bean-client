@@ -4,7 +4,10 @@ import {
   Budget,
   Category,
   PartialByKeys,
+  ReadOnlyBudget,
   ReadOnlyBudgetItem,
+  WriteOnlyBudget,
+  WriteOnlyBudgetItem,
 } from "@/lib/types";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import React, { FormEvent, useEffect, useState } from "react";
@@ -43,7 +46,7 @@ export const AddOrEditBudgetPage = ({
   const { categoriesQueryError } = useCategories();
   const { addBudget, editBudget } = useBudgets();
   const router = useRouter();
-  const [budget, setBudget] = useState<PartialByKeys<Budget, "id">>(
+  const [budget, setBudget] = useState<Budget>(
     initial_budget || {
       name: "",
       description: "",
@@ -79,7 +82,7 @@ export const AddOrEditBudgetPage = ({
       }
     }
 
-    setBudget({ ...budget, budget_items: updatedItems });
+    setBudget({ ...budget, budget_items: updatedItems } as Budget);
   };
   const handleAllocationChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -89,7 +92,7 @@ export const AddOrEditBudgetPage = ({
 
     const parsedValue = parseFloat(event.target.value);
     updatedItems[index] = { ...updatedItems[index], allocation: parsedValue };
-    setBudget({ ...budget, budget_items: updatedItems });
+    setBudget({ ...budget, budget_items: updatedItems } as Budget);
   };
   const handleClearConfirmationOpen = () => {
     setOpenClearConfirmation(true);
@@ -99,7 +102,7 @@ export const AddOrEditBudgetPage = ({
   };
   const handleClearConfirmed = () => {
     setBudget({
-      id: budget.id, // Preserve the ID
+      id: (budget as ReadOnlyBudget).id, // Preserve the ID
       name: "",
       description: "",
       start_date: format(startOfMonth(Date.now()), "yyyy-MM-dd"),
@@ -134,12 +137,12 @@ export const AddOrEditBudgetPage = ({
           category_uuid: "0-0-0-0-0",
           allocation: 0,
         },
-      ],
+      ] as WriteOnlyBudgetItem[],
     });
   };
   const handleRemoveBudgetItem = (index: number) => {
     const updatedItems = budget.budget_items.filter((_, i) => i !== index);
-    setBudget({ ...budget, budget_items: updatedItems });
+    setBudget({ ...budget, budget_items: updatedItems } as Budget);
   };
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -187,7 +190,7 @@ export const AddOrEditBudgetPage = ({
     event.preventDefault();
     if (validateForm()) {
       const new_budget = editMode
-        ? await editBudget({ ...budget, id: budget.id! })
+        ? await editBudget({ ...budget, id: (budget as ReadOnlyBudget).id })
         : await addBudget(budget);
       // Handles the extra submit behavior provided by parent component
       if (onSubmit) {
@@ -213,7 +216,9 @@ export const AddOrEditBudgetPage = ({
             sx={{ color: "grey" }}
             gutterBottom
           >
-            {editMode ? `Edit Budget ${budget.id}` : `Add New Budget`}
+            {editMode
+              ? `Edit Budget ${(budget as ReadOnlyBudget).id}`
+              : `Add New Budget`}
           </Typography>
 
           <form onSubmit={handleSubmit}>
