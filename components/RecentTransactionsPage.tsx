@@ -5,7 +5,6 @@ import { format } from "date-fns";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
-  Search,
   TrendingDown,
   TrendingUp,
   Trash,
@@ -41,7 +40,12 @@ import {
   Grid2,
   Tooltip,
 } from "@mui/material";
-import { ArrowUpward, ArrowDownward, FilterList } from "@mui/icons-material";
+import {
+  ArrowUpward,
+  ArrowDownward,
+  FilterList,
+  Search,
+} from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
 import { AddOrEditTransactionGroupModal } from "@/components/AddOrEditTransactionModal";
 import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
@@ -636,7 +640,7 @@ function TransactionListHeader({
           variant="contained"
           onClick={handleOpenAddModal}
           sx={{
-            backgroundColor: "purple",
+            backgroundColor: "#7b25cd",
             ":hover": { backgroundColor: "#6366f1" },
           }}
         >
@@ -650,7 +654,7 @@ function TransactionListHeader({
           loading={isLoading}
           loadingPosition="end"
           sx={{
-            backgroundColor: "purple",
+            backgroundColor: "#7b25cd",
             ":hover": { backgroundColor: "#6366f1" },
           }}
         >

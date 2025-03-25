@@ -23,6 +23,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import rgbHex from "rgb-hex";
 
 interface CategoriesContextType {
   paginatedCategories: PaginatedServerResponse<Category>;
@@ -161,6 +162,23 @@ export default function CategoryProvider({
         | PartialByKeys<Category, "legacy" | "id">
         | PartialByKeys<Category, "legacy" | "id">[],
     ) => {
+      const processCategory = (
+        category: PartialByKeys<Category, "legacy" | "id">,
+      ) => {
+        if (category.color) {
+          // If the color is not in hex format, convert it to hex
+          // Assumes that color is in rgb or rgba format
+          if (!category.color.startsWith("#")) {
+            category.color = `#${rgbHex(category.color)}`;
+          }
+        }
+        return category;
+      };
+      if (Array.isArray(newCategory)) {
+        newCategory = newCategory.map(processCategory);
+      } else {
+        newCategory = processCategory(newCategory);
+      }
       const response = await fetchApi(
         jwt,
         setAndStoreJwt,
@@ -226,6 +244,13 @@ export default function CategoryProvider({
       );
     },
     mutationFn: async (editedCategory: Category) => {
+      if (editedCategory.color) {
+        // If the color is not in hex format, convert it to hex
+        // Assumes that color is in rgb or rgba format
+        if (!editedCategory.color.startsWith("#")) {
+          editedCategory.color = `#${rgbHex(editedCategory.color)}`;
+        }
+      }
       const response = await fetchApi(
         jwt,
         setAndStoreJwt,

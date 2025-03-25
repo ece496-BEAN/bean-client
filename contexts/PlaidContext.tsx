@@ -150,8 +150,8 @@ export const PlaidProvider: React.FC<{ children: ReactNode }> = ({
           console.error("Error fetching transactions:", data.error);
           dispatch({ type: "SET_ERROR", payload: data.error });
         } else {
-          dispatch({ type: "SET_TRANSACTIONS", payload: data.transactions });
-          transactions.push(...data.transactions);
+          dispatch({ type: "SET_TRANSACTIONS", payload: data });
+          transactions.push(...data);
         }
       } catch (error) {
         console.error("Error fetching transactions:", error);

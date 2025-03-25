@@ -1,3 +1,5 @@
+import { UUID } from "crypto";
+
 export type PartialByKeys<T extends object, K extends keyof T = keyof T> = Omit<
   T,
   K
@@ -12,18 +14,29 @@ export type DefaultTransactionCategory =
   | "Transportation"
   | "Entertainment"
   | "Housing";
+export type DocumentScansImage = {
+  id: UUID; // UUID
+  image: string; // URL
+  source: UUID; // UUID of the corresponding DocumentScans
+};
+
+export type DocumentScans = {
+  id: UUID; // UUID
+  ocr_result: string;
+  images: DocumentScansImage[];
+};
 
 export type WriteOnlyTransaction = {
-  uuid?: string; // UUID not needed when creating a new transaction
+  uuid?: UUID; // UUID not needed when creating a new transaction
   name: string;
   description?: string;
   amount: number; // 2 Decimal Places
-  category_uuid: string; // UUID
+  category_uuid: UUID; // UUID
 };
 
 export type ReadOnlyTransaction = {
-  id: string; // UUID
-  group_id: string; // UUID
+  id: UUID; // UUID
+  group_id: UUID; // UUID
   name: string;
   description?: string;
   amount: number; // 2 Decimal Places
@@ -33,15 +46,16 @@ export type ReadOnlyTransaction = {
 export type Transaction = WriteOnlyTransaction | ReadOnlyTransaction;
 
 export type Category = {
-  id: string; // UUID
+  id: UUID; // UUID
   name: DefaultTransactionCategory | string;
   description?: string;
   legacy: boolean;
   is_income_type: boolean;
+  color: string; // #RRGGBB or #RRGGBBAA format
 };
 
 export type TransactionGroup<T extends Transaction> = {
-  id: string; // UUID
+  id: UUID; // UUID
   name: string;
   description?: string;
   source: string | null;
@@ -50,28 +64,39 @@ export type TransactionGroup<T extends Transaction> = {
 };
 
 export type WriteOnlyBudgetItem = {
-  uuid?: string; // UUID
-  allocation: number; // 2 decimal places
-  category_uuid: string; // UUID
+  uuid?: UUID; // UUID
+  allocation: number; // Up to 2 decimal places
+  category_uuid: UUID; // UUID
 };
 
 export type ReadOnlyBudgetItem = {
-  id: string; // UUID
-  budget_id: string; // UUID
-  allocation: number; // 2 decimal places
+  id: UUID; // UUID
+  budget_id: UUID; // UUID
+  allocation: number; // Up to 2 decimal places
   category: Category;
+  allocation_used: number; // Up to 2 decimal places
 };
 
 export type BudgetItem = WriteOnlyBudgetItem | ReadOnlyBudgetItem;
 
-export type Budget = {
-  id: string; // UUID
+export type ReadOnlyBudget = {
+  id: UUID; // UUID
   name: string;
   description?: string;
   start_date: string;
   end_date: string;
-  budget_items: BudgetItem[];
+  budget_items: ReadOnlyBudgetItem[];
+  total_allocation: number; // Up to 2 decimal places
+  total_used: number; // Up to 2 decimal places
 };
+export type WriteOnlyBudget = {
+  name: string;
+  description?: string;
+  start_date: string;
+  end_date: string;
+  budget_items: WriteOnlyBudgetItem[];
+};
+export type Budget = WriteOnlyBudget | ReadOnlyBudget;
 
 export type ServerResponse<T> =
   | PaginatedServerResponse<T>
