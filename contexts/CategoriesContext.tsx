@@ -166,7 +166,11 @@ export default function CategoryProvider({
         category: PartialByKeys<Category, "legacy" | "id">,
       ) => {
         if (category.color) {
-          category.color = `#${rgbHex(category.color)}`;
+          // If the color is not in hex format, convert it to hex
+          // Assumes that color is in rgb or rgba format
+          if (!category.color.startsWith("#")) {
+            category.color = `#${rgbHex(category.color)}`;
+          }
         }
         return category;
       };
