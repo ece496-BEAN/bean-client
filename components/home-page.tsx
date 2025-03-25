@@ -253,11 +253,9 @@ export function MainPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between mb-2">
-                    {/* <div className="flex flex-col"> */}
                     <span className="text-2xl font-bold text-indigo-600">
                       ${selectedBudget?.total_used?.toFixed(2)}
                     </span>
-                    {/* </div> */}
                     <span className="text-2xl font-bold text-indigo-600">
                       ${selectedBudget?.total_allocation?.toFixed(2)}
                     </span>
@@ -287,14 +285,21 @@ export function MainPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap justify-center gap-4">
-                    {spendingCategories.map((category, index) => (
-                      <div key={index} className="flex flex-col items-center">
+                    {selectedBudget?.budget_items?.map((budget_item) => (
+                      <div
+                        key={budget_item.id}
+                        className="flex flex-col items-center"
+                      >
                         <RingChart
-                          percentage={category.percentage}
-                          color={category.color}
+                          percentage={
+                            (budget_item.allocation_used /
+                              budget_item.allocation) *
+                            100
+                          }
+                          color={budget_item.category.color}
                         />
                         <span className="mt-2 text-sm font-medium text-gray-600">
-                          {category.name}
+                          {budget_item.category.name}
                         </span>
                       </div>
                     ))}
