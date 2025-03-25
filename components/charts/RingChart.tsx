@@ -19,6 +19,7 @@ export const RingChart: React.FC<RingChartProps> = ({
   animationDuration = 1,
 }) => {
   const cappedPercentage = Math.min(percentage, 100);
+  const remainderPercentage = percentage % 100;
   const numRing = Math.floor(percentage / 100);
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
