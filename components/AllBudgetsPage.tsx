@@ -199,7 +199,7 @@ const AllBudgetsHeader = ({
           variant="contained"
           onClick={handleAddBudget}
           sx={{
-            backgroundColor: "purple",
+            backgroundColor: "#7b25cd",
             ":hover": { backgroundColor: "#6366f1" },
           }}
         >
@@ -213,7 +213,7 @@ const AllBudgetsHeader = ({
           loading={isPaginatedBudgetsLoading}
           loadingPosition="end"
           sx={{
-            backgroundColor: "purple",
+            backgroundColor: "#7b25cd",
             ":hover": { backgroundColor: "#6366f1" },
           }}
         >
