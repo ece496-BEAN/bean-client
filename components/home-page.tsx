@@ -104,16 +104,6 @@ export function MainPage() {
     { name: "Others", percentage: 15, color: "#FF5722" },
   ];
 
-  const notifications: Notification[] = [
-    { id: 1, message: "Rent due in 3 days", type: "warning" },
-    { id: 2, message: "You've exceeded your restaurant budget", type: "alert" },
-  ];
-
-  const aiSuggestions: string[] = [
-    "Consider cooking at home more often to reduce food expenses.",
-    "You might save on transportation by using public transit twice a week.",
-  ];
-
   const [savingsData, setSavingsData] = useState<StackedDataPoint[]>([]);
 
   useEffect(() => {
@@ -346,54 +336,6 @@ export function MainPage() {
                       ))}
                   </ul>
                 </CardContent> */}
-              </Card>
-
-              {/* Notifications */}
-              <Card className="bg-white shadow-lg">
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center text-lg font-semibold text-gray-700">
-                    <Bell className="w-5 h-5 mr-2 text-indigo-500" />
-                    Notifications
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {notifications.map((notification) => (
-                      <li
-                        key={notification.id}
-                        className={`flex items-center p-2 rounded-lg ${notification.type === "warning" ? "bg-yellow-50 text-yellow-700" : "bg-red-50 text-red-700"}`}
-                      >
-                        <Calendar className="w-4 h-4 mr-2" />
-                        <span className="text-sm">{notification.message}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              {/* AI Suggestions */}
-              <Card className="bg-white shadow-lg">
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center text-lg font-semibold text-gray-700">
-                    <Sparkles className="w-5 h-5 mr-2 text-yellow-500" />
-                    AI Insights
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {aiSuggestions.map((suggestion, index) => (
-                      <li
-                        key={index}
-                        className="flex items-start p-2 bg-blue-50 rounded-lg"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2 mt-1 text-blue-500" />
-                        <span className="text-sm text-blue-700">
-                          {suggestion}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
               </Card>
             </div>
           </main>
