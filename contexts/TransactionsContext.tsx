@@ -2,7 +2,12 @@
 
 import React, { useMemo } from "react";
 import { createContext, useCallback, useContext, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { fetchApi } from "@/app/lib/api";
 import {
@@ -12,6 +17,8 @@ import {
   PaginatedServerResponse,
   ReadOnlyTransaction,
   Transaction,
+  isArrayType,
+  Category,
 } from "@/lib/types";
 
 interface TransactionsContextType {
@@ -20,12 +27,14 @@ interface TransactionsContextType {
   >;
   isTransactionGroupsLoading: boolean;
   transactionGroupsQueryError: Error | null;
+  isTransactionGroupsPlaceholderData: boolean;
 
   paginatedTransactionGroups: PaginatedServerResponse<
     TransactionGroup<ReadOnlyTransaction>
   >;
   isPaginatedTransactionGroupsLoading: boolean;
   paginatedTransactionGroupsQueryError: Error | null;
+  isPaginatedTransactionGroupsPlaceholderData: boolean;
 
   mutationError: Error | null;
   getTransactionGroups: (
@@ -38,10 +47,13 @@ interface TransactionsContextType {
 
   addTransactionGroup: (
     newGroup: Omit<TransactionGroup<Transaction>, "id">,
-  ) => Promise<void>;
+  ) => Promise<
+    | TransactionGroup<ReadOnlyTransaction>
+    | TransactionGroup<ReadOnlyTransaction>[]
+  >;
   editTransactionGroup: (
     editedGroup: TransactionGroup<Transaction>,
-  ) => Promise<void>;
+  ) => Promise<TransactionGroup<ReadOnlyTransaction>>;
   deleteTransactionGroup: (groupId: string) => Promise<void>;
   refetchTransactions: () => void;
 
@@ -57,6 +69,7 @@ export type TransactionGroupQueryParameters = {
   date_after?: string;
   date_before?: string;
   category_uuid?: string;
+  category_type_is_income?: boolean;
   search?: string;
   page?: number;
   page_size?: number;
@@ -120,9 +133,11 @@ export default function TransactionProvider({
     isLoading: isTransactionGroupsLoading,
     error: transactionGroupsQueryError,
     refetch: refetchTransactions,
+    isPlaceholderData: isTransactionGroupsPlaceholderData,
   } = useQuery({
     queryKey: ["transaction-groups", queryOptions],
     queryFn: () => fetchTransactionGroups(queryOptions),
+    placeholderData: keepPreviousData,
     enabled: !!jwt, // Only fetch when jwt is available
   });
 
@@ -132,9 +147,11 @@ export default function TransactionProvider({
     isLoading: isPaginatedTransactionGroupsLoading,
     error: paginatedTransactionGroupsQueryError,
     refetch: refetchPaginatedTransactionGroups,
+    isPlaceholderData: isPaginatedTransactionGroupsPlaceholderData,
   } = useQuery({
     queryKey: ["transaction-groups", paginatedQueryOptions],
     queryFn: () => fetchTransactionGroups(paginatedQueryOptions),
+    placeholderData: keepPreviousData,
     enabled: !!jwt, // Only fetch when jwt is available
   });
 
@@ -192,30 +209,52 @@ export default function TransactionProvider({
             ),
       );
     },
-    mutationFn: async (newGroup: Omit<TransactionGroup<Transaction>, "id">) => {
+    mutationFn: async (
+      newGroup:
+        | Omit<TransactionGroup<Transaction>, "id">
+        | Omit<TransactionGroup<Transaction>, "id">[],
+    ) => {
       // Modify ReadOnlyTransaction to a WriteOnlyTransaction
-      newGroup.transactions = newGroup.transactions.map((transaction) => {
-        if ("category" in transaction) {
-          const { category, ...rest } = transaction;
 
-          transaction = { ...rest, category_uuid: category.id };
+      const processTransaction = (transaction: any) => {
+        let updatedTransaction = { ...transaction };
+        if ("category" in updatedTransaction) {
+          const { category, ...rest } = updatedTransaction;
+          updatedTransaction = { ...rest, category_uuid: category.id };
         }
-        if ("amount" in transaction) {
-          // Round to 2 Decimal Places since server cannot handle more than 2 decimal places
-          transaction.amount = parseFloat(
-            parseFloat(transaction.amount.toString()).toFixed(2),
+        // Round to 2 Decimal Places since server cannot handle more than 2 decimal places
+        if ("amount" in updatedTransaction) {
+          updatedTransaction.amount = parseFloat(
+            parseFloat(updatedTransaction.amount.toString()).toFixed(2),
           );
         }
-        return transaction;
-      });
+        return updatedTransaction;
+      };
+      const processGroup = (
+        group: Omit<TransactionGroup<Transaction>, "id">,
+      ) => {
+        return {
+          ...group,
+          transactions: group.transactions.map(processTransaction),
+        };
+      };
 
-      return fetchApi(
+      const processedGroup = isArrayType(newGroup)
+        ? newGroup.map((group) => processGroup(group))
+        : processGroup(newGroup);
+
+      const response = await fetchApi(
         jwt,
         setAndStoreJwt,
         "transaction-groups/",
         "POST",
-        newGroup,
+        processedGroup,
       );
+      const data = await response.json();
+      if (isArrayType(data)) {
+        return data as TransactionGroup<ReadOnlyTransaction>[];
+      }
+      return data as TransactionGroup<ReadOnlyTransaction>;
     },
 
     onSuccess: () => {
@@ -245,6 +284,10 @@ export default function TransactionProvider({
 
             transaction = { ...rest, uuid: id, category_uuid: category.id };
           }
+          if ("category" in transaction) {
+            const { category, ...rest } = transaction;
+            transaction = { ...rest, category_uuid: (category as Category).id };
+          }
           if ("amount" in transaction) {
             transaction.amount = parseFloat(
               parseFloat(transaction.amount.toString()).toFixed(2),
@@ -253,13 +296,14 @@ export default function TransactionProvider({
           return transaction;
         });
 
-      return fetchApi(
+      const response = await fetchApi(
         jwt,
         setAndStoreJwt,
         `transaction-groups/${editedTransactionGroup.id}/`,
         "PUT",
         editedTransactionGroup,
       );
+      return (await response.json()) as TransactionGroup<ReadOnlyTransaction>;
     },
 
     onSuccess: () => {
@@ -281,15 +325,25 @@ export default function TransactionProvider({
       );
     },
     mutationFn: async (groupId: string) => {
-      return await fetchApi(
+      await fetchApi(
         jwt,
         setAndStoreJwt,
         `transaction-groups/${groupId}/`,
         "DELETE",
       );
+      return groupId;
     },
 
-    onSuccess: () => {
+    onSuccess: (groupId) => {
+      console.log(
+        `selectedTransactionGroupUUID: ${selectedTransactionGroupUUID}`,
+      );
+
+      if (selectedTransactionGroupUUID === groupId) {
+        console.log(`Selected Transaction Group ${groupId} Deleted`);
+        console.log(`It matches ${selectedTransactionGroupUUID}`);
+        setSelectedTransactionGroupUUID(undefined);
+      }
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
         queryKey: ["transaction-groups"],
@@ -305,15 +359,19 @@ export default function TransactionProvider({
     deleteTransactionGroupMutation;
 
   const addTransactionGroup = useCallback(
-    async (transactionGroup: Omit<TransactionGroup<Transaction>, "id">) => {
-      await addTransactionGroupMutateAsync(transactionGroup);
+    async (
+      transactionGroup:
+        | Omit<TransactionGroup<Transaction>, "id">
+        | Omit<TransactionGroup<Transaction>, "id">[],
+    ) => {
+      return await addTransactionGroupMutateAsync(transactionGroup);
     },
     [addTransactionGroupMutateAsync],
   );
 
   const editTransactionGroup = useCallback(
     async (transactionGroup: TransactionGroup<Transaction>) => {
-      await editTransactionGroupMutateAsync(transactionGroup);
+      return await editTransactionGroupMutateAsync(transactionGroup);
     },
     [editTransactionGroupMutateAsync],
   );
@@ -360,6 +418,7 @@ export default function TransactionProvider({
     ),
     isTransactionGroupsLoading,
     transactionGroupsQueryError,
+    isTransactionGroupsPlaceholderData,
     paginatedTransactionGroups: useMemo(
       () =>
         (paginatedTransactionGroups as PaginatedServerResponse<
@@ -369,6 +428,7 @@ export default function TransactionProvider({
     ),
     isPaginatedTransactionGroupsLoading,
     paginatedTransactionGroupsQueryError,
+    isPaginatedTransactionGroupsPlaceholderData,
     mutationError,
     addTransactionGroup,
     editTransactionGroup,

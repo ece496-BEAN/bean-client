@@ -2,29 +2,43 @@
 
 import React, { useState, FormEvent, useEffect, useRef } from "react";
 import { Trash, X } from "lucide-react";
-// import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
-import { Dialog, DialogContent, DialogTitle, IconButton } from "@mui/material";
+import {
+  Box,
+  Card,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  Grid2,
+  IconButton,
+  Switch,
+  TextField,
+} from "@mui/material";
 
-import { Label } from "@/components/ui/label";
 import { Category, PartialByKeys } from "@/lib/types";
 import { Button } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { MuiColorInput, matchIsValidColor } from "mui-color-input";
 
 interface AddCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (
-    transaction: PartialByKeys<Category, "id" | "legacy">[],
-  ) => Promise<void>;
+    category:
+      | PartialByKeys<Category, "id" | "legacy">[]
+      | PartialByKeys<Category, "id" | "legacy">,
+  ) => Promise<Category[] | Category>;
 }
 
 const defaultCategory: PartialByKeys<Category, "id" | "legacy"> = {
   name: "",
   description: "",
   is_income_type: false,
+  color: "#0062ff",
 };
 
 export function AddCategoryModal({
@@ -38,7 +52,14 @@ export function AddCategoryModal({
 
   const [formErrors, setFormErrors] = useState<string[]>([]); // Array of error messages
   const formRef = useRef<HTMLFormElement>(null);
-
+  const handleColorChange = (color: string, index: number) => {
+    const updatedCategories = [...newCategories];
+    updatedCategories[index] = {
+      ...updatedCategories[index],
+      color,
+    } as PartialByKeys<Category, "id" | "legacy">;
+    setNewCategories(updatedCategories);
+  };
   const handleCategoryChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -46,10 +67,17 @@ export function AddCategoryModal({
     index: number,
   ) => {
     const updatedCategories = [...newCategories];
-    updatedCategories[index] = {
-      ...updatedCategories[index],
-      [e.target.name]: e.target.value,
-    } as PartialByKeys<Category, "id" | "legacy">;
+    if (e.target.name !== "is_income_type") {
+      updatedCategories[index] = {
+        ...updatedCategories[index],
+        [e.target.name]: e.target.value,
+      } as PartialByKeys<Category, "id" | "legacy">;
+    } else {
+      updatedCategories[index] = {
+        ...updatedCategories[index],
+        [e.target.name]: (e.target as HTMLInputElement).checked,
+      } as PartialByKeys<Category, "id" | "legacy">;
+    }
     setNewCategories(updatedCategories);
   };
 
@@ -73,6 +101,11 @@ export function AddCategoryModal({
     newCategories.forEach((category, index) => {
       if (!category.name) {
         errors.push(`Category ${index + 1}: Name is required`);
+      }
+      if (!matchIsValidColor(category.color)) {
+        errors.push(
+          `Category ${index + 1}: Color is invalid. Please use a valid hex color code.`,
+        );
       }
     });
     return errors;
@@ -125,50 +158,83 @@ export function AddCategoryModal({
         </IconButton>
       </DialogTitle>
       <DialogContent dividers={true}>
-        <div>
+        <Box>
           <form ref={formRef} onSubmit={handleSubmit} className="space-y-2">
-            <h3>Categories</h3>
             {newCategories.map((category, index) => (
-              <div
-                key={index}
-                className="flex flex-col border border-solid border-indigo-600"
-              >
-                <div>
-                  <Label htmlFor={`category-name-${index}`}>Name</Label>
-                  <Input
-                    id={`category-name-${index}`}
-                    type="text"
-                    name="name"
-                    value={category.name}
-                    onChange={(e) => handleCategoryChange(e, index)}
-                  />
-                </div>
+              <Card key={index} className="flex flex-col p-4 space-y-2">
+                <TextField
+                  id={`category-name-${index}`}
+                  name="name"
+                  label="Name"
+                  variant="outlined"
+                  fullWidth
+                  value={category.name}
+                  onChange={(e) => handleCategoryChange(e, index)}
+                />
+                <TextField
+                  id={`category-description-${index}`}
+                  name="description"
+                  label="Description (Optional)"
+                  variant="outlined"
+                  fullWidth
+                  value={category.description}
+                  onChange={(e) => handleCategoryChange(e, index)}
+                />
+                <Grid2 container className="mt-2 mb-2">
+                  {/* TODO: Fix to not cause as many re-renders since this triggers alot of times when using the picker */}
+                  {/* Maybe consider using a [react-hook-form](https://viclafouch.github.io/mui-color-input/docs/react-hook-form/) */}
+                  <Grid2 size={{ xs: 12, sm: 6 }}>
+                    <MuiColorInput
+                      name="color"
+                      label="Color"
+                      sx={{ minWidth: "235px" }}
+                      value={category.color}
+                      onChange={(color) => {
+                        handleColorChange(color, index);
+                      }}
+                    />
+                  </Grid2>
+                  <Grid2
+                    size={{ xs: 12, sm: 6 }}
+                    sx={{
+                      paddingLeft: "16px",
+                      display: "flex",
+                      justifyContent: "left",
+                      alignItems: "center",
+                    }}
+                  >
+                    <FormControlLabel
+                      label={
+                        <Chip
+                          label={category.is_income_type ? "Income" : "Expense"}
+                          color={category.is_income_type ? "success" : "error"}
+                        />
+                      }
+                      control={
+                        <Switch
+                          name="is_income_type"
+                          checked={category.is_income_type}
+                          onChange={(e) => handleCategoryChange(e, index)}
+                        />
+                      }
+                    />
+                  </Grid2>
+                </Grid2>
 
-                <div>
-                  <Label htmlFor={`category-description-${index}`}>
-                    Description
-                  </Label>
-                  <Input
-                    id={`category-description-${index}`}
-                    type="text"
-                    name="description"
-                    value={category.description || ""}
-                    onChange={(e) => handleCategoryChange(e, index)}
-                  />
-                </div>
                 <Button
                   type="button"
                   onClick={() => removeCategory(index)}
-                  className="text-red-500 hover:text-red-700"
+                  variant="outlined"
+                  color="error"
                 >
                   <Trash className="h-4 w-4" />
                 </Button>
-              </div>
+              </Card>
             ))}
           </form>
-        </div>
+        </Box>
       </DialogContent>
-      <div className="flex flex-col space-y-1">
+      <DialogActions>
         <Button type="button" variant="contained" onClick={addCategory}>
           Add Category
         </Button>
@@ -187,7 +253,7 @@ export function AddCategoryModal({
         >
           Submit Categories
         </Button>
-      </div>
+      </DialogActions>
       <ToastContainer />
     </Dialog>
   );

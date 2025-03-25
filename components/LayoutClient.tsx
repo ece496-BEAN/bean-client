@@ -11,6 +11,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LocalizationProvider } from "@mui/x-date-pickers-pro";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import CategoryProvider from "@/contexts/CategoriesContext";
+import DocumentScansProvider from "@/contexts/DocumentScansContext";
+import DocumentScansImageProvider from "@/contexts/DocumentScansImageContext";
 
 function LayoutClient({ children }: { children: ReactNode }) {
   // login & survey page -> no navigation bar
@@ -26,7 +28,11 @@ function LayoutClient({ children }: { children: ReactNode }) {
           {showNavigationBar && (
             <TransactionProvider>
               <CategoryProvider>
-                <NavigationBar />
+                <DocumentScansImageProvider>
+                  <DocumentScansProvider>
+                    <NavigationBar />
+                  </DocumentScansProvider>
+                </DocumentScansImageProvider>
               </CategoryProvider>
             </TransactionProvider>
           )}

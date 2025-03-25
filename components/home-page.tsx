@@ -19,59 +19,9 @@ import { CategoryValue } from "./charts/common";
 import { ChartTransaction } from "./charts/common";
 import * as d3 from "d3";
 import { JwtContext } from "@/app/lib/jwt-provider";
-
-interface RingChartProps {
-  percentage: number;
-  color: string;
-  size?: number;
-}
-
-const RingChart: React.FC<RingChartProps> = ({
-  percentage,
-  color,
-  size = 100,
-}) => {
-  const strokeWidth = 10;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
-  return (
-    <div className="relative">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="#e5e7eb"
-          strokeWidth={strokeWidth}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-bold">{percentage}%</span>
-      </div>
-    </div>
-  );
-};
-
-interface Notification {
-  id: number;
-  message: string;
-  type: "warning" | "alert";
-}
+import { useCurrentBudget } from "@/contexts/CurrentBudgetContext";
+import { useBudgets } from "@/contexts/BudgetContext";
+import { RingChart } from "./charts/RingChart";
 
 export function MainPage() {
   const [jwt, setAndStoreJwt] = useContext(JwtContext);
@@ -92,26 +42,12 @@ export function MainPage() {
 
   const { transactionGroups } = useTransactions();
 
-  const totalSpending = 2500;
-  const monthlyBudget = 3000;
-  const spendingPercentage = (totalSpending / monthlyBudget) * 100;
-
   const spendingCategories = [
     { name: "Housing", percentage: 40, color: "#4CAF50" },
     { name: "Food", percentage: 20, color: "#FFC107" },
     { name: "Transportation", percentage: 15, color: "#2196F3" },
     { name: "Entertainment", percentage: 10, color: "#9C27B0" },
     { name: "Others", percentage: 15, color: "#FF5722" },
-  ];
-
-  const notifications: Notification[] = [
-    { id: 1, message: "Rent due in 3 days", type: "warning" },
-    { id: 2, message: "You've exceeded your restaurant budget", type: "alert" },
-  ];
-
-  const aiSuggestions: string[] = [
-    "Consider cooking at home more often to reduce food expenses.",
-    "You might save on transportation by using public transit twice a week.",
   ];
 
   const [savingsData, setSavingsData] = useState<StackedDataPoint[]>([]);
@@ -199,9 +135,27 @@ export function MainPage() {
     fetchSavingsData();
   }, []);
 
+  const { currentBudgetUUID } = useCurrentBudget();
+  const {
+    getSelectedBudget,
+    selectedBudget,
+    selectedBudgetQueryError,
+    isSelectedBudgetLoading,
+  } = useBudgets();
+
+  useEffect(() => {
+    if (currentBudgetUUID) getSelectedBudget(currentBudgetUUID);
+  }, [currentBudgetUUID, getSelectedBudget]);
+
+  const spendingPercentage =
+    ((selectedBudget?.total_used ?? 0) /
+      (selectedBudget?.total_allocation ?? 1)) *
+    100;
+  console.log(currentBudgetUUID, selectedBudget);
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {isLoading ? (
+      {isLoading || isSelectedBudgetLoading ? (
         <div className="flex items-center justify-center h-screen">
           <div className="text-lg font-semibold">Loading...</div>
         </div>
@@ -247,20 +201,22 @@ export function MainPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-500">
-                      Total Spending
+                    <span className="text-2xl font-bold text-indigo-600">
+                      ${selectedBudget?.total_used?.toFixed(2)}
                     </span>
                     <span className="text-2xl font-bold text-indigo-600">
-                      ${totalSpending.toFixed(2)}
+                      ${selectedBudget?.total_allocation?.toFixed(2)}
                     </span>
                   </div>
                   <Progress value={spendingPercentage} className="h-2 mb-1" />
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>0%</span>
-                    <span>
-                      {spendingPercentage.toFixed(1)}% of ${monthlyBudget}
+                    <span className="text-sm font-medium text-gray-500">
+                      Used
                     </span>
-                    <span>100%</span>
+                    <span>{spendingPercentage.toFixed(1)}%</span>
+                    <span className="text-sm font-medium text-gray-500">
+                      Allocated
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -277,14 +233,21 @@ export function MainPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap justify-center gap-4">
-                    {spendingCategories.map((category, index) => (
-                      <div key={index} className="flex flex-col items-center">
+                    {selectedBudget?.budget_items?.map((budget_item) => (
+                      <div
+                        key={budget_item.id}
+                        className="flex flex-col items-center"
+                      >
                         <RingChart
-                          percentage={category.percentage}
-                          color={category.color}
+                          percentage={
+                            (budget_item.allocation_used /
+                              budget_item.allocation) *
+                            100
+                          }
+                          color={budget_item.category.color}
                         />
                         <span className="mt-2 text-sm font-medium text-gray-600">
-                          {category.name}
+                          {budget_item.category.name}
                         </span>
                       </div>
                     ))}
@@ -346,54 +309,6 @@ export function MainPage() {
                       ))}
                   </ul>
                 </CardContent> */}
-              </Card>
-
-              {/* Notifications */}
-              <Card className="bg-white shadow-lg">
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center text-lg font-semibold text-gray-700">
-                    <Bell className="w-5 h-5 mr-2 text-indigo-500" />
-                    Notifications
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {notifications.map((notification) => (
-                      <li
-                        key={notification.id}
-                        className={`flex items-center p-2 rounded-lg ${notification.type === "warning" ? "bg-yellow-50 text-yellow-700" : "bg-red-50 text-red-700"}`}
-                      >
-                        <Calendar className="w-4 h-4 mr-2" />
-                        <span className="text-sm">{notification.message}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              {/* AI Suggestions */}
-              <Card className="bg-white shadow-lg">
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center text-lg font-semibold text-gray-700">
-                    <Sparkles className="w-5 h-5 mr-2 text-yellow-500" />
-                    AI Insights
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {aiSuggestions.map((suggestion, index) => (
-                      <li
-                        key={index}
-                        className="flex items-start p-2 bg-blue-50 rounded-lg"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2 mt-1 text-blue-500" />
-                        <span className="text-sm text-blue-700">
-                          {suggestion}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
               </Card>
             </div>
           </main>
