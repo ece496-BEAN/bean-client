@@ -15,6 +15,7 @@ type Transaction = {
 type TransactionGroup = {
   name: string;
   description?: string;
+  source: string | null;
   date: string;
   transactions: Transaction[];
 };
@@ -180,6 +181,7 @@ export async function POST(request: Request) {
     const transactionGroup: TransactionGroup = {
       name: receiptData.store_name,
       description: receiptData.address || undefined,
+      source: receiptData.payment_type || null,
       date: receiptData.date_time,
       transactions,
     };
