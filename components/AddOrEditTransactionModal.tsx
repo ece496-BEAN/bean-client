@@ -9,6 +9,7 @@ import {
   Box,
   Card,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   IconButton,
@@ -31,7 +32,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import "react-toastify/dist/ReactToastify.css";
 import CategorySelector from "./CategorySelector";
-import { DatePicker, DateTimePicker } from "@mui/x-date-pickers";
+import { DateTimePicker } from "@mui/x-date-pickers";
 
 interface AddOrEditTransactionModalProps {
   isOpen: boolean;
@@ -264,7 +265,7 @@ export function AddOrEditTransactionGroupModal({
             <TextField
               id="name"
               name="name"
-              label="Transaction Name"
+              label="Transaction Group Name"
               fullWidth
               error={!!formErrors.name}
               helperText={formErrors.name}
@@ -274,7 +275,7 @@ export function AddOrEditTransactionGroupModal({
             <TextField
               id="description"
               name="description"
-              label="Transaction Description (Optional)"
+              label="Transaction Group Description (Optional)"
               fullWidth
               multiline
               value={newTransactionGroup.description}
@@ -286,91 +287,105 @@ export function AddOrEditTransactionGroupModal({
               value={new Date(newTransactionGroup.date)}
               onChange={(date) => handleDateChange(date)}
             />
-            <Typography variant="h6" sx={{ color: "grey" }} gutterBottom>
-              Budget Items
-            </Typography>{" "}
-            {newTransactionGroup.transactions.map((transaction, index) => (
-              <Card key={index} className="flex flex-col p-4 space-y-2">
-                <TextField
-                  fullWidth
-                  id={`transaction-name-${index}`}
-                  name="name"
-                  label="Name"
-                  error={!!formErrors[`transaction[${index}].name`]}
-                  helperText={formErrors[`transaction[${index}].name`] || ""}
-                  value={transaction.name}
-                  onChange={(e) => handleTransactionChange(e, index)}
-                />
-                <TextField
-                  fullWidth
-                  id={`transaction-description-${index}`}
-                  name="description"
-                  label="Description (Optional)"
-                  value={transaction.description || ""}
-                  onChange={(e) => handleTransactionChange(e, index)}
-                />
-                <TextField
-                  fullWidth
-                  id={`transaction-amount-${index}`}
-                  type="number"
-                  slotProps={{ htmlInput: { step: 0.01 } }}
-                  name="amount"
-                  label="Amount"
-                  value={transaction.amount}
-                  error={!!formErrors[`transaction[${index}].amount`]}
-                  helperText={formErrors[`transaction[${index}].amount`] || ""}
-                  onChange={(e) => handleTransactionChange(e, index)}
-                />
-                <div>
-                  <CategorySelector
-                    error={!!formErrors[`transaction[${index + 1}].category`]}
-                    helperText={
-                      formErrors[`transaction[${index + 1}].category`] || ""
-                    }
-                    value={(transaction as ReadOnlyTransaction).category}
-                    onChange={(value) => {
-                      if (value) {
-                        const updatedTransactions = [
-                          ...newTransactionGroup.transactions,
-                        ];
-                        if (
-                          mode === "edit" &&
-                          "category" in updatedTransactions[index]
-                        ) {
-                          updatedTransactions[index] = {
-                            ...updatedTransactions[index],
-                            category: {
-                              ...updatedTransactions[index].category,
-                              id: value.id,
-                            },
-                          };
-                        } else {
-                          updatedTransactions[index] = {
-                            ...updatedTransactions[index],
-                            category_uuid: value.id,
-                          };
-                        }
-                        setNewTransactionGroup({
-                          ...newTransactionGroup,
-                          transactions: updatedTransactions,
-                        });
+            {newTransactionGroup.transactions.length === 0 ? (
+              <Typography variant="h6" sx={{ color: "grey" }} gutterBottom>
+                No Transaction Items Found
+              </Typography>
+            ) : (
+              <>
+                <Typography variant="h6" sx={{ color: "grey" }} gutterBottom>
+                  Transaction Items
+                </Typography>
+                {newTransactionGroup.transactions.map((transaction, index) => (
+                  <Card key={index} className="flex flex-col p-4 space-y-2">
+                    <TextField
+                      fullWidth
+                      id={`transaction-name-${index}`}
+                      name="name"
+                      label="Transaction Name"
+                      error={!!formErrors[`transaction[${index}].name`]}
+                      helperText={
+                        formErrors[`transaction[${index}].name`] || ""
                       }
-                    }}
-                  />
-                </div>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => removeTransaction(index)}
-                >
-                  <Trash className="h-4 w-4" />
-                </Button>
-              </Card>
-            ))}
+                      value={transaction.name}
+                      onChange={(e) => handleTransactionChange(e, index)}
+                    />
+                    <TextField
+                      fullWidth
+                      id={`transaction-description-${index}`}
+                      name="description"
+                      label="Transaction Description (Optional)"
+                      value={transaction.description || ""}
+                      onChange={(e) => handleTransactionChange(e, index)}
+                    />
+                    <TextField
+                      fullWidth
+                      id={`transaction-amount-${index}`}
+                      type="number"
+                      slotProps={{ htmlInput: { step: 0.01 } }}
+                      name="amount"
+                      label="Transaction Amount"
+                      value={transaction.amount}
+                      error={!!formErrors[`transaction[${index}].amount`]}
+                      helperText={
+                        formErrors[`transaction[${index}].amount`] || ""
+                      }
+                      onChange={(e) => handleTransactionChange(e, index)}
+                    />
+                    <div>
+                      <CategorySelector
+                        error={
+                          !!formErrors[`transaction[${index + 1}].category`]
+                        }
+                        helperText={
+                          formErrors[`transaction[${index + 1}].category`] || ""
+                        }
+                        value={(transaction as ReadOnlyTransaction).category}
+                        onChange={(value) => {
+                          if (value) {
+                            const updatedTransactions = [
+                              ...newTransactionGroup.transactions,
+                            ];
+                            if (
+                              mode === "edit" &&
+                              "category" in updatedTransactions[index]
+                            ) {
+                              updatedTransactions[index] = {
+                                ...updatedTransactions[index],
+                                category: {
+                                  ...updatedTransactions[index].category,
+                                  id: value.id,
+                                },
+                              };
+                            } else {
+                              updatedTransactions[index] = {
+                                ...updatedTransactions[index],
+                                category_uuid: value.id,
+                              };
+                            }
+                            setNewTransactionGroup({
+                              ...newTransactionGroup,
+                              transactions: updatedTransactions,
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={() => removeTransaction(index)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </Card>
+                ))}
+              </>
+            )}
           </form>
         </Card>
       </DialogContent>
-      <div className="flex flex-col space-y-1">
+      <DialogActions>
         <Button type="button" variant="contained" onClick={addTransaction}>
           Add Item
         </Button>
@@ -389,7 +404,7 @@ export function AddOrEditTransactionGroupModal({
         >
           Submit Transaction
         </Button>
-      </div>
+      </DialogActions>
       <ToastContainer />
     </Dialog>
   );

@@ -53,7 +53,6 @@ export default function CurrentBudgetProvider({
         start_date_before: formattedEnd,
       }).toString();
       const url = `budgets/?${queryString}`;
-      console.log("Fetching Current Budget", url);
       const response = await fetchApi(jwt, setAndStoreJwt, url, "GET");
       const data: PaginatedServerResponse<ReadOnlyBudget> =
         await response.json();
