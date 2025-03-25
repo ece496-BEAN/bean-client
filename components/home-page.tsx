@@ -19,6 +19,8 @@ import { CategoryValue } from "./charts/common";
 import { ChartTransaction } from "./charts/common";
 import * as d3 from "d3";
 import { JwtContext } from "@/app/lib/jwt-provider";
+import { useCurrentBudget } from "@/contexts/CurrentBudgetContext";
+import { useBudgets } from "@/contexts/BudgetContext";
 
 interface RingChartProps {
   percentage: number;
@@ -91,10 +93,6 @@ export function MainPage() {
   }, [jwt, isLoading, router]);
 
   const { transactionGroups } = useTransactions();
-
-  const totalSpending = 2500;
-  const monthlyBudget = 3000;
-  const spendingPercentage = (totalSpending / monthlyBudget) * 100;
 
   const spendingCategories = [
     { name: "Housing", percentage: 40, color: "#4CAF50" },
@@ -189,9 +187,27 @@ export function MainPage() {
     fetchSavingsData();
   }, []);
 
+  const { currentBudgetUUID } = useCurrentBudget();
+  const {
+    getSelectedBudget,
+    selectedBudget,
+    selectedBudgetQueryError,
+    isSelectedBudgetLoading,
+  } = useBudgets();
+
+  useEffect(() => {
+    if (currentBudgetUUID) getSelectedBudget(currentBudgetUUID);
+  }, [currentBudgetUUID, getSelectedBudget]);
+
+  const spendingPercentage =
+    ((selectedBudget?.total_used ?? 0) /
+      (selectedBudget?.total_allocation ?? 1)) *
+    100;
+  console.log(currentBudgetUUID, selectedBudget);
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {isLoading ? (
+      {isLoading || isSelectedBudgetLoading ? (
         <div className="flex items-center justify-center h-screen">
           <div className="text-lg font-semibold">Loading...</div>
         </div>
@@ -237,20 +253,24 @@ export function MainPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-500">
-                      Total Spending
-                    </span>
+                    {/* <div className="flex flex-col"> */}
                     <span className="text-2xl font-bold text-indigo-600">
-                      ${totalSpending.toFixed(2)}
+                      ${selectedBudget?.total_used?.toFixed(2)}
+                    </span>
+                    {/* </div> */}
+                    <span className="text-2xl font-bold text-indigo-600">
+                      ${selectedBudget?.total_allocation?.toFixed(2)}
                     </span>
                   </div>
                   <Progress value={spendingPercentage} className="h-2 mb-1" />
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>0%</span>
-                    <span>
-                      {spendingPercentage.toFixed(1)}% of ${monthlyBudget}
+                    <span className="text-sm font-medium text-gray-500">
+                      Used
                     </span>
-                    <span>100%</span>
+                    <span>{spendingPercentage.toFixed(1)}%</span>
+                    <span className="text-sm font-medium text-gray-500">
+                      Allocated
+                    </span>
                   </div>
                 </CardContent>
               </Card>

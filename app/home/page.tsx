@@ -6,13 +6,16 @@
 
 import { MainPage } from "@/components/home-page";
 import CategoryProvider from "@/contexts/CategoriesContext";
+import CurrentBudgetProvider from "@/contexts/CurrentBudgetContext";
 import TransactionProvider from "@/contexts/TransactionsContext";
 
 export default function Page() {
   return (
     <TransactionProvider>
       <CategoryProvider>
-        <MainPage />
+        <CurrentBudgetProvider>
+          <MainPage />
+        </CurrentBudgetProvider>
       </CategoryProvider>
     </TransactionProvider>
   );
