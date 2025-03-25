@@ -19,7 +19,7 @@ import {
   Grid2,
   Card,
 } from "@mui/material";
-import { Pencil } from "lucide-react";
+import { DollarSign, Pencil } from "lucide-react";
 import { AddOrEditBudgetPage } from "@/components/AddOrEditBudgetPage";
 import BudgetSelector from "@/components/BudgetSelector"; // Import your budget selector
 
@@ -152,32 +152,66 @@ function BudgetOverview() {
               (item) => {
                 const percentage = (item.allocation / totalAllocation) * 100;
                 return (
-                  <Box key={item.id} sx={{ width: "100%", mb: 2 }}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="body2" sx={{ color: "grey" }}>
-                        {item.category.name} ({percentage.toFixed(2)}%)
-                      </Typography>
+                  <ul key={item.id} className="space-y-3 my-3">
+                    <li className="relative overflow-hidden p-2">
+                      <div
+                        className="absolute inset-0 rounded-lg opacity-20"
+                        style={{
+                          width: `${(item.allocation_used / item.allocation) * 100}%`,
+                          backgroundColor: item.category.color,
+                        }}
+                      ></div>
+                      <div
+                        className="absolute inset-0 rounded-lg w-full border-solid border-2"
+                        style={{
+                          borderColor: item.category.color,
+                        }}
+                      ></div>
+                      <div className="flex items-center justify-between p-2 rounded-lg relative z-10 text-lg">
+                        <div className="flex items-center flex-grow mr-2">
+                          <div
+                            className="w-4 h-4 rounded-full mr-3"
+                            style={{ backgroundColor: item.category.color }}
+                          ></div>
+                          <span className="font-medium text-gray-700">
+                            {item.category.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="flex items-center mr-2">
+                            <DollarSign className="w-4 h-4 mr-1 text-gray-700" />
+                            <span className="font-medium text-gray-700">{`${item.allocation_used} / ${item.allocation}`}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                  // <Box key={item.id} sx={{ width: "100%", mb: 2 }}>
+                  //   <Stack direction="row" spacing={1} alignItems="center">
+                  //     <Typography variant="body2" sx={{ color: "grey" }}>
+                  //       {item.category.name} ({percentage.toFixed(2)}%)
+                  //     </Typography>
 
-                      <Chip
-                        label={
-                          item.category.is_income_type ? "Income" : "Expense"
-                        }
-                        color={
-                          item.category.is_income_type ? "success" : "error"
-                        }
-                        size="small"
-                        variant="outlined"
-                      />
-                      <Chip
-                        label={item.category.legacy ? "Legacy" : "Active"}
-                        color={item.category.legacy ? "default" : "primary"}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </Stack>
+                  //     <Chip
+                  //       label={
+                  //         item.category.is_income_type ? "Income" : "Expense"
+                  //       }
+                  //       color={
+                  //         item.category.is_income_type ? "success" : "error"
+                  //       }
+                  //       size="small"
+                  //       variant="outlined"
+                  //     />
+                  //     <Chip
+                  //       label={item.category.legacy ? "Legacy" : "Active"}
+                  //       color={item.category.legacy ? "default" : "primary"}
+                  //       size="small"
+                  //       variant="outlined"
+                  //     />
+                  //   </Stack>
 
-                    <LinearProgress variant="determinate" value={percentage} />
-                  </Box>
+                  //   <LinearProgress variant="determinate" value={percentage} />
+                  // </Box>
                 );
               },
             )}
