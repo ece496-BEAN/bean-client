@@ -11,12 +11,12 @@ import { useQuery } from "@tanstack/react-query";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { fetchApi } from "@/app/lib/api";
-import { Budget, PaginatedServerResponse } from "@/lib/types";
+import { Budget, PaginatedServerResponse, ReadOnlyBudget } from "@/lib/types";
 
 interface CurrentBudgetContextType {
   currentBudgetUUID: string | null;
   setCurrentBudgetUUID: (uuid: string | null) => void;
-  currentBudget: PaginatedServerResponse<Budget>;
+  currentBudget: PaginatedServerResponse<ReadOnlyBudget>;
   isCurrentBudgetLoading: boolean;
   currentBudgetError: Error | null;
 }
@@ -53,9 +53,9 @@ export default function CurrentBudgetProvider({
         start_date_before: formattedEnd,
       }).toString();
       const url = `budgets/?${queryString}`;
-      console.log("Fetching Current Budget", url);
       const response = await fetchApi(jwt, setAndStoreJwt, url, "GET");
-      const data: PaginatedServerResponse<Budget> = await response.json();
+      const data: PaginatedServerResponse<ReadOnlyBudget> =
+        await response.json();
       return data;
     },
     enabled: !!jwt,

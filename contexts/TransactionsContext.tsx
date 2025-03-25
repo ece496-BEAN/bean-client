@@ -17,6 +17,8 @@ import {
   PaginatedServerResponse,
   ReadOnlyTransaction,
   Transaction,
+  isArrayType,
+  Category,
 } from "@/lib/types";
 
 interface TransactionsContextType {
@@ -45,7 +47,10 @@ interface TransactionsContextType {
 
   addTransactionGroup: (
     newGroup: Omit<TransactionGroup<Transaction>, "id">,
-  ) => Promise<TransactionGroup<ReadOnlyTransaction>>;
+  ) => Promise<
+    | TransactionGroup<ReadOnlyTransaction>
+    | TransactionGroup<ReadOnlyTransaction>[]
+  >;
   editTransactionGroup: (
     editedGroup: TransactionGroup<Transaction>,
   ) => Promise<TransactionGroup<ReadOnlyTransaction>>;
@@ -186,12 +191,9 @@ export default function TransactionProvider({
   } = useQuery({
     queryKey: ["transaction-groups", selectedTransactionGroupUUID],
     queryFn: () => {
-      if (!selectedTransactionGroupUUID) {
-        throw new Error("No transaction group UUID provided.");
-      }
       return fetchTransactionGroups(
         {},
-        { uuid: selectedTransactionGroupUUID },
+        { uuid: selectedTransactionGroupUUID! },
       ) as Promise<TransactionGroup<ReadOnlyTransaction>>;
     },
     enabled: !!selectedTransactionGroupUUID && !!jwt, // Only fetch if uuid is set and jwt is available
@@ -207,31 +209,52 @@ export default function TransactionProvider({
             ),
       );
     },
-    mutationFn: async (newGroup: Omit<TransactionGroup<Transaction>, "id">) => {
+    mutationFn: async (
+      newGroup:
+        | Omit<TransactionGroup<Transaction>, "id">
+        | Omit<TransactionGroup<Transaction>, "id">[],
+    ) => {
       // Modify ReadOnlyTransaction to a WriteOnlyTransaction
-      newGroup.transactions = newGroup.transactions.map((transaction) => {
-        if ("category" in transaction) {
-          const { category, ...rest } = transaction;
 
-          transaction = { ...rest, category_uuid: category.id };
+      const processTransaction = (transaction: any) => {
+        let updatedTransaction = { ...transaction };
+        if ("category" in updatedTransaction) {
+          const { category, ...rest } = updatedTransaction;
+          updatedTransaction = { ...rest, category_uuid: category.id };
         }
-        if ("amount" in transaction) {
-          // Round to 2 Decimal Places since server cannot handle more than 2 decimal places
-          transaction.amount = parseFloat(
-            parseFloat(transaction.amount.toString()).toFixed(2),
+        // Round to 2 Decimal Places since server cannot handle more than 2 decimal places
+        if ("amount" in updatedTransaction) {
+          updatedTransaction.amount = parseFloat(
+            parseFloat(updatedTransaction.amount.toString()).toFixed(2),
           );
         }
-        return transaction;
-      });
+        return updatedTransaction;
+      };
+      const processGroup = (
+        group: Omit<TransactionGroup<Transaction>, "id">,
+      ) => {
+        return {
+          ...group,
+          transactions: group.transactions.map(processTransaction),
+        };
+      };
+
+      const processedGroup = isArrayType(newGroup)
+        ? newGroup.map((group) => processGroup(group))
+        : processGroup(newGroup);
 
       const response = await fetchApi(
         jwt,
         setAndStoreJwt,
         "transaction-groups/",
         "POST",
-        newGroup,
+        processedGroup,
       );
-      return (await response.json()) as TransactionGroup<ReadOnlyTransaction>;
+      const data = await response.json();
+      if (isArrayType(data)) {
+        return data as TransactionGroup<ReadOnlyTransaction>[];
+      }
+      return data as TransactionGroup<ReadOnlyTransaction>;
     },
 
     onSuccess: () => {
@@ -260,6 +283,10 @@ export default function TransactionProvider({
             const { id, category, group_id, ...rest } = transaction;
 
             transaction = { ...rest, uuid: id, category_uuid: category.id };
+          }
+          if ("category" in transaction) {
+            const { category, ...rest } = transaction;
+            transaction = { ...rest, category_uuid: (category as Category).id };
           }
           if ("amount" in transaction) {
             transaction.amount = parseFloat(
@@ -304,9 +331,19 @@ export default function TransactionProvider({
         `transaction-groups/${groupId}/`,
         "DELETE",
       );
+      return groupId;
     },
 
-    onSuccess: () => {
+    onSuccess: (groupId) => {
+      console.log(
+        `selectedTransactionGroupUUID: ${selectedTransactionGroupUUID}`,
+      );
+
+      if (selectedTransactionGroupUUID === groupId) {
+        console.log(`Selected Transaction Group ${groupId} Deleted`);
+        console.log(`It matches ${selectedTransactionGroupUUID}`);
+        setSelectedTransactionGroupUUID(undefined);
+      }
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
         queryKey: ["transaction-groups"],
@@ -322,7 +359,11 @@ export default function TransactionProvider({
     deleteTransactionGroupMutation;
 
   const addTransactionGroup = useCallback(
-    async (transactionGroup: Omit<TransactionGroup<Transaction>, "id">) => {
+    async (
+      transactionGroup:
+        | Omit<TransactionGroup<Transaction>, "id">
+        | Omit<TransactionGroup<Transaction>, "id">[],
+    ) => {
       return await addTransactionGroupMutateAsync(transactionGroup);
     },
     [addTransactionGroupMutateAsync],

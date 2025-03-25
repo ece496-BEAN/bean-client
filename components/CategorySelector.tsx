@@ -9,6 +9,7 @@ import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
 import { useCategories } from "@/contexts/CategoriesContext"; // Import your context
 import { Category, PartialByKeys } from "@/lib/types"; // Import your types
 import {
+  Box,
   Chip,
   CircularProgress,
   FormControlLabel,
@@ -17,7 +18,8 @@ import {
   Switch,
   Typography,
 } from "@mui/material";
-
+import { MuiColorInput, matchIsValidColor } from "mui-color-input";
+import { useState } from "react";
 type CategoryOption = Category & { inputValue?: string };
 
 interface CategoryAutocompleteProps {
@@ -33,6 +35,7 @@ export default function CategoryAutocomplete({
   error,
   helperText,
 }: CategoryAutocompleteProps) {
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const { categories, addCategory, isCategoriesLoading } = useCategories();
   const categoryOptions: CategoryOption[] = categories;
   const [open, toggleOpen] = React.useState(false);
@@ -42,6 +45,7 @@ export default function CategoryAutocomplete({
     name: "",
     description: "",
     is_income_type: false,
+    color: "#0062ff",
   });
 
   const loading = open && isCategoriesLoading;
@@ -59,18 +63,35 @@ export default function CategoryAutocomplete({
       name: "",
       description: "",
       is_income_type: false,
+      color: "#0062ff",
     });
+    setFormErrors({});
     toggleOpen(false);
   };
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!dialogValue.name) {
+      newErrors.name = "Name is required";
+    }
+    if (!matchIsValidColor(dialogValue.color)) {
+      newErrors.color = "Color is invalid. Please use a valid hex color code.";
+    }
+
+    setFormErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
   const handleSubmit = async (
     _: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
-    // Can't seem to get the type inferring working
-    const newCategory = (await addCategory(dialogValue)) as Category;
-    setDialogValue(newCategory);
-    onChange(newCategory); // Send value to parent component
-    handleClose();
+    if (validateForm()) {
+      // Can't seem to get the type inferring working
+      const newCategory = (await addCategory(dialogValue)) as Category;
+      setDialogValue(newCategory);
+      onChange(newCategory); // Send value to parent component
+      handleClose();
+    }
   };
 
   const filter = createFilterOptions<CategoryOption>();
@@ -86,6 +107,7 @@ export default function CategoryAutocomplete({
               name: newValue.inputValue,
               description: "",
               is_income_type: false,
+              color: "#0062ff",
             });
           } else {
             onChange(newValue);
@@ -100,16 +122,17 @@ export default function CategoryAutocomplete({
               inputValue: params.inputValue,
               name: `Add "${params.inputValue}"`, // Display in options
               // Placeholder values (will be overwritten later)
-              id: params.inputValue,
+              id: "0-0-0-0-0",
               legacy: false,
               is_income_type: false,
+              color: "#0062ff",
             });
           }
 
           return filtered;
         }}
         disablePortal
-        id="combo-box-demo"
+        id="category-autocomplete"
         options={categoryOptions}
         getOptionLabel={(option: CategoryOption) => {
           if (typeof option === "string") {
@@ -131,13 +154,27 @@ export default function CategoryAutocomplete({
               sx={{ width: "100%" }}
             >
               <Grid2>
-                <Stack direction="column" alignItems="flex-start" spacing={0.2}>
-                  <Typography variant="body1">{option.name}</Typography>
-                  {option.description && (
-                    <Typography variant="caption" color="text.secondary">
-                      {option.description}
-                    </Typography>
-                  )}
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box
+                    sx={{
+                      width: 16, // Adjust size as needed
+                      height: 16,
+                      bgcolor: option.color || "transparent", // Use category color or transparent if not available
+                      borderRadius: "50%", // Make it a circle
+                    }}
+                  />
+                  <Stack
+                    direction="column"
+                    alignItems="flex-start"
+                    spacing={0.2}
+                  >
+                    <Typography variant="body1">{option.name}</Typography>
+                    {option.description && (
+                      <Typography variant="caption" color="text.secondary">
+                        {option.description}
+                      </Typography>
+                    )}
+                  </Stack>
                 </Stack>
               </Grid2>
               <Grid2>
@@ -191,6 +228,8 @@ export default function CategoryAutocomplete({
               fullWidth
               variant="outlined"
               value={dialogValue.name}
+              error={!!formErrors.name}
+              helperText={formErrors.name || ""}
               onChange={(e) =>
                 setDialogValue({ ...dialogValue, name: e.target.value })
               }
@@ -211,26 +250,51 @@ export default function CategoryAutocomplete({
                 })
               }
             />
-            <FormControlLabel
-              label={
-                <Chip
-                  label={dialogValue.is_income_type ? "Income" : "Expense"}
-                  color={dialogValue.is_income_type ? "success" : "error"}
+            <Grid2 container className="mt-2 mb-2">
+              {/* TODO: Fix to not cause as many re-renders since this triggers alot of times when using the picker */}
+              {/* Maybe consider using a [react-hook-form](https://viclafouch.github.io/mui-color-input/docs/react-hook-form/) */}
+              <Grid2 size={{ xs: 12, sm: 6 }}>
+                <MuiColorInput
+                  name="color"
+                  label="Color"
+                  sx={{ minWidth: "235px" }}
+                  value={dialogValue.color}
+                  onChange={(color) => {
+                    setDialogValue({ ...dialogValue, color });
+                  }}
                 />
-              }
-              control={
-                <Switch
-                  name="is_income_type"
-                  checked={dialogValue.is_income_type}
-                  onChange={(e) =>
-                    setDialogValue({
-                      ...dialogValue,
-                      is_income_type: e.target.checked,
-                    })
+              </Grid2>
+              <Grid2
+                size={{ xs: 12, sm: 6 }}
+                sx={{
+                  left_margin: "auto",
+                  display: "flex",
+                  justifyContent: "left",
+                  alignItems: "center",
+                }}
+              >
+                <FormControlLabel
+                  label={
+                    <Chip
+                      label={dialogValue.is_income_type ? "Income" : "Expense"}
+                      color={dialogValue.is_income_type ? "success" : "error"}
+                    />
+                  }
+                  control={
+                    <Switch
+                      name="is_income_type"
+                      checked={dialogValue.is_income_type}
+                      onChange={(e) =>
+                        setDialogValue({
+                          ...dialogValue,
+                          is_income_type: e.target.checked,
+                        })
+                      }
+                    />
                   }
                 />
-              }
-            />
+              </Grid2>
+            </Grid2>
           </div>
         </DialogContent>
         <DialogActions>
