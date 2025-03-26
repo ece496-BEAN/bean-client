@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { format } from "date-fns";
 import {
   ArrowDownIcon,
@@ -247,19 +247,14 @@ export function RecentTransactionsPage() {
     isPaginatedTransactionGroupsLoading: isTransactionGroupLoading,
     paginatedTransactionGroupsQueryError: transactionQueryError,
     mutationError: transactionMutationError,
-    refetchPaginatedTransactionGroups: refetchTransactions,
     addTransactionGroup,
     deleteTransactionGroup,
     editTransactionGroup,
-    getTransactionGroups,
   } = useTransactions();
 
-  const { categoriesQueryError, refetchCategories } = useCategories();
+  const { categoriesQueryError } = useCategories();
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [ordering, setOrdering] = useState<string>("-date");
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
 
   useEffect(() => {
     if (categoriesQueryError) {
@@ -296,56 +291,7 @@ export function RecentTransactionsPage() {
   const [transactionToEdit, setTransactionToEdit] =
     useState<TransactionGroup<ReadOnlyTransaction>>();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<Category | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  // Don't automatically refetch on search
-  useEffect(() => {
-    applyFilters();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, pageSize, ordering, categoryFilter, startDate, endDate]);
-
-  const applyFilters = () => {
-    // Give no options to set `no_page`
-    let queryParams: TransactionGroupQueryParameters = {};
-    if (searchTerm) {
-      queryParams.search = searchTerm;
-    }
-    if (categoryFilter) {
-      queryParams.category_uuid = categoryFilter.id;
-    }
-    if (currentPage >= 1) {
-      // Pages for API start at 1, but the pages in the component start at 0
-      queryParams.page = currentPage + 1;
-    }
-    if (pageSize) {
-      queryParams.page_size = pageSize;
-    }
-    if (ordering) {
-      queryParams.ordering = ordering;
-    }
-    if (startDate) {
-      queryParams.date_after = format(startDate, "yyyy-MM-dd");
-    }
-    if (endDate) {
-      queryParams.date_before = format(endDate, "yyyy-MM-dd");
-    }
-    getTransactionGroups(queryParams);
-  };
-  const refetchData = () => {
-    refetchTransactions;
-    refetchCategories();
-  };
-  const resetFilters = () => {
-    setSearchTerm("");
-    setCategoryFilter(null);
-    setStartDate(null);
-    setEndDate(null);
-    setCurrentPage((_) => 0);
-    setPageSize((_) => 10);
-    setOrdering("-date");
-    getTransactionGroups({});
-  };
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [groupToDeleted, setGroupToDeleted] =
@@ -434,20 +380,11 @@ export function RecentTransactionsPage() {
           ) : (
             <>
               <TransactionListHeader
-                applyFilters={applyFilters}
-                resetFilters={resetFilters}
+                setCurrentPage={setCurrentPage}
+                setPageSize={setPageSize}
+                pageSize={pageSize}
+                currentPage={currentPage}
                 isLoading={isTransactionGroupLoading}
-                refetch={refetchData}
-                setOrdering={setOrdering}
-                setSearchTerm={setSearchTerm}
-                setCategoryFilter={setCategoryFilter}
-                categoryFilter={categoryFilter}
-                setStartDate={setStartDate}
-                setEndDate={setEndDate}
-                ordering={ordering}
-                searchTerm={searchTerm}
-                startDate={startDate}
-                endDate={endDate}
                 handleOpenAddModal={handleOpenAddModal}
               />
 
@@ -506,42 +443,91 @@ export function RecentTransactionsPage() {
   );
 }
 interface TransactionListHeaderProps {
-  applyFilters: () => void;
-  resetFilters: () => void;
+  setPageSize: (pageSize: number) => void;
+  setCurrentPage: (currentPage: number) => void;
+  pageSize: number;
+  currentPage: number;
   isLoading: boolean;
-  refetch: () => void;
-  setOrdering: React.Dispatch<React.SetStateAction<string>>;
-  setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
-  categoryFilter: Category | null;
-  setCategoryFilter: React.Dispatch<React.SetStateAction<Category | null>>;
-  setStartDate: React.Dispatch<React.SetStateAction<Date | null>>;
-  setEndDate: React.Dispatch<React.SetStateAction<Date | null>>;
-  ordering: string;
-  searchTerm: string;
-  startDate: Date | null;
-  endDate: Date | null;
   handleOpenAddModal: () => void;
 }
 function TransactionListHeader({
-  applyFilters,
-  resetFilters,
+  setPageSize,
+  setCurrentPage,
+  pageSize,
+  currentPage,
   isLoading,
-  refetch,
-  setOrdering,
-  setSearchTerm,
-  categoryFilter,
-  setCategoryFilter,
-  setStartDate,
-  setEndDate,
-  ordering,
-  searchTerm,
-  startDate,
-  endDate,
   handleOpenAddModal,
 }: TransactionListHeaderProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const filterMenuOpen = Boolean(anchorEl);
 
+  const {
+    getTransactionGroups,
+    refetchPaginatedTransactionGroups: refetchTransactions,
+  } = useTransactions();
+  const { refetchCategories } = useCategories();
+
+  const [ordering, setOrdering] = useState<string>("-date");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<Category | null>(null);
+
+  const refetchData = () => {
+    refetchTransactions();
+    refetchCategories();
+  };
+
+  const applyFilters = useCallback(() => {
+    // Give no options to set `no_page`
+    let queryParams: TransactionGroupQueryParameters = {};
+    if (searchTerm) {
+      queryParams.search = searchTerm;
+    }
+    if (categoryFilter) {
+      queryParams.category_uuid = categoryFilter.id;
+    }
+    if (currentPage >= 1) {
+      // Pages for API start at 1, but the pages in the component start at 0
+      queryParams.page = currentPage + 1;
+    }
+    if (pageSize) {
+      queryParams.page_size = pageSize;
+    }
+    if (ordering) {
+      queryParams.ordering = ordering;
+    }
+    if (startDate) {
+      queryParams.date_after = format(startDate, "yyyy-MM-dd");
+    }
+    if (endDate) {
+      queryParams.date_before = format(endDate, "yyyy-MM-dd");
+    }
+    getTransactionGroups(queryParams);
+  }, [
+    searchTerm,
+    categoryFilter,
+    currentPage,
+    pageSize,
+    ordering,
+    startDate,
+    endDate,
+    getTransactionGroups,
+  ]);
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setCategoryFilter(null);
+    setStartDate(null);
+    setEndDate(null);
+    setCurrentPage(0);
+    setPageSize(10);
+    setOrdering("-date");
+    getTransactionGroups({});
+  };
   const handleFilterMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -550,6 +536,7 @@ function TransactionListHeader({
     setAnchorEl(null);
   };
 
+  // TODO: Debounce this
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
@@ -557,7 +544,6 @@ function TransactionListHeader({
   const handleSearchClick = () => {
     applyFilters();
   };
-
   return (
     <Grid2
       container
@@ -667,7 +653,7 @@ function TransactionListHeader({
       <Grid2>
         <Button
           variant="contained"
-          onClick={refetch}
+          onClick={refetchData}
           loading={isLoading}
           loadingPosition="end"
           sx={{

@@ -1,4 +1,5 @@
 "use client";
+
 import { BudgetQueryParameters, useBudgets } from "@/contexts/BudgetContext";
 import { FilterList } from "@mui/icons-material";
 import {
@@ -26,7 +27,6 @@ import { DateField, DateRangePicker } from "@mui/x-date-pickers-pro";
 import { format } from "date-fns";
 import { Eye, Pencil, Trash } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { PaginatedServerResponse, ReadOnlyBudget } from "@/lib/types";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -64,8 +64,6 @@ const AllBudgetsHeader = ({
   rowsPerPage,
   setRowsPerPage,
 }: AllBudgetsHeaderProps) => {
-  const router = useRouter();
-
   const [searchQuery, setSearchQuery] = useState("");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const filterMenuOpen = Boolean(anchorEl);
@@ -73,9 +71,6 @@ const AllBudgetsHeader = ({
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
   const handleFilterMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -103,6 +98,10 @@ const AllBudgetsHeader = ({
     getBudgets(queryParams);
   }, [getBudgets, page, rowsPerPage, searchQuery, startDate, endDate]);
 
+  // TODO: Debounce this search term
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
   const resetFilters = () => {
     setSearchQuery("");
     setStartDate(null);
@@ -119,10 +118,6 @@ const AllBudgetsHeader = ({
   const handleSearchClick = useCallback(() => {
     applyFilters();
   }, [applyFilters]);
-
-  const handleAddBudget = useCallback(() => {
-    router.push("/budget/new");
-  }, [router]);
 
   return (
     <Grid2 container spacing={1} className="flex flex-col h-auto pb-4">
@@ -210,10 +205,8 @@ const AllBudgetsTable = ({
   paginatedBudgets,
   isPaginatedBudgetsLoading,
   handleDeleteConfirmation,
-  getSelectedBudget,
   chooseMonth,
 }: AllBudgetsTableProps) => {
-  const router = useRouter();
   const handleChangePage = useCallback(
     (_: unknown, newPage: number) => {
       setPage(newPage);
@@ -249,11 +242,13 @@ const AllBudgetsTable = ({
           </TableHead>
           <TableBody>
             {paginatedBudgets.results.length === 0 ? (
-              <TableCell sx={{ p: 2 }} align="center" colSpan={4}>
-                <Typography variant="h6" align="center">
-                  No Budgets Found
-                </Typography>
-              </TableCell>
+              <TableRow>
+                <TableCell sx={{ p: 2 }} align="center" colSpan={4}>
+                  <Typography variant="h6" align="center">
+                    No Budgets Found
+                  </Typography>
+                </TableCell>
+              </TableRow>
             ) : (
               <>
                 {paginatedBudgets.results.map((budget) => (
@@ -340,7 +335,6 @@ function AllBudgetsPage(props: AllBudgetsPage) {
     deleteBudget,
     getSelectedBudget,
   } = useBudgets();
-  const router = useRouter();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [budgetToBeDeleted, setBudgetToBeDeleted] = useState<
     ReadOnlyBudget | undefined

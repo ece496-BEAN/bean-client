@@ -86,7 +86,67 @@ function CategoriesContent(props: CategoriesContentProps) {
     setSearchQuery(event.target.value);
   };
   const handleSearchClick = () => {
-    const params: CategoryQueryParameters = {};
+    applyFilters();
+  };
+  const handleFilterMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleFilterMenuClose = () => {
+    setAnchorEl(null);
+  };
+  const handleIsIncomeTypeFilterChange = () => {
+    setIsIncomeTypeFilter((prev) => {
+      let isIncomeTypeValue = null;
+      if (prev === null) {
+        isIncomeTypeValue = true;
+      } else if (prev === true) {
+        isIncomeTypeValue = false;
+      } else {
+        isIncomeTypeValue = null;
+      }
+      return isIncomeTypeValue;
+    });
+    handleFilterMenuClose();
+    setPage(0);
+  };
+  const handleLegacyFilterChange = () => {
+    setLegacyFilter((prev) => {
+      let legacyValue = null;
+      if (prev === null) {
+        legacyValue = true;
+      } else if (prev === true) {
+        legacyValue = false;
+      } else {
+        legacyValue = null;
+      }
+      return legacyValue;
+    });
+    handleFilterMenuClose();
+    setPage(0);
+  };
+
+  const handleSortClick = (direction: "asc" | "desc") => {
+    setSortDirection((_) => direction);
+    handleFilterMenuClose();
+    setPage(0);
+  };
+  const handleDeleteConfirmation = (category: Category) => {
+    setIsDeleteModalOpen(true);
+    setCategoryToBeDeleted(category);
+  };
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setCategoryToBeDeleted(undefined);
+  };
+
+  const handleChangePage = (newPage: number) => {
+    setPage((_) => newPage);
+  };
+
+  const applyFilters = useCallback(() => {
+    // Give no options to set `no_page`
+    let params: CategoryQueryParameters = {};
     if (searchQuery) {
       params.search = searchQuery;
     }
@@ -99,121 +159,27 @@ function CategoriesContent(props: CategoriesContentProps) {
     if (sortDirection) {
       params.ordering = sortDirection === "asc" ? "name" : "-name";
     }
-
-    params.page = 1; // Reset to first page when filters change
-    setPage(0);
-
+    if (page >= 1) {
+      // Pages for API start at 1, but the pages in the component start at 0
+      params.page = page + 1;
+    }
+    if (rowsPerPage) {
+      params.page_size = rowsPerPage;
+    }
     getCategories(params);
-  };
-  const handleFilterMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  }, [
+    searchQuery,
+    legacyFilter,
+    isIncomeTypeFilter,
+    sortDirection,
+    page,
+    rowsPerPage,
+    getCategories,
+  ]);
 
-  const handleFilterMenuClose = () => {
-    setAnchorEl(null);
-  };
-  const handleIsIncomeTypeFilterChange = () => {
-    let isIncomeTypeValue = null;
-    setIsIncomeTypeFilter((prev) => {
-      if (prev === null) {
-        isIncomeTypeValue = true;
-      } else if (prev === true) {
-        isIncomeTypeValue = false;
-      } else {
-        isIncomeTypeValue = null;
-      }
-      return isIncomeTypeValue;
-    });
-    handleFilterMenuClose();
-    const params: CategoryQueryParameters =
-      isIncomeTypeValue === null ? {} : { is_income_type: isIncomeTypeValue };
-    if (legacyFilter !== null) {
-      params.legacy = legacyFilter;
-    }
-    if (searchQuery) {
-      params.name = searchQuery;
-    }
-    if (sortDirection) {
-      params.ordering = sortDirection === "asc" ? "name" : "-name";
-    }
-  };
-  const handleLegacyFilterChange = () => {
-    let legacyValue = null;
-    setLegacyFilter((prev) => {
-      if (prev === null) {
-        legacyValue = true;
-      } else if (prev === true) {
-        legacyValue = false;
-      } else {
-        legacyValue = null;
-      }
-      return legacyValue;
-    });
-    handleFilterMenuClose();
-    const params: CategoryQueryParameters =
-      legacyValue === null ? {} : { legacy: legacyValue };
-    if (isIncomeTypeFilter !== null) {
-      params.is_income_type = isIncomeTypeFilter;
-    }
-    if (searchQuery) {
-      params.name = searchQuery;
-    }
-    if (sortDirection) {
-      params.ordering = sortDirection === "asc" ? "name" : "-name";
-    }
-    setPage(0);
-
-    getCategories(params);
-  };
-
-  const handleSortClick = (direction: "asc" | "desc") => {
-    setSortDirection((_) => direction);
-    handleFilterMenuClose();
-    const params: CategoryQueryParameters = {};
-    if (searchQuery) {
-      params.name = searchQuery;
-    }
-    if (legacyFilter !== null) {
-      params.legacy = legacyFilter;
-    }
-    if (isIncomeTypeFilter !== null) {
-      params.is_income_type = isIncomeTypeFilter;
-    }
-    if (sortDirection) {
-      params.ordering = direction === "asc" ? "name" : "-name";
-    }
-    setPage(0);
-
-    getCategories(params);
-  };
-  const handleDeleteConfirmation = (category: Category) => {
-    setIsDeleteModalOpen(true);
-    setCategoryToBeDeleted(category);
-  };
-  const handleCloseDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setCategoryToBeDeleted(undefined);
-  };
-
-  // TODO: Make it refetch with the proper query parameters other than pages
-  const handleChangePage = useCallback(
-    (newPage: number) => {
-      setPage((_) => newPage);
-      const params: CategoryQueryParameters = {};
-      if (searchQuery) {
-        params.name = searchQuery;
-      }
-      if (legacyFilter !== null) {
-        params.legacy = legacyFilter;
-      }
-      if (sortDirection) {
-        params.ordering = sortDirection === "asc" ? "name" : "-name";
-      }
-      getCategories({ ...params, page: newPage + 1, page_size: rowsPerPage });
-    },
-    [rowsPerPage, searchQuery, legacyFilter, sortDirection, getCategories],
-  );
-
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
   const handleChangeRowsPerPage = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setRowsPerPage((_) => parseInt(event.target.value, 10));
@@ -472,11 +438,13 @@ const CategoriesTable = ({
           </TableHead>
           <TableBody>
             {categories.length === 0 ? (
-              <TableCell sx={{ p: 2 }} align="center" colSpan={6}>
-                <Typography variant="h6" align="center">
-                  No Categories Found
-                </Typography>
-              </TableCell>
+              <TableRow>
+                <TableCell sx={{ p: 2 }} align="center" colSpan={6}>
+                  <Typography variant="h6" align="center">
+                    No Categories Found
+                  </Typography>
+                </TableCell>
+              </TableRow>
             ) : (
               <>
                 {categories.map((category) => (
