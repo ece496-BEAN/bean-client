@@ -132,6 +132,7 @@ export default function SurveyPage() {
   >([]);
   const [aiResponse, setAiResponse] = useState<string>("\n");
   const [showAiResponse, setShowAiResponse] = useState<boolean>(false);
+  const [isNegativeInput, setIsNegativeInput] = useState<boolean>(false);
   const router = useRouter();
 
   // Wait for a short period to allow JwtProvider to finish initialization
@@ -185,7 +186,7 @@ export default function SurveyPage() {
 
   const handleNumberInput = async () => {
     const action = actionStack[0];
-    console.log("parsing action: ", action);
+    // console.log("parsing action: ", action);
 
     // add budget to budgetItemArrayState
     const newBudgetItem = {
@@ -214,7 +215,7 @@ export default function SurveyPage() {
       // add multiple choice question, move onto MC questions
       setQuestions((prev) => [...prev, multipleChoiceCategoryQuestion]);
 
-      console.log("Unavoidable costs section completed");
+      // console.log("Unavoidable costs section completed");
 
       // remove budgets that have 0 allocation
       const finishedBudgetItemArrayState = [
@@ -230,7 +231,7 @@ export default function SurveyPage() {
         (budgetItem) => budgetItem.category,
       );
       const retCat = (await addCategory(categoriesToAdd)) as Category[];
-      console.log("DEBUG retCat: ", retCat);
+      // console.log("DEBUG retCat: ", retCat);
 
       // update the categories in BudgetItemArrayState with the returned categories
       const newBudgetItemArrayState = finishedBudgetItemArrayState.map(
@@ -247,7 +248,7 @@ export default function SurveyPage() {
   };
 
   const confirmMultipleChoice = async () => {
-    console.log("DEBUG multipleChoiceSelections: ", multipleChoiceSelections);
+    // console.log("DEBUG multipleChoiceSelections: ", multipleChoiceSelections);
 
     // ask AI to generate budgets for multipleChoiceSelections categories
     // only do this if multipleChoiceSelections is not empty
@@ -255,7 +256,7 @@ export default function SurveyPage() {
       const multiChoiceCategories = multipleChoiceSelections
         .toString()
         .replaceAll(",", "\n");
-      console.log("DEBUG multiChoiceCategories: ", multiChoiceCategories);
+      // console.log("DEBUG multiChoiceCategories: ", multiChoiceCategories);
       const unavoidableExpenses = budgetItemArrayState.map((budgetItem) => ({
         name: budgetItem.category.name,
         allocation: budgetItem.allocation,
@@ -289,7 +290,7 @@ export default function SurveyPage() {
       prompt += `-----\n`;
       prompt += `${netIncome} <- net income\n\nSTEP 2: ASSIGN BUDGET ALLOCATIONS\n\n${multiChoiceCategories}\n\n`;
 
-      console.log("DEBUG budgetItemArrayState: ", budgetItemArrayState);
+      // console.log("DEBUG budgetItemArrayState: ", budgetItemArrayState);
       console.log("DEBUG: prompt:\n", prompt);
 
       // make call to LLM to determine budget for each category in multipleChoiceSelections
@@ -303,7 +304,7 @@ export default function SurveyPage() {
       const respJSON = await response.json();
 
       // const respJSON = {test: "test"};
-      console.log("DEBUG response: ", respJSON);
+      // console.log("DEBUG response: ", respJSON);
 
       // parse AI output
       setAiResponse(respJSON.response_text);
@@ -311,7 +312,7 @@ export default function SurveyPage() {
       // convert generated budgets to app-compatible format
       const generatedBudgetArray: generatedBudgetArrayItem[] =
         respJSON.budget_array;
-      console.log("DEBUG: generatedBudgetArray", generatedBudgetArray);
+      // console.log("DEBUG: generatedBudgetArray", generatedBudgetArray);
 
       // setFinalNumBudgets((prev) => prev + generatedBudgetArray.length)
 
@@ -332,7 +333,7 @@ export default function SurveyPage() {
       const addedGeneratedCategories = (await addCategory(
         generatedCategories,
       )) as Category[];
-      console.log("DEBUG addedGeneratedCategories: ", addedGeneratedCategories);
+      // console.log("DEBUG addedGeneratedCategories: ", addedGeneratedCategories);
 
       const addToBudgetItemArray: ReadOnlyBudgetItem[] =
         generatedBudgetArray.map((item) => {
@@ -346,7 +347,7 @@ export default function SurveyPage() {
             allocation_used: 0,
           };
         });
-      console.log("DEBUG addToBudgetItemArray: ", addToBudgetItemArray);
+      // console.log("DEBUG addToBudgetItemArray: ", addToBudgetItemArray);
 
       // remove budgets that have 0 allocation
       const filteredBudgets = addToBudgetItemArray.filter(
@@ -359,12 +360,12 @@ export default function SurveyPage() {
     }
 
     // wrap up survey, then head to budget confirmation page!
-    console.log("About to finish survey");
+    // console.log("About to finish survey");
     setFinishedSurvey(true);
   };
 
   const startSurvey = async () => {
-    console.log("startSurvey called!");
+    // console.log("startSurvey called!");
     setStartedSurvey(true);
     setQuestionCount(1);
   };
@@ -433,6 +434,11 @@ export default function SurveyPage() {
                 <h2 className="text-xl font-bold mb-6">
                   {questions[questions.length - 1].text}
                 </h2>
+                {isNegativeInput && (
+                  <p className="text-red-xl font-bold mb-6">
+                    Please enter a positive value or zero.
+                  </p>
+                )}
 
                 {questions[questions.length - 1].type === "multiple" && (
                   <div className="space-y-4">
@@ -495,13 +501,23 @@ export default function SurveyPage() {
                       type="number"
                       placeholder="Enter a number"
                       defaultValue={0}
-                      onChange={(e) => setNumberInput(parseInt(e.target.value))}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value);
+                        if (v < 0) {
+                          setIsNegativeInput(true);
+                        } else {
+                          setIsNegativeInput(false);
+                          setNumberInput(v);
+                        }
+                      }}
                       className="border-purple-300 focus:border-purple-500 focus:ring-purple-500"
                     />
                     <Button
                       className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                       onClick={() => {
-                        handleNumberInput();
+                        if (!isNegativeInput) {
+                          handleNumberInput();
+                        }
                       }}
                     >
                       Confirm
