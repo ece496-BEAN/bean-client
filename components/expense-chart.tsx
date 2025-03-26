@@ -222,15 +222,17 @@ export function ExpenseChart() {
           <CardContent className="p-2">
             <div className="w-full h-96">
               <ParentSize>
-                {({ width, height }) => (
-                  <ThresholdChart
-                    width={width}
-                    height={height}
-                    data={savingsData}
-                    projectionDateIdx={cumulativeExpenseEndIndex}
-                    colorPalette={expenseColors}
-                  />
-                )}
+                {({ width, height }) =>
+                  savingsData.length > 0 && (
+                    <ThresholdChart
+                      width={width}
+                      height={height}
+                      data={savingsData}
+                      projectionDateIdx={cumulativeExpenseEndIndex}
+                      colorPalette={expenseColors}
+                    />
+                  )
+                }
               </ParentSize>
             </div>
           </CardContent>
@@ -244,15 +246,17 @@ export function ExpenseChart() {
           <CardContent className="p-2">
             <div className="w-full h-96">
               <ParentSize>
-                {({ width, height }) => (
-                  <StackedAreaChart
-                    width={width}
-                    height={height}
-                    data={cumulativeExpenseData}
-                    projectionDateIdx={cumulativeExpenseEndIndex}
-                    colorPalette={expenseColors}
-                  />
-                )}
+                {({ width, height }) =>
+                  cumulativeExpenseData.length > 0 && (
+                    <StackedAreaChart
+                      width={width}
+                      height={height}
+                      data={cumulativeExpenseData}
+                      projectionDateIdx={cumulativeExpenseEndIndex}
+                      colorPalette={expenseColors}
+                    />
+                  )
+                }
               </ParentSize>
             </div>
           </CardContent>
@@ -266,15 +270,17 @@ export function ExpenseChart() {
           <CardContent className="p-2">
             <div className="w-full h-96">
               <ParentSize>
-                {({ width, height }) => (
-                  <StackedAreaChart
-                    width={width}
-                    height={height}
-                    data={cumulativeIncomeData}
-                    projectionDateIdx={cumulativeIncomeEndIndex}
-                    colorPalette={incomeColors}
-                  />
-                )}
+                {({ width, height }) =>
+                  cumulativeIncomeData.length > 0 && (
+                    <StackedAreaChart
+                      width={width}
+                      height={height}
+                      data={cumulativeIncomeData}
+                      projectionDateIdx={cumulativeIncomeEndIndex}
+                      colorPalette={incomeColors}
+                    />
+                  )
+                }
               </ParentSize>
             </div>
           </CardContent>
@@ -289,15 +295,17 @@ export function ExpenseChart() {
           <CardContent className="p-2">
             <div className="w-full h-96">
               <ParentSize>
-                {({ width, height }) => (
-                  <StackedBarChart
-                    width={width}
-                    height={height}
-                    data={incomeData}
-                    projectionDateIdx={TODO}
-                    colorPalette={incomeColors}
-                  />
-                )}
+                {({ width, height }) =>
+                  incomeData.length > 0 && (
+                    <StackedBarChart
+                      width={width}
+                      height={height}
+                      data={incomeData}
+                      projectionDateIdx={TODO}
+                      colorPalette={incomeColors}
+                    />
+                  )
+                }
               </ParentSize>
             </div>
           </CardContent>
@@ -311,15 +319,17 @@ export function ExpenseChart() {
           <CardContent className="p-2">
             <div className="w-full h-96">
               <ParentSize>
-                {({ width, height }) => (
-                  <StackedBarChart
-                    width={width}
-                    height={height}
-                    data={expenseData}
-                    projectionDateIdx={TODO}
-                    colorPalette={expenseColors}
-                  />
-                )}
+                {({ width, height }) =>
+                  expenseData.length > 0 && (
+                    <StackedBarChart
+                      width={width}
+                      height={height}
+                      data={expenseData}
+                      projectionDateIdx={TODO}
+                      colorPalette={expenseColors}
+                    />
+                  )
+                }
               </ParentSize>
             </div>
           </CardContent>

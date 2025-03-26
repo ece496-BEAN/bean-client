@@ -20,6 +20,7 @@ import {
 import DollarAxisLeft from "./DollarAxisLeft";
 import LegendToggle from "./LegendToggle";
 import TooltipLine from "./TooltipLine";
+import DateRangeSlider from "./DateRangeSlider";
 
 const getDate = (d: StackedDataPoint) => new Date(d.date).valueOf();
 const getY0 = (d: SeriesPoint<StackedDataPoint>) => d[0];
@@ -38,8 +39,10 @@ export default function StackedAreaChart({
   const { tooltipData, tooltipLeft, tooltipTop, showTooltip, hideTooltip } =
     useTooltip<StackedDataPoint>();
   const [isLegendVisible, setIsLegendVisible] = useState(false);
+  const [selectedIndices, setSelectedIndices] = useState([0, data.length - 1]);
 
-  const dimensions = new ChartDimensions(width, height);
+  const chartRegionHeight = height - 30;
+  const dimensions = new ChartDimensions(width, chartRegionHeight);
   const {
     axisLeftWidth,
     chartLeft,
@@ -50,17 +53,45 @@ export default function StackedAreaChart({
     legendButtonTop,
   } = dimensions;
 
+  // Sort data by date to ensure chronological order
+  const sortedData = [...data].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+
+  // Get the selected date range based on slider indices
+  const selectedMinIndex = Math.min(...selectedIndices);
+  const selectedMaxIndex = Math.max(...selectedIndices);
+  const selectedMinDate = new Date(
+    sortedData[selectedMinIndex]?.date ?? new Date(),
+  );
+  const selectedMaxDate = new Date(
+    sortedData[selectedMaxIndex]?.date ?? new Date(),
+  );
+
+  // Filter visible data based on selected date range
+  const visibleData = sortedData.filter(
+    (d) =>
+      new Date(d.date) >= selectedMinDate &&
+      new Date(d.date) <= selectedMaxDate,
+  );
+
+  // Adjust projectionDateIdx based on the filtered data range
+  const adjustedProjectionDateIdx = Math.max(
+    0,
+    Math.min(projectionDateIdx - selectedMinIndex, visibleData.length - 1),
+  );
+
   // Scales
   const xScale = scaleTime<number>({
     range: [chartLeft, chartLeft + chartWidth],
-    domain: [Math.min(...data.map(getDate)), Math.max(...data.map(getDate))],
+    domain: [selectedMinDate, selectedMaxDate],
   });
-  const yScale = getYDollarScale(chartHeight, chartTop, data);
-  const colorScale = getColorScale(data, colorPalette);
+  const yScale = getYDollarScale(chartHeight, chartTop, visibleData);
+  const colorScale = getColorScale(visibleData, colorPalette);
 
   // Calculate the x-position for the projection start
   const projectionDate = new Date(
-    data.length != 0 ? data[projectionDateIdx].date : 0,
+    visibleData.length != 0 ? visibleData[adjustedProjectionDateIdx].date : 0,
   );
   const projectionX = xScale(projectionDate);
 
@@ -73,9 +104,9 @@ export default function StackedAreaChart({
     ) => {
       const { x } = localPoint(event) || { x: 0 };
       const x0 = xScale.invert(x);
-      const index = bisectDate(data, x0, 1);
-      const d0 = data[index - 1];
-      const d1 = data[index];
+      const index = bisectDate(visibleData, x0, 1);
+      const d0 = visibleData[index - 1];
+      const d1 = visibleData[index];
       let d = d0;
       if (d1 && getDate(d1)) {
         d =
@@ -92,15 +123,20 @@ export default function StackedAreaChart({
         ),
       });
     },
-    [showTooltip, xScale, yScale, data],
+    [showTooltip, xScale, yScale, visibleData],
   );
+
+  // Handle slider changes
+  const handleSliderChange = (selectedIndices: number[]) => {
+    setSelectedIndices(selectedIndices);
+  };
 
   return (
     <div style={{ position: "relative" }}>
-      <svg width={width} height={height}>
+      <svg width={width} height={chartRegionHeight}>
         <AreaStack<StackedDataPoint>
-          data={data}
-          keys={data.length !== 0 ? keys(data) : []}
+          data={visibleData}
+          keys={visibleData.length !== 0 ? keys(visibleData) : []}
           value={(d, key) =>
             d.categories.find((e) => e.category === key)?.value ?? 0
           }
@@ -111,7 +147,7 @@ export default function StackedAreaChart({
         >
           {({ stacks, path }) =>
             stacks.map((stack, i) => {
-              const splitIndex = projectionDateIdx;
+              const splitIndex = adjustedProjectionDateIdx;
               const firstHalf = stack.slice(0, splitIndex + 1);
               const secondHalf = stack.slice(splitIndex);
               return (
@@ -190,6 +226,9 @@ export default function StackedAreaChart({
           numTicks={width > 520 ? 8 : 5}
         />
       </svg>
+      <div style={{ width: chartWidth - 10, marginLeft: chartLeft }}>
+        <DateRangeSlider data={sortedData} onChange={handleSliderChange} />
+      </div>
       {tooltipData && tooltipLeft && (
         <TooltipWithBounds top={tooltipTop} left={tooltipLeft + 12}>
           <div>
