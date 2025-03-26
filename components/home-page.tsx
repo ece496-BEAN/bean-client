@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
 import ParentSize from "@visx/responsive/lib/components/ParentSize"; // Import ParentSize
 import { useTransactions } from "@/contexts/TransactionsContext";
-import { JwtContext } from "@/app/lib/jwt-provider";
+
+import { useJwt } from "@/app/lib/jwt-provider";
 import { useCurrentBudget } from "@/contexts/CurrentBudgetContext";
 import { useBudgets } from "@/contexts/BudgetContext";
 import { RingChart } from "./charts/RingChart";
 import ThresholdChart, { DataPoint } from "@/components/charts/ThresholdChart";
 import { expenseColors } from "@/lib/colors";
 import { fetchAndComputeData } from "@/lib/data-fetcher"; // Import the new function
+import { HeaderBanner } from "@/components/HeaderBanner";
 
 export function MainPage() {
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const [jwt, _] = useJwt();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -74,9 +76,7 @@ export function MainPage() {
         </div>
       ) : (
         <>
-          <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
-            <h1 className="text-2xl font-bold">Financial Dashboard</h1>
-          </header>
+          <HeaderBanner headerText="Financial Dashboard" showAccountMenu />
 
           <main className="flex-grow p-4 overflow-y-auto">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -40,3 +40,4 @@ certificates
 .vscode
 
 .devenv
+.env

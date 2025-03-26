@@ -1,7 +1,7 @@
 "use client";
 
 import { fetchApi } from "@/app/lib/api";
-import { JwtContext } from "@/app/lib/jwt-provider";
+import { useJwt } from "@/app/lib/jwt-provider";
 import {
   Budget,
   Category,
@@ -9,7 +9,6 @@ import {
   PaginatedServerResponse,
   ReadOnlyBudget,
   ServerResponse,
-  WriteOnlyBudget,
 } from "@/lib/types";
 import {
   keepPreviousData,
@@ -78,7 +77,7 @@ export default function BudgetProvider({
   children: React.ReactNode;
 }) {
   const queryClient = useQueryClient();
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const [jwt, setAndStoreJwt] = useJwt();
   const [mutationError, setMutationError] = useState<Error | null>(null); // State to hold the mutation error
   const [queryOptions, setQueryOptions] = useState<Record<string, any>>({
     no_page: true,
