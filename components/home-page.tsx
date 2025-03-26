@@ -104,9 +104,7 @@ export function MainPage() {
                   <div className="w-full h-96">
                     <ParentSize>
                       {({ width, height }) =>
-                        savingsData.length > 0 &&
-                        width > 0 &&
-                        height > 0 && (
+                        savingsData.length >= 2 && width > 0 && height > 0 ? (
                           <ThresholdChart
                             width={width}
                             height={height}
@@ -114,6 +112,11 @@ export function MainPage() {
                             projectionDateIdx={cumulativeExpenseEndIndex}
                             colorPalette={expenseColors}
                           />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            Add at least two week's worth of data to show this
+                            graph!
+                          </div>
                         )
                       }
                     </ParentSize>
