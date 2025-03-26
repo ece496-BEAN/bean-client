@@ -80,9 +80,7 @@ export function ExpenseChart() {
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) =>
-                  savingsData.length > 0 &&
-                  width > 0 &&
-                  height > 0 && (
+                  savingsData.length >= 2 && width > 0 && height > 0 ? (
                     <ThresholdChart
                       width={width}
                       height={height}
@@ -90,6 +88,10 @@ export function ExpenseChart() {
                       projectionDateIdx={cumulativeExpenseEndIndex}
                       colorPalette={expenseColors}
                     />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      Add at least two week's worth of data to show this graph!
+                    </div>
                   )
                 }
               </ParentSize>
@@ -106,9 +108,9 @@ export function ExpenseChart() {
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) =>
-                  cumulativeExpenseData.length > 0 &&
+                  cumulativeExpenseData.length >= 2 &&
                   width > 0 &&
-                  height > 0 && (
+                  height > 0 ? (
                     <StackedAreaChart
                       width={width}
                       height={height}
@@ -116,6 +118,10 @@ export function ExpenseChart() {
                       projectionDateIdx={cumulativeExpenseEndIndex}
                       colorPalette={expenseColors}
                     />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      Add at least two week's worth of data to show this graph!
+                    </div>
                   )
                 }
               </ParentSize>
@@ -132,9 +138,9 @@ export function ExpenseChart() {
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) =>
-                  cumulativeIncomeData.length > 0 &&
+                  cumulativeIncomeData.length >= 2 &&
                   width > 0 &&
-                  height > 0 && (
+                  height > 0 ? (
                     <StackedAreaChart
                       width={width}
                       height={height}
@@ -142,6 +148,10 @@ export function ExpenseChart() {
                       projectionDateIdx={cumulativeIncomeEndIndex}
                       colorPalette={incomeColors}
                     />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      Add at least two week's worth of data to show this graph!
+                    </div>
                   )
                 }
               </ParentSize>
@@ -159,9 +169,7 @@ export function ExpenseChart() {
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) =>
-                  incomeData.length > 0 &&
-                  width > 0 &&
-                  height > 0 && (
+                  incomeData.length >= 1 && width > 0 && height > 0 ? (
                     <StackedBarChart
                       width={width}
                       height={height}
@@ -169,6 +177,10 @@ export function ExpenseChart() {
                       projectionDateIdx={TODO}
                       colorPalette={incomeColors}
                     />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      Add at least one week's worth of data to show this graph!
+                    </div>
                   )
                 }
               </ParentSize>
@@ -185,9 +197,7 @@ export function ExpenseChart() {
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) =>
-                  expenseData.length > 0 &&
-                  width > 0 &&
-                  height > 0 && (
+                  expenseData.length >= 1 && width > 0 && height > 0 ? (
                     <StackedBarChart
                       width={width}
                       height={height}
@@ -195,6 +205,10 @@ export function ExpenseChart() {
                       projectionDateIdx={TODO}
                       colorPalette={expenseColors}
                     />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      Add at least one week's worth of data to show this graph!
+                    </div>
                   )
                 }
               </ParentSize>
