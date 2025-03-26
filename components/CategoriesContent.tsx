@@ -46,7 +46,11 @@ import {
 import { AddCategoryModal } from "@/components/AddCategoryModal";
 import { MuiColorInput } from "mui-color-input";
 
-function CategoriesContent() {
+interface CategoriesContentProps {
+  refetch?: () => void;
+}
+
+function CategoriesContent(props: CategoriesContentProps) {
   const {
     paginatedCategories,
     isCategoriesLoading: isLoading,
@@ -241,6 +245,7 @@ function CategoriesContent() {
   const handleSaveClick = async (category: Category) => {
     await editCategory(category);
     setEditingCategory(undefined);
+    props.refetch?.();
   };
 
   const handleValueChange = (
@@ -461,8 +466,8 @@ const CategoriesTable = ({
                 </Tooltip>
               </TableCell>
               <TableCell>Description</TableCell>
-              <TableCell>Status</TableCell>
               <TableCell>Type</TableCell>
+              <TableCell>Status</TableCell>
               <TableCell>Color</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>

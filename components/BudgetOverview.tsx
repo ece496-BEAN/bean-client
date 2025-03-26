@@ -1,11 +1,11 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useBudgets } from "@/contexts/BudgetContext"; // Import your Budget context
-import BudgetOverviewPieChart from "@/components/charts/PieChart";
 import {
   Budget,
   Category,
+  PaginatedServerResponse,
   ReadOnlyBudget,
   ReadOnlyBudgetItem,
 } from "@/lib/types";
@@ -21,249 +21,202 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Link,
 } from "@mui/material";
-import { DollarSign, Pencil } from "lucide-react";
-import { AddOrEditBudgetPage } from "@/components/AddOrEditBudgetPage";
-import BudgetSelector from "@/components/BudgetSelector"; // Import your budget selector
+import { Check, DollarSign, Pencil } from "lucide-react";
 import { CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@mui/x-date-pickers";
+import { BudgetAllocation } from "./BudgetAllocation";
+import { BudgetUsage } from "./BudgetUsage";
+import { JwtContext } from "@/app/lib/jwt-provider";
+import { useQuery } from "@tanstack/react-query";
+import { endOfMonth, format, startOfMonth } from "date-fns";
+import { fetchApi } from "@/app/lib/api";
+import CategoriesContent from "./CategoriesContent";
 
 function BudgetOverview() {
-  const params = useParams();
-  const searchParams = useSearchParams();
   const router = useRouter();
-
-  const [month, setMonth] = useState<Date | null>(new Date(Date.now()));
-
-  const uuid = params.uuid as string;
-  const {
-    getSelectedBudget,
-    selectedBudget,
-    selectedBudgetQueryError,
-    refetchSelectedBudget,
-    isSelectedBudgetLoading: isLoading,
-  } = useBudgets();
-  const initialEditMode = searchParams.get("edit") === "true";
-  const [editMode, setEditMode] = useState(initialEditMode);
-
+  const [jwt, setAndStoreJwt] = useContext(JwtContext);
   useEffect(() => {
-    getSelectedBudget(uuid);
-  }, [uuid, getSelectedBudget]);
-
-  useEffect(() => {
-    // Update URL when editMode changes
-    const newSearchParams = new URLSearchParams(searchParams);
-    if (editMode) {
-      newSearchParams.set("edit", "true");
-    } else {
-      newSearchParams.delete("edit");
+    if (!jwt) {
+      router.push("/login"); // Redirect to login if JWT is not set
     }
+  }, [jwt, router]);
 
-    router.push(`${location.pathname}?${newSearchParams}`);
-  }, [editMode, router, searchParams]);
-
-  const toggleEditMode = () => {
-    setEditMode(!editMode);
-  };
-  if (selectedBudgetQueryError) {
-    return (
-      <Box className="flex flex-col h-auto bg-gray-50 p-2">
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{ color: "grey" }}
-          gutterBottom
-        >
-          Budget Not Found
-        </Typography>
-        <Typography variant="body1" sx={{ color: "grey" }} gutterBottom>
-          The budget you are looking for does not exist.
-        </Typography>
-        <Typography variant="body1" sx={{ color: "grey" }} gutterBottom>
-          Consider creating a new budget.
-        </Typography>
-      </Box>
-    );
-  }
-  if (isLoading || !selectedBudget) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <CircularProgress />
-      </div>
-    );
-  }
-
-  const totalAllocation = (selectedBudget.budget_items || []).reduce(
-    (sum, item) => sum + item.allocation,
-    0,
+  // Construct date range from selected month
+  const [month, setMonth] = useState<Date | null>(new Date(Date.now()));
+  const monthStart = useMemo(
+    () => month && format(startOfMonth(month), "yyyy-MM-dd"),
+    [month],
+  );
+  const monthEnd = useMemo(
+    () => month && format(endOfMonth(month), "yyyy-MM-dd"),
+    [month],
   );
 
+  // Exit edit mode when changing month
+  const [editMode, setEditMode] = useState(false);
+  useEffect(() => {
+    setEditMode(false);
+  }, [month]);
+
+  // Query for the budget corresponding to the selected month
+  const {
+    data: selectedBudget,
+    isLoading: isQuerying,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    // eslint-disable-next-line @tanstack/query/exhaustive-deps
+    queryKey: [monthStart, monthEnd],
+    queryFn: async () => {
+      if (!monthStart || !monthEnd) return undefined;
+
+      // Set query parameters for selected month
+      const queryString = new URLSearchParams({
+        start_date_after: monthStart,
+        start_date_before: monthEnd,
+      }).toString();
+      const url = `budgets/?${queryString}`;
+
+      // Get budget from API request
+      const response = await fetchApi(jwt, setAndStoreJwt, url, "GET");
+      const data: PaginatedServerResponse<ReadOnlyBudget> =
+        await response.json();
+      return data?.results?.[0];
+    },
+    enabled: !!jwt,
+  });
+
+  // If no budget exists for this month, create it
+  const { addBudget } = useBudgets();
+  const isCreating =
+    !isQuerying && queryError?.message?.includes("data is undefined");
+  useEffect(
+    () => {
+      if (!isCreating) return;
+      addBudget({
+        name: `${monthStart}-${monthEnd}`,
+        start_date: monthStart!,
+        end_date: monthEnd!,
+        budget_items: [],
+      })
+        .then(() => {
+          // fetch the newly created budget
+          refetch();
+        })
+        .catch(console.error);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isCreating],
+  );
+
+  const isErrorState = !isQuerying && !isCreating && queryError;
+  useEffect(() => {
+    // log errors to the console
+    if (isErrorState) console.warn(queryError.message);
+  }, [isErrorState, queryError]);
+
+  const isLoading = isQuerying || isCreating || !selectedBudget;
   return (
-    <div className="flex-grow p-4 overflow-y-auto">
-      <Grid2 container columns={{ xs: 1, md: 2 }} spacing={2}>
-        <Grid2 container columns={12} spacing={2} alignItems="center" size={2}>
-          {/* <Card variant="outlined" sx={{ p: 2 }}>
-            <Grid2
-              container
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              columns={{ xs: 1, md: 2 }}
+    <>
+      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Budget Overview</h1>
+      </header>
+      <main className="p-4 overflow-y-auto">
+        <Card variant="outlined" sx={{ p: 2, width: "100%", marginBottom: 2 }}>
+          <Stack direction="row" spacing={2}>
+            <DatePicker
+              label="Month"
+              views={["month", "year"]}
+              value={month}
+              onChange={(date) => setMonth(date)}
               sx={{ width: "100%" }}
-            >
-              <Typography variant="h4">Monthly Breakdown (rename?)</Typography>
-              <DatePicker
-                label="Month"
-                views={["month", "year"]}
-                value={month}
-                onChange={(date) => setMonth(date)}
-              />
-            </Grid2>
-          </Card> */}
-          <Grid2 size="grow">
-            <BudgetSelector
-              value={selectedBudget}
-              onChange={(budget: ReadOnlyBudget | null) => {
-                if (budget) {
-                  router.push(`/budget/${budget.id}`);
-                }
-              }}
             />
-          </Grid2>
-          {/* HOPEFULLY DOESN'T NEED TO EXIST FOR MONTHLY...
-           <Grid2 size="auto">
             <Button
               variant="outlined"
-              onClick={toggleEditMode}
-              startIcon={<Pencil />}
+              onClick={() => setEditMode(!editMode)}
+              startIcon={editMode ? <Check /> : <Pencil />}
             >
-              {editMode ? "Exit Edit Mode" : "Edit"}
+              {editMode ? "Done" : "Edit"}
             </Button>
-          </Grid2> */}
-        </Grid2>
-        <Grid2 size={1}>
-          <Card variant="outlined" sx={{ p: 2 }}>
-            {/* <CardContent>pie charts</CardContent> */}
-            <BudgetOverviewPieChart
-              selectedBudget={
-                selectedBudget as ReadOnlyBudget & {
-                  budget_items: ReadOnlyBudgetItem[];
-                }
-              }
-              totalAllocation={totalAllocation}
-            />
-          </Card>
-        </Grid2>
-        <Grid2 size={1}>
-          <Card variant="outlined" sx={{ p: 2 }}>
-            <Grid2
-              container
-              direction="row"
-              justifyContent="space-between" // Align items to edges
-              sx={{ width: "100%" }}
-              paddingBottom={1}
+          </Stack>
+        </Card>
+        {isErrorState ? (
+          <Box className="flex flex-col h-auto bg-gray-50 p-2">
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{ color: "grey" }}
+              gutterBottom
             >
-              <Grid2 size={12} paddingBottom={2}>
-                <Stack
-                  direction="row"
-                  spacing={0.5}
-                  justifyContent="space-between"
-                >
-                  <Typography variant="h5" gutterBottom>
-                    Usage
-                  </Typography>
-                </Stack>
-              </Grid2>
+              Budget Not Found
+            </Typography>
+            <Typography variant="body1" sx={{ color: "grey" }} gutterBottom>
+              The budget you are looking for does not exist.
+            </Typography>
+            <Typography variant="body1" sx={{ color: "grey" }} gutterBottom>
+              Consider creating a new budget.
+            </Typography>
+          </Box>
+        ) : isLoading ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100vh",
+            }}
+          >
+            <CircularProgress />
+          </div>
+        ) : !selectedBudget.budget_items.length && !editMode ? (
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+              width: "100%",
+              justifyContent: "center",
+            }}
+          >
+            <Typography variant="body1">
+              No allocations set for this month.
+            </Typography>
+            <Link
+              component="button"
+              variant="body1"
+              onClick={() => setEditMode(true)}
+            >
+              Add some?
+            </Link>
+          </Stack>
+        ) : (
+          <Grid2 container columns={12} spacing={2}>
+            <Grid2 size={editMode ? 12 : { xs: 12, md: 6, lg: 4 }}>
+              <BudgetAllocation
+                budget={selectedBudget}
+                editMode={editMode}
+                refetch={refetch}
+              />
             </Grid2>
             {editMode ? (
-              <AddOrEditBudgetPage
-                editMode={editMode}
-                initial_budget={selectedBudget}
-                onSubmit={() => {
-                  setEditMode(false);
-                }}
-              />
+              <Grid2 size={12}>
+                <Card variant="outlined" sx={{ p: 2 }}>
+                  <Typography variant="h5" gutterBottom>
+                    Modify Categories
+                  </Typography>
+                  <CategoriesContent refetch={refetch} />
+                </Card>
+              </Grid2>
             ) : (
-              <div>
-                {(selectedBudget.budget_items as ReadOnlyBudgetItem[]).map(
-                  (item) => {
-                    const percentage =
-                      (item.allocation / totalAllocation) * 100;
-                    return (
-                      <ul key={item.id} className="space-y-3 my-3">
-                        <li className="relative overflow-hidden p-2">
-                          <div
-                            className="absolute inset-0 rounded-lg opacity-20"
-                            style={{
-                              width: `${(item.allocation_used / item.allocation) * 100}%`,
-                              backgroundColor: item.category.color,
-                            }}
-                          ></div>
-                          <div
-                            className="absolute inset-0 rounded-lg w-full border-solid border-2"
-                            style={{
-                              borderColor: item.category.color,
-                            }}
-                          ></div>
-                          <div className="flex items-center justify-between p-2 rounded-lg relative z-10 text-lg">
-                            <div className="flex items-center flex-grow mr-2">
-                              <div
-                                className="w-4 h-4 rounded-full mr-3"
-                                style={{ backgroundColor: item.category.color }}
-                              ></div>
-                              <span className="font-medium text-gray-700">
-                                {item.category.name}
-                              </span>
-                            </div>
-                            <div className="flex items-center">
-                              <div className="flex items-center mr-2">
-                                <DollarSign className="w-4 h-4 mr-1 text-gray-700" />
-                                <span className="font-medium text-gray-700">{`${item.allocation_used} / ${item.allocation}`}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </li>
-                      </ul>
-                      // <Box key={item.id} sx={{ width: "100%", mb: 2 }}>
-                      //   <Stack direction="row" spacing={1} alignItems="center">
-                      //     <Typography variant="body2" sx={{ color: "grey" }}>
-                      //       {item.category.name} ({percentage.toFixed(2)}%)
-                      //     </Typography>
-                      //     <Chip
-                      //       label={
-                      //         item.category.is_income_type ? "Income" : "Expense"
-                      //       }
-                      //       color={
-                      //         item.category.is_income_type ? "success" : "error"
-                      //       }
-                      //       size="small"
-                      //       variant="outlined"
-                      //     />
-                      //     <Chip
-                      //       label={item.category.legacy ? "Legacy" : "Active"}
-                      //       color={item.category.legacy ? "default" : "primary"}
-                      //       size="small"
-                      //       variant="outlined"
-                      //     />
-                      //   </Stack>
-                      //   <LinearProgress variant="determinate" value={percentage} />
-                      // </Box>
-                    );
-                  },
-                )}
-              </div>
+              <Grid2 size={{ xs: 12, md: 6, lg: 8 }}>
+                <BudgetUsage budget={selectedBudget} />
+              </Grid2>
             )}
-          </Card>
-        </Grid2>
-      </Grid2>
-    </div>
+          </Grid2>
+        )}
+      </main>
+    </>
   );
 }
 
