@@ -45,6 +45,9 @@ function BudgetOverview() {
     }
   }, [jwt, router]);
 
+  const [viewAll, setViewAll] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+
   // Construct date range from selected month
   const [month, setMonth] = useState<Date | null>(new Date(Date.now()));
   const monthStart = useMemo(
@@ -55,14 +58,6 @@ function BudgetOverview() {
     () => month && format(endOfMonth(month), "yyyy-MM-dd"),
     [month],
   );
-
-  // Reset view when changing month
-  const [viewAll, setViewAll] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  useEffect(() => {
-    setEditMode(false);
-    setViewAll(false);
-  }, [month]);
 
   // Query for the budget corresponding to the selected month
   const {
@@ -135,7 +130,11 @@ function BudgetOverview() {
                 label="Month"
                 views={["month", "year"]}
                 value={month}
-                onChange={(date) => setMonth(date)}
+                onChange={(date) => {
+                  setMonth(date);
+                  setEditMode(false);
+                  setViewAll(false);
+                }}
                 sx={{ width: "100%" }}
               />
             </Grid2>
@@ -193,9 +192,10 @@ function BudgetOverview() {
           </div>
         ) : viewAll ? (
           <AllBudgetsPage
-            chooseMonth={(month) => {
+            chooseMonth={(month, editMode) => {
               setMonth(month);
               setViewAll(false);
+              setEditMode(editMode);
             }}
           />
         ) : !selectedBudget.budget_items.length && !editMode ? (

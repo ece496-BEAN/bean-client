@@ -54,8 +54,7 @@ interface AllBudgetsTableProps {
   setRowsPerPage: (pageSize: number) => void;
   handleDeleteConfirmation: (budget: ReadOnlyBudget) => void;
   getSelectedBudget: (id: string) => void;
-  handleEditBudget: (budget: ReadOnlyBudget) => void;
-  chooseMonth: (month: Date) => void;
+  chooseMonth: (month: Date, editMode: boolean) => void;
 }
 const AllBudgetsHeader = ({
   isPaginatedBudgetsLoading,
@@ -220,7 +219,6 @@ const AllBudgetsTable = ({
   isPaginatedBudgetsLoading,
   handleDeleteConfirmation,
   getSelectedBudget,
-  handleEditBudget,
   chooseMonth,
 }: AllBudgetsTableProps) => {
   const router = useRouter();
@@ -281,9 +279,20 @@ const AllBudgetsTable = ({
                 </TableCell>
                 <TableCell align="center">
                   <IconButton
-                    onClick={() => chooseMonth(new Date(budget.start_date))}
+                    onClick={() =>
+                      chooseMonth(new Date(budget.start_date), false)
+                    }
                   >
-                    {<Eye className="text-blue-500 ml-2 hover:text-blue-700" />}
+                    {<Eye className="text-grey-500 ml-2 hover:text-grey-700" />}
+                  </IconButton>
+                  <IconButton
+                    onClick={() =>
+                      chooseMonth(new Date(budget.start_date), true)
+                    }
+                  >
+                    {
+                      <Pencil className="text-blue-500 ml-2 hover:text-blue-700" />
+                    }
                   </IconButton>
                   <IconButton onClick={() => handleDeleteConfirmation(budget)}>
                     {<Trash className="text-red-500 ml-2 hover:text-red-700" />}
@@ -310,7 +319,7 @@ const AllBudgetsTable = ({
 };
 
 interface AllBudgetsPage {
-  chooseMonth: (month: Date) => void;
+  chooseMonth: (month: Date, editMode: boolean) => void;
 }
 
 function AllBudgetsPage(props: AllBudgetsPage) {
@@ -337,10 +346,6 @@ function AllBudgetsPage(props: AllBudgetsPage) {
   const handleCloseDeleteModal = () => {
     setIsDeleteModalOpen(false);
     setBudgetToBeDeleted(undefined);
-  };
-  const handleEditBudget = (budget: ReadOnlyBudget) => {
-    getSelectedBudget(budget.id);
-    router.push(`/budget/${budget.id}/?edit=true`);
   };
 
   useEffect(() => {
@@ -371,7 +376,6 @@ function AllBudgetsPage(props: AllBudgetsPage) {
         paginatedBudgetsError={error}
         handleDeleteConfirmation={handleDeleteConfirmation}
         getSelectedBudget={getSelectedBudget}
-        handleEditBudget={handleEditBudget}
         chooseMonth={props.chooseMonth}
       />
       <ConfirmDeleteModal

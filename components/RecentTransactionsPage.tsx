@@ -446,7 +446,7 @@ export function RecentTransactionsPage() {
               ":hover": { backgroundColor: "#6366f1" },
             }}
           >
-            {showCategories ? "Hide Categories" : "View Categories"}
+            {showCategories ? "View Transactions" : "View Categories"}
           </Button>
         </Stack>
 
