@@ -36,14 +36,14 @@ export function generateColorByIndex(
 }
 
 export const defaultColor = "#0062FF";
+
 export const expenseColors = [
-  "#E9573A",
-  "#F2715D",
-  "#F78F77",
-  "#FBA183",
-  "#FEC0A6",
-  "#FED8C3",
-  "#FFF2E9",
+  "#6A040F",
+  "#9D0208",
+  "#D00000",
+  "#DC2F02",
+  "#E85D04",
+  "#F48C06",
 ];
 
 export const incomeColors = [
