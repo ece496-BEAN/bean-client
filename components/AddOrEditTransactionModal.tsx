@@ -242,9 +242,13 @@ export function AddOrEditTransactionGroupModal({
     >
       <DialogTitle className="flex justify-between items-center bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
         {mode === "add" ? (
-          <h2 className="text-2xl font-bold">Add New Transaction</h2>
+          <Typography variant="h6" className="text-2xl font-bold">
+            Add New Transaction
+          </Typography>
         ) : (
-          <h2 className="text-2xl font-bold">Edit Transaction</h2>
+          <Typography variant="h6" className="text-2xl font-bold">
+            Edit Transaction
+          </Typography>
         )}
         <IconButton
           aria-label="close"
