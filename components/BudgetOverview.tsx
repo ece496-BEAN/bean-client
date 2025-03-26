@@ -1,14 +1,8 @@
 "use client";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useBudgets } from "@/contexts/BudgetContext"; // Import your Budget context
-import {
-  Budget,
-  Category,
-  PaginatedServerResponse,
-  ReadOnlyBudget,
-  ReadOnlyBudgetItem,
-} from "@/lib/types";
+import { Budget, PaginatedServerResponse, ReadOnlyBudget } from "@/lib/types";
 import {
   Box,
   Typography,
@@ -21,15 +15,16 @@ import {
 } from "@mui/material";
 import { Eye, Pencil } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers";
-import { BudgetAllocation } from "./BudgetAllocation";
-import { BudgetUsage } from "./BudgetUsage";
+import { BudgetAllocation } from "@/components/BudgetAllocation";
+import { BudgetUsage } from "@/components/BudgetUsage";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { useQuery } from "@tanstack/react-query";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { fetchApi } from "@/app/lib/api";
-import CategoriesContent from "./CategoriesContent";
-import AllBudgetsPage from "./AllBudgetsPage";
+import CategoriesContent from "@/components/CategoriesContent";
+import AllBudgetsPage from "@/components/AllBudgetsPage";
 import { ArrowBack } from "@mui/icons-material";
+import { HeaderBanner } from "@/components/HeaderBanner";
 
 function BudgetOverview() {
   const router = useRouter();
@@ -114,9 +109,7 @@ function BudgetOverview() {
   const isLoading = isQuerying || isCreating || !selectedBudget;
   return (
     <>
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Budget Overview</h1>
-      </header>
+      <HeaderBanner headerText="Budget Overview" showAccountMenu />
       <main className="p-4 overflow-y-auto">
         <Card variant="outlined" sx={{ p: 2, width: "100%", marginBottom: 2 }}>
           <Grid2 container spacing={2}>
