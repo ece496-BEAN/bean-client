@@ -124,7 +124,7 @@ export default function ThresholdChart({
     <div style={{ position: "relative" }}>
       <svg width={width} height={chartRegionHeight}>
         <Threshold<DataPoint>
-          data={sortedData}
+          data={visibleData}
           x={(d) => xScale(getDate(d)) ?? 0}
           y0={(d) => yScale(getValue(d)) ?? 0}
           y1={() => yScale(0)}

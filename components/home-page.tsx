@@ -60,10 +60,15 @@ export function MainPage() {
     if (currentBudgetUUID) getSelectedBudget(currentBudgetUUID);
   }, [currentBudgetUUID, getSelectedBudget]);
 
-  const spendingPercentage =
-    ((selectedBudget?.total_used ?? 0) /
-      (selectedBudget?.total_allocation ?? 1)) *
-    100;
+  const spendingPercentage = selectedBudget
+    ? (selectedBudget.budget_items
+        .filter((item) => !item.category.is_income_type)
+        .reduce((acc, item) => acc + item.allocation_used, 0) /
+        selectedBudget.budget_items
+          .filter((item) => !item.category.is_income_type)
+          .reduce((acc, item) => acc + item.allocation, 0)) *
+      100
+    : 0;
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -80,7 +85,7 @@ export function MainPage() {
           <main className="flex-grow p-4 overflow-y-auto">
             <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {/* Savings Graph */}
-              {/* <Card className="bg-white shadow-lg col-span-full">
+              <Card className="bg-white shadow-lg col-span-full">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg font-semibold text-gray-700">
                     <Stack direction="row" justifyContent="space-between">
@@ -114,7 +119,7 @@ export function MainPage() {
                     </ParentSize>
                   </div>
                 </CardContent>
-              </Card> */}
+              </Card>
 
               {/* Spending Summary */}
               <Card className="col-span-full bg-white shadow-lg">
@@ -126,10 +131,18 @@ export function MainPage() {
                 <CardContent>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-2xl font-bold text-indigo-600">
-                      ${(selectedBudget?.total_used ?? 0).toFixed(2)}
+                      $
+                      {selectedBudget?.budget_items
+                        .filter((item) => !item.category.is_income_type)
+                        .reduce((acc, item) => acc + item.allocation_used, 0)
+                        .toFixed(2)}
                     </span>
                     <span className="text-2xl font-bold text-indigo-600">
-                      ${(selectedBudget?.total_allocation ?? 0).toFixed(2)}
+                      $
+                      {selectedBudget?.budget_items
+                        .filter((item) => !item.category.is_income_type)
+                        .reduce((acc, item) => acc + item.allocation, 0)
+                        .toFixed(2)}
                     </span>
                   </div>
                   <Progress value={spendingPercentage} className="h-2 mb-1" />
@@ -169,25 +182,29 @@ export function MainPage() {
                     </div>
                   ) : (
                     <Grid2 container spacing={2}>
-                      {selectedBudget?.budget_items?.map((budget_item) => (
-                        <Grid2
-                          key={budget_item.id}
-                          className="flex flex-col items-center"
-                          size={{ xs: 6, sm: 4, md: 4, lg: 4, xl: 3 }}
-                        >
-                          <RingChart
-                            percentage={
-                              (budget_item.allocation_used /
-                                budget_item.allocation) *
-                              100
-                            }
-                            color={budget_item.category.color}
-                          />
-                          <span className="mt-2 text-sm font-medium text-gray-600">
-                            {budget_item.category.name}
-                          </span>
-                        </Grid2>
-                      ))}
+                      {selectedBudget?.budget_items
+                        ?.filter(
+                          (budget_item) => !budget_item.category.is_income_type,
+                        )
+                        .map((budget_item) => (
+                          <Grid2
+                            key={budget_item.id}
+                            className="flex flex-col items-center"
+                            size={{ xs: 6, sm: 4, md: 4, lg: 4, xl: 3 }}
+                          >
+                            <RingChart
+                              percentage={
+                                (budget_item.allocation_used /
+                                  budget_item.allocation) *
+                                100
+                              }
+                              color={budget_item.category.color}
+                            />
+                            <span className="mt-2 text-sm font-medium text-gray-600">
+                              {budget_item.category.name}
+                            </span>
+                          </Grid2>
+                        ))}
                     </Grid2>
                   )}
                 </CardContent>

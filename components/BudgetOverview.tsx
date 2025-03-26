@@ -221,6 +221,7 @@ function BudgetOverview() {
                 editMode={editMode}
                 setEditMode={setEditMode}
                 refetch={refetch}
+                type="expense"
               />
             </Grid2>
             {editMode ? (

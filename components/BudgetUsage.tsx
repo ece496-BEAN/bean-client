@@ -7,6 +7,10 @@ export interface BudgetUsageProps {
 }
 
 export const BudgetUsage: React.FC<BudgetUsageProps> = ({ budget }) => {
+  const expenseItems = budget.budget_items.filter(
+    (item) => !item.category.is_income_type,
+  );
+
   return (
     <Card variant="outlined" sx={{ p: 2 }}>
       <Stack direction="row" justifyContent="space-between">
@@ -15,8 +19,10 @@ export const BudgetUsage: React.FC<BudgetUsageProps> = ({ budget }) => {
         </Typography>
       </Stack>
       <div>
-        {budget.budget_items.map((item) => {
-          // const percentage = (item.allocation / budget.total_allocation) * 100;
+        <Typography variant="h6" gutterBottom>
+          Expenses
+        </Typography>
+        {expenseItems.map((item) => {
           const usageColour =
             item.allocation_used > item.allocation
               ? "text-red-500"
