@@ -58,7 +58,10 @@ export const NavigationBar: React.FC = () => {
       const addedTransactionGroup = await addTransactionGroup(transactionGroup);
 
       const formData = new FormData();
-      formData.append("image", imageFile as Blob);
+      const pngFile = new File([imageFile as Blob], "image.png", {
+        type: "image/png",
+      });
+      formData.append("image", pngFile);
       formData.append("source", documentScanId);
 
       await addDocumentScansImage(formData);
@@ -104,6 +107,7 @@ export const NavigationBar: React.FC = () => {
         const formData = new FormData();
         formData.append("file", compressedFile);
         formData.append("mimeType", compressedFile.type);
+        console.log("file type: ", compressedFile.type);
         formData.append("displayName", compressedFile.name);
 
         formData.append(
