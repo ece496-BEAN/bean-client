@@ -36,22 +36,22 @@ export function generateColorByIndex(
 }
 
 export const expenseColors = [
-  "#6A040F",
-  "#9D0208",
-  "#DC2F02",
-  "#E85D04",
-  "#F48C06",
-  "#FAA307",
-  "#FFBA08",
+  "#E9573A",
+  "#F2715D",
+  "#F78F77",
+  "#FBA183",
+  "#FEC0A6",
+  "#FED8C3",
+  "#FFF2E9",
 ];
 
 export const incomeColors = [
-  "#99d98cff",
-  "#76c893ff",
-  "#52b69aff",
-  "#34a0a4ff",
-  "#168aadff",
-  "#1a759fff",
-  "#1e6091ff",
-  "#184e77ff",
+  "#008080",
+  "#20B2AA",
+  "#48D1CC",
+  "#66CDAA",
+  "#7FFFD4",
+  "#B0E0E6",
+  "#E0FFFF",
+  "#F0FFFF",
 ];

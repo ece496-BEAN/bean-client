@@ -4,6 +4,7 @@ import { FilterList } from "@mui/icons-material";
 import {
   Box,
   Button,
+  Card,
   Grid2,
   IconButton,
   InputAdornment,
@@ -23,7 +24,7 @@ import {
 } from "@mui/material";
 import { DateField, DateRangePicker } from "@mui/x-date-pickers-pro";
 import { format } from "date-fns";
-import { ExternalLink, Pencil, Trash } from "lucide-react";
+import { ExternalLink, Eye, Pencil, Trash } from "lucide-react";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { JwtContext } from "@/app/lib/jwt-provider";
@@ -53,7 +54,7 @@ interface AllBudgetsTableProps {
   setRowsPerPage: (pageSize: number) => void;
   handleDeleteConfirmation: (budget: ReadOnlyBudget) => void;
   getSelectedBudget: (id: string) => void;
-  handleEditBudget: (budget: ReadOnlyBudget) => void;
+  chooseMonth: (month: Date, editMode: boolean) => void;
 }
 const AllBudgetsHeader = ({
   isPaginatedBudgetsLoading,
@@ -132,11 +133,7 @@ const AllBudgetsHeader = ({
   }, [router]);
 
   return (
-    <Grid2
-      container
-      spacing={1}
-      className="flex flex-col h-auto bg-gray-50 p-4"
-    >
+    <Grid2 container spacing={1} className="flex flex-col h-auto pb-4">
       <Popover
         open={filterMenuOpen}
         anchorEl={anchorEl}
@@ -198,18 +195,6 @@ const AllBudgetsHeader = ({
       <Grid2>
         <Button
           variant="contained"
-          onClick={handleAddBudget}
-          sx={{
-            backgroundColor: "#7b25cd",
-            ":hover": { backgroundColor: "#6366f1" },
-          }}
-        >
-          Add New Budget
-        </Button>
-      </Grid2>
-      <Grid2>
-        <Button
-          variant="contained"
           onClick={refetchPaginatedBudgets}
           loading={isPaginatedBudgetsLoading}
           loadingPosition="end"
@@ -234,7 +219,7 @@ const AllBudgetsTable = ({
   isPaginatedBudgetsLoading,
   handleDeleteConfirmation,
   getSelectedBudget,
-  handleEditBudget,
+  chooseMonth,
 }: AllBudgetsTableProps) => {
   const router = useRouter();
   const handleChangePage = useCallback(
@@ -265,24 +250,22 @@ const AllBudgetsTable = ({
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
               <TableCell>Start Date</TableCell>
               <TableCell>End Date</TableCell>
-              <TableCell>Details</TableCell>
-              <TableCell align="center">Edit</TableCell>
+              <TableCell />
             </TableRow>
           </TableHead>
           <TableBody>
             {paginatedBudgets.results.map((budget) => (
               <TableRow key={budget.id}>
                 <TableCell>{budget.name}</TableCell>
-                <TableCell>{budget.description}</TableCell>
                 <TableCell sx={{ minWidth: "145px" }}>
                   <DateField
                     label="Start Date"
                     defaultValue={getLocalMidnightDate(budget.start_date)}
                     size="small"
                     variant="outlined"
+                    disabled
                   />
                 </TableCell>
                 <TableCell sx={{ minWidth: "145px" }}>
@@ -291,20 +274,22 @@ const AllBudgetsTable = ({
                     defaultValue={getLocalMidnightDate(budget.end_date)}
                     size="small"
                     variant="outlined"
+                    disabled
                   />
                 </TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={() => {
-                      getSelectedBudget(budget.id);
-                      router.push(`/budget/${budget.id}`);
-                    }}
-                  >
-                    {<ExternalLink />}
-                  </IconButton>
-                </TableCell>
                 <TableCell align="center">
-                  <IconButton onClick={() => handleEditBudget(budget)}>
+                  <IconButton
+                    onClick={() =>
+                      chooseMonth(new Date(budget.start_date), false)
+                    }
+                  >
+                    {<Eye className="text-grey-500 ml-2 hover:text-grey-700" />}
+                  </IconButton>
+                  <IconButton
+                    onClick={() =>
+                      chooseMonth(new Date(budget.start_date), true)
+                    }
+                  >
                     {
                       <Pencil className="text-blue-500 ml-2 hover:text-blue-700" />
                     }
@@ -332,7 +317,12 @@ const AllBudgetsTable = ({
     </Box>
   );
 };
-function AllBudgetsPage() {
+
+interface AllBudgetsPage {
+  chooseMonth: (month: Date, editMode: boolean) => void;
+}
+
+function AllBudgetsPage(props: AllBudgetsPage) {
   const {
     paginatedBudgets: budgets,
     isPaginatedBudgetsLoading: isLoading,
@@ -357,10 +347,6 @@ function AllBudgetsPage() {
     setIsDeleteModalOpen(false);
     setBudgetToBeDeleted(undefined);
   };
-  const handleEditBudget = (budget: ReadOnlyBudget) => {
-    getSelectedBudget(budget.id);
-    router.push(`/budget/${budget.id}/?edit=true`);
-  };
 
   useEffect(() => {
     if (error) {
@@ -370,7 +356,7 @@ function AllBudgetsPage() {
     }
   }, [error]);
   return (
-    <>
+    <Card variant="outlined" sx={{ p: 2 }}>
       <AllBudgetsHeader
         page={page}
         setPage={setPage}
@@ -390,7 +376,7 @@ function AllBudgetsPage() {
         paginatedBudgetsError={error}
         handleDeleteConfirmation={handleDeleteConfirmation}
         getSelectedBudget={getSelectedBudget}
-        handleEditBudget={handleEditBudget}
+        chooseMonth={props.chooseMonth}
       />
       <ConfirmDeleteModal
         isOpen={isDeleteModalOpen}
@@ -399,7 +385,7 @@ function AllBudgetsPage() {
         onClose={handleCloseDeleteModal}
       />
       <ToastContainer />
-    </>
+    </Card>
   );
 }
 export default AllBudgetsPage;
