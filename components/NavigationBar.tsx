@@ -27,6 +27,7 @@ import { fetchApi, fetchApiFormData } from "@/app/lib/api";
 import { toast, ToastContainer } from "react-toastify";
 import { useDocumentScans } from "@/contexts/DocumentScansContext";
 import { useDocumentScansImage } from "@/contexts/DocumentScansImageContext";
+import imageCompression from "browser-image-compression";
 
 export const NavigationBar: React.FC = () => {
   const router = useRouter();
@@ -87,65 +88,80 @@ export const NavigationBar: React.FC = () => {
   ) => {
     const file = event.target.files?.[0];
     if (file) {
-      setImageFile(file); // Set image file
-      setImage(URL.createObjectURL(file)); // Set image URL for optional display
       setLoading(true); // Indicate loading state
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("mimeType", file.type);
-      formData.append("displayName", file.name);
+      // Compress the image
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+      try {
+        const compressedFile = await imageCompression(file, options);
+        setImageFile(compressedFile); // Set compressed image file
+        setImage(URL.createObjectURL(compressedFile)); // Set image URL for optional display
 
-      formData.append(
-        "categories",
-        JSON.stringify(
-          categories
-            .filter((category) => !category.legacy && !category.is_income_type)
-            .map((category) => category.name),
-        ),
-      );
+        const formData = new FormData();
+        formData.append("file", compressedFile);
+        formData.append("mimeType", compressedFile.type);
+        formData.append("displayName", compressedFile.name);
 
-      const response = await fetch("/api/receipt-ocr", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-      setOcrResult(JSON.stringify(data, null, 2));
-      console.log(data);
-
-      // TODO: Definitely need to display the dialog modal, as well as allow for the creation of DocumentScans instances (with image upload)
-      // addTransactionGroup(data);
-      // Need to remap the categories of the data object since the category fields are only strings from the OCR API
-      data.transactions = data.transactions.map((transaction: any) => {
-        const { category, ...rest } = transaction; // Strip away the `category` string field
-        // Search for a corresponding category instance in the categories array
-        const category_instance = categories.find(
-          // We really fucked up the types with the data object since category is set as a string for some reason, so I need to set it as any for now
-          (c) => c.name === category,
+        formData.append(
+          "categories",
+          JSON.stringify(
+            categories
+              .filter(
+                (category) => !category.legacy && !category.is_income_type,
+              )
+              .map((category) => category.name),
+          ),
         );
 
-        if (category_instance) {
-          transaction = {
-            ...rest,
-            category: category_instance,
-          };
-        } else {
-          transaction = {
-            ...rest,
-          };
-        }
-        if (transaction.amount < 0) {
-          transaction.amount = transaction.amount * -1;
-        }
-        return transaction;
-      });
-      handleOpenAddModal(data);
-      setLoading(false); // Reset loading state
+        const response = await fetch("/api/receipt-ocr", {
+          method: "POST",
+          body: formData,
+        });
 
-      // Reset the input value to allow the same file to be uploaded again
-      if (inputRef.current) {
-        inputRef.current.value = "";
+        const data = await response.json();
+        setOcrResult(JSON.stringify(data, null, 2));
+        console.log(data);
+
+        // TODO: Definitely need to display the dialog modal, as well as allow for the creation of DocumentScans instances (with image upload)
+        // addTransactionGroup(data);
+        // Need to remap the categories of the data object since the category fields are only strings from the OCR API
+        data.transactions = data.transactions.map((transaction: any) => {
+          const { category, ...rest } = transaction; // Strip away the `category` string field
+          // Search for a corresponding category instance in the categories array
+          const category_instance = categories.find(
+            // We really fucked up the types with the data object since category is set as a string for some reason, so I need to set it as any for now
+            (c) => c.name === category,
+          );
+
+          if (category_instance) {
+            transaction = {
+              ...rest,
+              category: category_instance,
+            };
+          } else {
+            transaction = {
+              ...rest,
+            };
+          }
+          if (transaction.amount < 0) {
+            transaction.amount = transaction.amount * -1;
+          }
+          return transaction;
+        });
+        handleOpenAddModal(data);
+        setLoading(false); // Reset loading state
+
+        // Reset the input value to allow the same file to be uploaded again
+        if (inputRef.current) {
+          inputRef.current.value = "";
+        }
+      } catch (error) {
+        console.error("Error compressing the image:", error);
+        setLoading(false); // Reset loading state
       }
     }
   };
