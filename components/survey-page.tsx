@@ -15,6 +15,7 @@ import { AddOrEditBudgetPage } from "@/components/AddOrEditBudgetPage";
 import { UUID } from "crypto";
 
 type QuestionType = "single" | "multiple" | "singleWithOther" | "number";
+import { HeaderBanner } from "./HeaderBanner";
 
 type Question = {
   text: string;
@@ -326,9 +327,7 @@ export default function SurveyPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4 sticky top-0 z-10">
-        <h1 className="text-2xl font-bold">Financial Survey</h1>
-      </header>
+      <HeaderBanner headerText="Financial Survey" showAccountMenu />
 
       <main className="flex-grow p-4 overflow-y-auto">
         <div className="max-w-lg mx-auto space-y-6">

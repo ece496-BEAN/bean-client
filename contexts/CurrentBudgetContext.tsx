@@ -8,10 +8,10 @@ import React, {
   useState,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { JwtContext } from "@/app/lib/jwt-provider";
+import { useJwt } from "@/app/lib/jwt-provider";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { fetchApi } from "@/app/lib/api";
-import { Budget, PaginatedServerResponse, ReadOnlyBudget } from "@/lib/types";
+import { PaginatedServerResponse, ReadOnlyBudget } from "@/lib/types";
 
 interface CurrentBudgetContextType {
   currentBudgetUUID: string | null;
@@ -33,7 +33,7 @@ export default function CurrentBudgetProvider({
   const [currentBudgetUUID, setCurrentBudgetUUID] = useState<string | null>(
     null,
   );
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const [jwt, setAndStoreJwt] = useJwt();
   const {
     data: currentBudget,
     isLoading: isCurrentBudgetLoading,

@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { usePathname } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import NavigationBar from "@/components/NavigationBar";
-import { PlaidProvider } from "@/contexts/PlaidContext";
-import BudgetProvider from "@/contexts/BudgetContext";
 import { ReactNode } from "react";
 import TransactionProvider from "@/contexts/TransactionsContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,12 +11,21 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import CategoryProvider from "@/contexts/CategoriesContext";
 import DocumentScansProvider from "@/contexts/DocumentScansContext";
 import DocumentScansImageProvider from "@/contexts/DocumentScansImageContext";
+import { useJwt } from "@/app/lib/jwt-provider";
 
 function LayoutClient({ children }: { children: ReactNode }) {
   // login & survey page -> no navigation bar
   const pathname = usePathname();
+  const router = useRouter();
   const excludedPaths = ["/login", "/survey", "/signup"];
   const showNavigationBar = !excludedPaths.includes(pathname);
+  const [jwt, _] = useJwt();
+
+  useEffect(() => {
+    if (!jwt) {
+      router.push("/login"); // Redirect to login if JWT is not set
+    }
+  }, [jwt, router]);
 
   const [queryClient] = useState(() => new QueryClient());
   return (
@@ -37,12 +44,7 @@ function LayoutClient({ children }: { children: ReactNode }) {
             </TransactionProvider>
           )}
 
-          <main className="pb-16">
-            {/* TODO: Move Plaid and Budget Provider to components that need them rather than wrap everything with them */}
-            <PlaidProvider>
-              <BudgetProvider>{children}</BudgetProvider>
-            </PlaidProvider>
-          </main>
+          <main className="pb-16">{children}</main>
         </QueryClientProvider>
       </LocalizationProvider>
     </>

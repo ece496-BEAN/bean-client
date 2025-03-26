@@ -15,7 +15,6 @@ import {
 import { Resizable } from "re-resizable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { useRouter } from "next/navigation";
 import PlaidLinkButton from "@/components/external-accounts/PlaidLinkButton";
 import {
   TransactionGroupQueryParameters,
@@ -27,7 +26,6 @@ import {
   ReadOnlyTransaction,
   Transaction,
 } from "@/lib/types";
-import { JwtContext } from "@/app/lib/jwt-provider";
 import { useCategories } from "@/contexts/CategoriesContext";
 import {
   CircularProgress,
@@ -53,7 +51,8 @@ import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import CategorySelector from "@/components/CategorySelector";
-import CategoriesContent from "./CategoriesContent";
+import { HeaderBanner } from "@/components/HeaderBanner";
+import CategoriesContent from "@/components/CategoriesContent";
 
 interface TransactionSummaryProps {
   totalIncome: number;
@@ -170,8 +169,8 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                         className={`font-semibold ${transaction.category.is_income_type ? "text-green-600" : "text-red-600"}`}
                       >
                         {transaction.category.is_income_type
-                          ? `+${Math.abs(transaction.amount).toFixed(2)}`
-                          : `-${Math.abs(transaction.amount).toFixed(2)}`}
+                          ? `${transaction.amount.toFixed(2)}`
+                          : `${transaction.amount.toFixed(2)}`}
                       </span>
                     </div>
                   </li>
@@ -284,8 +283,6 @@ export function RecentTransactionsPage() {
   } = useTransactions();
 
   const { categoriesQueryError, refetchCategories } = useCategories();
-  const [jwt] = useContext(JwtContext);
-  const router = useRouter();
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [pageSize, setPageSize] = useState<number>(10);
   const [ordering, setOrdering] = useState<string>("-date");
@@ -299,11 +296,7 @@ export function RecentTransactionsPage() {
       });
     }
   }, [categoriesQueryError]);
-  useEffect(() => {
-    if (!jwt) {
-      router.push("/login"); // Redirect to login if JWT is not set
-    }
-  }, [jwt, router]);
+
   useEffect(() => {
     if (transactionQueryError) {
       toast.error(
@@ -418,9 +411,7 @@ export function RecentTransactionsPage() {
   const netBalance = totalIncome - totalExpenses;
   return (
     <div className="flex flex-col h-auto bg-gray-50">
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
-        <h1 className="text-2xl font-bold">Recent Transactions</h1>
-      </header>
+      <HeaderBanner headerText="Recent Transactions" showAccountMenu />
 
       <ToastContainer />
 
