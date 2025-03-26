@@ -58,7 +58,7 @@ const initialCategories: Category[] = [
     description: "Full/part-time job, side hustles, etc...",
     legacy: false,
     is_income_type: true,
-    color: "#0062ff",
+    color: "#9b5de5",
   },
   {
     id: "" as UUID,
@@ -66,7 +66,7 @@ const initialCategories: Category[] = [
     description: "Rent, mortgage, utilities, etc...",
     legacy: false,
     is_income_type: false,
-    color: "#0062ff",
+    color: "#00bbf9",
   },
   {
     id: "" as UUID,
@@ -74,7 +74,7 @@ const initialCategories: Category[] = [
     description: "Gas, public transit fare, etc...",
     legacy: false,
     is_income_type: false,
-    color: "#0062ff",
+    color: "#00f5d4",
   },
   {
     id: "" as UUID,
@@ -82,7 +82,7 @@ const initialCategories: Category[] = [
     description: "Groceries, take-out, etc...",
     legacy: false,
     is_income_type: false,
-    color: "#0062ff",
+    color: "#fee440",
   },
   {
     id: "" as UUID,
@@ -90,7 +90,7 @@ const initialCategories: Category[] = [
     description: "Credit card, student loans, etc...",
     legacy: false,
     is_income_type: false,
-    color: "#0062ff",
+    color: "#f15bb5",
   },
 ];
 
