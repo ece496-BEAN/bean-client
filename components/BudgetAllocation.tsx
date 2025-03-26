@@ -9,6 +9,7 @@ export interface BudgetAllocationProps {
   editMode: boolean;
   setEditMode: (editMode: boolean) => void;
   refetch: () => void;
+  type: "income" | "expense";
 }
 
 export const BudgetAllocation: React.FC<BudgetAllocationProps> = ({
@@ -16,17 +17,25 @@ export const BudgetAllocation: React.FC<BudgetAllocationProps> = ({
   editMode,
   setEditMode,
   refetch,
+  type,
 }) => {
   const pieChartData = useMemo(() => {
-    // if (budget === undefined) return [];
-    if (!budget.budget_items.length || !budget.total_allocation) {
+    const filteredItems = budget.budget_items.filter(
+      (item) => !item.category.is_income_type,
+    );
+
+    const totalFilteredAllocation = filteredItems.reduce(
+      (total, item) => total + item.allocation,
+      0,
+    );
+
+    if (!filteredItems.length || !totalFilteredAllocation) {
       return [];
     }
 
-    return budget.budget_items.map((item, index) => {
-      // percentage rounded to one decimal place
+    return filteredItems.map((item, index) => {
       const percentage =
-        Math.round((item.allocation / budget.total_allocation) * 1000) / 10;
+        Math.round((item.allocation / totalFilteredAllocation) * 1000) / 10;
       return {
         id: index.toString(),
         value: percentage,
@@ -35,21 +44,24 @@ export const BudgetAllocation: React.FC<BudgetAllocationProps> = ({
       };
     });
   }, [budget]);
+
   const pieChartBottomMargin = useCallback((items: number) => {
     if (items < 5) return 50;
     if (items < 8) return 100;
     return 150;
   }, []);
+
   const pieChartHeight = useCallback((items: number) => {
     if (items < 5) return 300;
     if (items < 8) return 350;
     return 400;
   }, []);
+
   return (
     <Card variant="outlined" sx={{ p: 2 }}>
       <Stack direction="row" justifyContent="space-between">
         <Typography variant="h5" gutterBottom>
-          Budget Allocation
+          Expense Allocation
         </Typography>
       </Stack>
       {editMode ? (
@@ -78,7 +90,7 @@ export const BudgetAllocation: React.FC<BudgetAllocationProps> = ({
             legend: {
               direction: "row",
               padding: 0,
-              position: { vertical: "bottom", horizontal: "middle" }, // or 'right'
+              position: { vertical: "bottom", horizontal: "middle" },
             },
           }}
         />
