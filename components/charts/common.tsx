@@ -14,7 +14,7 @@ export class ChartDimensions {
   legendButtonTop: number;
 
   constructor(width: number, height: number) {
-    this.axisLeftWidth = 40;
+    this.axisLeftWidth = 50;
     this.axisBottomHeight = 23;
 
     this.chartLeft = this.axisLeftWidth;
