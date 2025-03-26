@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import { MuiColorInput, matchIsValidColor } from "mui-color-input";
 import { useState } from "react";
+import { defaultColor } from "@/lib/colors";
 type CategoryOption = Category & { inputValue?: string };
 
 interface CategoryAutocompleteProps {
@@ -45,7 +46,7 @@ export default function CategoryAutocomplete({
     name: "",
     description: "",
     is_income_type: false,
-    color: "#0062ff",
+    color: defaultColor,
   });
 
   const loading = open && isCategoriesLoading;
@@ -63,7 +64,7 @@ export default function CategoryAutocomplete({
       name: "",
       description: "",
       is_income_type: false,
-      color: "#0062ff",
+      color: defaultColor,
     });
     setFormErrors({});
     toggleOpen(false);
@@ -107,7 +108,7 @@ export default function CategoryAutocomplete({
               name: newValue.inputValue,
               description: "",
               is_income_type: false,
-              color: "#0062ff",
+              color: defaultColor,
             });
           } else {
             onChange(newValue);
@@ -125,7 +126,7 @@ export default function CategoryAutocomplete({
               id: "0-0-0-0-0",
               legacy: false,
               is_income_type: false,
-              color: "#0062ff",
+              color: defaultColor,
             });
           }
 

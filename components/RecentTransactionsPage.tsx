@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import {
   ArrowDownIcon,
@@ -38,6 +38,7 @@ import {
   Grid2,
   Tooltip,
   Stack,
+  Typography,
 } from "@mui/material";
 import {
   ArrowUpward,
@@ -60,49 +61,35 @@ interface TransactionSummaryProps {
   netBalance: number;
 }
 
-interface TransactionGroupListProps {
+type TransactionGroupListProps = {
   transactionGroups: TransactionGroup<ReadOnlyTransaction>[];
-  onEdit: (group: TransactionGroup<ReadOnlyTransaction>) => void;
-  onDelete: (uuid: string) => Promise<void>;
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
-  onPageChange: (pageNumber: number) => void;
-  onRowsPerPageChange: (newPageSize: number) => void;
-}
+  readOnly: boolean;
+  onEdit?: (group: TransactionGroup<ReadOnlyTransaction>) => void;
+  handleDeleteConfirmation?: (
+    group: TransactionGroup<ReadOnlyTransaction>,
+  ) => void;
+};
 
-const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
+export const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
   transactionGroups,
   onEdit,
-  onDelete,
-  totalCount,
-  pageNumber,
-  pageSize,
-  onPageChange,
-  onRowsPerPageChange,
+  handleDeleteConfirmation,
+  readOnly,
 }) => {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-  const [groupToDeleted, setGroupToDeleted] =
-    useState<TransactionGroup<ReadOnlyTransaction>>();
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
-
-  const handleDeleteConfirmation = (
-    group: TransactionGroup<ReadOnlyTransaction>,
-  ) => {
-    setIsDeleteModalOpen(true);
-    setGroupToDeleted(group);
-  };
-
-  const handleCloseDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setGroupToDeleted(undefined);
-  };
   const toggleGroup = (groupId: string) => {
     setOpenGroups((prevState) => ({
       ...prevState,
       [groupId]: !prevState[groupId],
     }));
   };
+  if (!transactionGroups || transactionGroups.length === 0) {
+    return (
+      <Typography variant="h6" align="center">
+        No Transactions Found
+      </Typography>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -131,18 +118,22 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                   {format(new Date(group.date), "MM/dd/yyyy")}{" "}
                   {/* Formatted date */}
                 </p>
-                <button
-                  onClick={() => onEdit(group)}
-                  className="text-blue-500 ml-2 hover:text-blue-700"
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  onClick={() => handleDeleteConfirmation(group)}
-                  className="text-red-500 ml-2 hover:text-red-700"
-                >
-                  <Trash size={16} />
-                </button>
+                {!readOnly && (
+                  <>
+                    <button
+                      onClick={() => onEdit?.(group)}
+                      className="text-blue-500 ml-2 hover:text-blue-700"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteConfirmation?.(group)}
+                      className="text-red-500 ml-2 hover:text-red-700"
+                    >
+                      <Trash size={16} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -180,25 +171,6 @@ const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
           </div>
         );
       })}
-      <TablePagination
-        component="div"
-        showFirstButton
-        showLastButton
-        count={totalCount}
-        page={pageNumber}
-        rowsPerPageOptions={[5, 10, 25, 50]}
-        onPageChange={(_, newPage) => onPageChange(newPage)}
-        rowsPerPage={pageSize}
-        onRowsPerPageChange={(e) => {
-          onRowsPerPageChange(parseInt(e.target.value, 10));
-        }}
-      />
-      <ConfirmDeleteModal
-        isOpen={isDeleteModalOpen}
-        onDelete={onDelete}
-        confirmDeleteItem={groupToDeleted}
-        onClose={handleCloseDeleteModal}
-      />
     </div>
   );
 };
@@ -375,6 +347,21 @@ export function RecentTransactionsPage() {
     getTransactionGroups({});
   };
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [groupToDeleted, setGroupToDeleted] =
+    useState<TransactionGroup<ReadOnlyTransaction>>();
+
+  const handleDeleteConfirmation = (
+    group: TransactionGroup<ReadOnlyTransaction>,
+  ) => {
+    setIsDeleteModalOpen(true);
+    setGroupToDeleted(group);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setGroupToDeleted(undefined);
+  };
   const handleOpenEditModal = (
     groupToEdit: TransactionGroup<ReadOnlyTransaction>,
   ) => {
@@ -469,21 +456,29 @@ export function RecentTransactionsPage() {
                   <CircularProgress />
                 ) : (
                   <TransactionGroupList
+                    readOnly={false}
                     transactionGroups={transactionGroups.results}
                     onEdit={handleOpenEditModal}
-                    onDelete={deleteTransactionGroup}
-                    totalCount={transactionGroups.count}
-                    pageNumber={currentPage}
-                    pageSize={pageSize}
-                    onPageChange={(page) => {
-                      setCurrentPage((_) => page);
-                    }}
-                    onRowsPerPageChange={(pageRows) => {
-                      setPageSize((_) => pageRows);
-                      setCurrentPage((_) => 0);
-                    }}
+                    handleDeleteConfirmation={handleDeleteConfirmation}
                   />
                 )}
+                <TablePagination
+                  component="div"
+                  showFirstButton
+                  showLastButton
+                  count={transactionGroups.count}
+                  page={currentPage}
+                  rowsPerPageOptions={[5, 10, 25, 50]}
+                  onPageChange={(_, newPage) => setCurrentPage(newPage)}
+                  rowsPerPage={pageSize}
+                  onRowsPerPageChange={(e) => {
+                    const onRowsPerPageChange = (pageRows: number) => {
+                      setPageSize((_) => pageRows);
+                      setCurrentPage((_) => 0);
+                    };
+                    onRowsPerPageChange(parseInt(e.target.value, 10));
+                  }}
+                />
               </CardContent>
             </>
           )}
@@ -500,6 +495,12 @@ export function RecentTransactionsPage() {
                 editTransactionGroup(group as TransactionGroup<Transaction>)
             : addTransactionGroup
         }
+      />
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        onDelete={deleteTransactionGroup}
+        confirmDeleteItem={groupToDeleted}
+        onClose={handleCloseDeleteModal}
       />
     </div>
   );

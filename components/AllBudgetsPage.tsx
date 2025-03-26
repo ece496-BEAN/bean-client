@@ -248,50 +248,66 @@ const AllBudgetsTable = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedBudgets.results.map((budget) => (
-              <TableRow key={budget.id}>
-                <TableCell>{budget.name}</TableCell>
-                <TableCell sx={{ minWidth: "145px" }}>
-                  <DateField
-                    label="Start Date"
-                    defaultValue={getLocalMidnightDate(budget.start_date)}
-                    size="small"
-                    variant="outlined"
-                    disabled
-                  />
-                </TableCell>
-                <TableCell sx={{ minWidth: "145px" }}>
-                  <DateField
-                    label="End Date"
-                    defaultValue={getLocalMidnightDate(budget.end_date)}
-                    size="small"
-                    variant="outlined"
-                    disabled
-                  />
-                </TableCell>
-                <TableCell align="center">
-                  <IconButton
-                    onClick={() =>
-                      chooseMonth(new Date(budget.start_date), false)
-                    }
-                  >
-                    {<Eye className="text-grey-500 ml-2 hover:text-grey-700" />}
-                  </IconButton>
-                  <IconButton
-                    onClick={() =>
-                      chooseMonth(new Date(budget.start_date), true)
-                    }
-                  >
-                    {
-                      <Pencil className="text-blue-500 ml-2 hover:text-blue-700" />
-                    }
-                  </IconButton>
-                  <IconButton onClick={() => handleDeleteConfirmation(budget)}>
-                    {<Trash className="text-red-500 ml-2 hover:text-red-700" />}
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+            {paginatedBudgets.results.length === 0 ? (
+              <TableCell sx={{ p: 2 }} align="center" colSpan={4}>
+                <Typography variant="h6" align="center">
+                  No Budgets Found
+                </Typography>
+              </TableCell>
+            ) : (
+              <>
+                {paginatedBudgets.results.map((budget) => (
+                  <TableRow key={budget.id}>
+                    <TableCell>{budget.name}</TableCell>
+                    <TableCell sx={{ minWidth: "145px" }}>
+                      <DateField
+                        label="Start Date"
+                        defaultValue={getLocalMidnightDate(budget.start_date)}
+                        size="small"
+                        variant="outlined"
+                        disabled
+                      />
+                    </TableCell>
+                    <TableCell sx={{ minWidth: "145px" }}>
+                      <DateField
+                        label="End Date"
+                        defaultValue={getLocalMidnightDate(budget.end_date)}
+                        size="small"
+                        variant="outlined"
+                        disabled
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        onClick={() =>
+                          chooseMonth(new Date(budget.start_date), false)
+                        }
+                      >
+                        {
+                          <Eye className="text-grey-500 ml-2 hover:text-grey-700" />
+                        }
+                      </IconButton>
+                      <IconButton
+                        onClick={() =>
+                          chooseMonth(new Date(budget.start_date), true)
+                        }
+                      >
+                        {
+                          <Pencil className="text-blue-500 ml-2 hover:text-blue-700" />
+                        }
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleDeleteConfirmation(budget)}
+                      >
+                        {
+                          <Trash className="text-red-500 ml-2 hover:text-red-700" />
+                        }
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
+            )}
           </TableBody>
         </Table>
       </TableContainer>

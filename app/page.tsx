@@ -1,9 +1,3 @@
-// import { LoginPage } from "@/components/login-page"
-
-// export default function Page() {
-//   return <LoginPage />
-// }
-
 import { MainPage } from "@/components/home-page";
 import BudgetProvider from "@/contexts/BudgetContext";
 import CategoryProvider from "@/contexts/CategoriesContext";

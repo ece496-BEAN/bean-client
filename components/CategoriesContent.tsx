@@ -395,8 +395,7 @@ function CategoriesContent(props: CategoriesContentProps) {
     </>
   );
 }
-interface CategoriesHeaderProps {}
-const CategoriesHeader = ({}: CategoriesHeaderProps) => {};
+
 interface CategoriesTableProps {
   handleEditClick: (category: Category) => void;
   handleSortClick: (direction: "asc" | "desc") => void;
@@ -473,135 +472,151 @@ const CategoriesTable = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {categories.map((category) => (
-              <TableRow key={category.id}>
-                <TableCell>
-                  {editingCategory?.id === category.id ? (
-                    <TextField
-                      value={editingCategory.name}
-                      onChange={(e) =>
-                        handleValueChange("name", e.target.value)
-                      }
-                    />
-                  ) : (
-                    category.name
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingCategory?.id === category.id ? (
-                    <TextField
-                      value={editingCategory.description || ""}
-                      onChange={(e) =>
-                        handleValueChange("description", e.target.value)
-                      }
-                    />
-                  ) : (
-                    category.description || ""
-                  )}
-                </TableCell>
+            {categories.length === 0 ? (
+              <TableCell sx={{ p: 2 }} align="center" colSpan={6}>
+                <Typography variant="h6" align="center">
+                  No Categories Found
+                </Typography>
+              </TableCell>
+            ) : (
+              <>
+                {categories.map((category) => (
+                  <TableRow key={category.id}>
+                    <TableCell>
+                      {editingCategory?.id === category.id ? (
+                        <TextField
+                          value={editingCategory.name}
+                          onChange={(e) =>
+                            handleValueChange("name", e.target.value)
+                          }
+                        />
+                      ) : (
+                        category.name
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingCategory?.id === category.id ? (
+                        <TextField
+                          value={editingCategory.description || ""}
+                          onChange={(e) =>
+                            handleValueChange("description", e.target.value)
+                          }
+                        />
+                      ) : (
+                        category.description || ""
+                      )}
+                    </TableCell>
 
-                <TableCell>
-                  {editingCategory?.id === category.id ? (
-                    <FormControlLabel
-                      label={
-                        <Chip
+                    <TableCell>
+                      {editingCategory?.id === category.id ? (
+                        <FormControlLabel
                           label={
-                            editingCategory.is_income_type
-                              ? "Income"
-                              : "Expense"
+                            <Chip
+                              label={
+                                editingCategory.is_income_type
+                                  ? "Income"
+                                  : "Expense"
+                              }
+                              color={
+                                editingCategory.is_income_type
+                                  ? "success"
+                                  : "error"
+                              }
+                            />
                           }
-                          color={
-                            editingCategory.is_income_type ? "success" : "error"
+                          control={
+                            <Switch
+                              checked={!editingCategory.is_income_type}
+                              onChange={(e) =>
+                                handleValueChange(
+                                  "is_income_type",
+                                  !e.target.checked,
+                                )
+                              }
+                            />
                           }
                         />
-                      }
-                      control={
-                        <Switch
-                          checked={!editingCategory.is_income_type}
-                          onChange={(e) =>
-                            handleValueChange(
-                              "is_income_type",
-                              !e.target.checked,
-                            )
-                          }
-                        />
-                      }
-                    />
-                  ) : (
-                    <Chip
-                      label={category.is_income_type ? "Income" : "Expense"}
-                      color={category.is_income_type ? "success" : "error"}
-                    />
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingCategory?.id === category.id ? (
-                    <FormControlLabel
-                      label={
+                      ) : (
                         <Chip
-                          label={editingCategory.legacy ? "Legacy" : "Active"}
-                          color={editingCategory.legacy ? "default" : "primary"}
+                          label={category.is_income_type ? "Income" : "Expense"}
+                          color={category.is_income_type ? "success" : "error"}
                         />
-                      }
-                      control={
-                        <Switch
-                          checked={!editingCategory.legacy}
-                          onChange={(e) =>
-                            handleValueChange("legacy", !e.target.checked)
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingCategory?.id === category.id ? (
+                        <FormControlLabel
+                          label={
+                            <Chip
+                              label={
+                                editingCategory.legacy ? "Legacy" : "Active"
+                              }
+                              color={
+                                editingCategory.legacy ? "default" : "primary"
+                              }
+                            />
+                          }
+                          control={
+                            <Switch
+                              checked={!editingCategory.legacy}
+                              onChange={(e) =>
+                                handleValueChange("legacy", !e.target.checked)
+                              }
+                            />
                           }
                         />
-                      }
-                    />
-                  ) : (
-                    <Chip
-                      label={category.legacy ? "Legacy" : "Active"}
-                      color={category.legacy ? "default" : "primary"}
-                    />
-                  )}
-                </TableCell>
-                <TableCell>
-                  <MuiColorInput
-                    name="color"
-                    label="Color"
-                    disabled={editingCategory?.id !== category.id}
-                    sx={{ minWidth: "235px" }}
-                    value={
-                      editingCategory?.id === category.id
-                        ? editingCategory.color
-                        : category.color
-                    }
-                    onChange={(color) => {
-                      handleValueChange("color", color);
-                    }}
-                  />
-                </TableCell>
-                <TableCell>
-                  {editingCategory?.id === category.id ? (
-                    <>
-                      <IconButton
-                        onClick={() => handleSaveClick(editingCategory)}
-                      >
-                        <Check />
-                      </IconButton>
-                      <IconButton onClick={() => handleCancelClick()}>
-                        <X />
-                      </IconButton>
-                    </>
-                  ) : (
-                    <>
-                      <IconButton onClick={() => handleEditClick(category)}>
-                        <Pencil />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => handleDeleteConfirmation(category)}
-                      >
-                        <Trash />
-                      </IconButton>
-                    </>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
+                      ) : (
+                        <Chip
+                          label={category.legacy ? "Legacy" : "Active"}
+                          color={category.legacy ? "default" : "primary"}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <MuiColorInput
+                        name="color"
+                        label="Color"
+                        disabled={editingCategory?.id !== category.id}
+                        sx={{ minWidth: "235px" }}
+                        value={
+                          editingCategory?.id === category.id
+                            ? editingCategory.color
+                            : category.color
+                        }
+                        onChange={(color) => {
+                          handleValueChange("color", color);
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {editingCategory?.id === category.id ? (
+                        <>
+                          <IconButton
+                            onClick={() => handleSaveClick(editingCategory)}
+                          >
+                            <Check />
+                          </IconButton>
+                          <IconButton onClick={() => handleCancelClick()}>
+                            <X />
+                          </IconButton>
+                        </>
+                      ) : (
+                        <>
+                          <IconButton onClick={() => handleEditClick(category)}>
+                            <Pencil />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => handleDeleteConfirmation(category)}
+                          >
+                            <Trash />
+                          </IconButton>
+                        </>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
