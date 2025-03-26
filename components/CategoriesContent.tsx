@@ -25,7 +25,6 @@ import {
   Checkbox,
   FormGroup,
   Grid2,
-  Tab,
   LinearProgress,
 } from "@mui/material";
 import { Pencil, Trash, Check, X } from "lucide-react";
@@ -560,20 +559,32 @@ const CategoriesTable = ({
                         <>
                           <IconButton
                             onClick={() => handleSaveClick(editingCategory)}
+                            color="primary"
+                            size="small"
                           >
                             <Check />
                           </IconButton>
-                          <IconButton onClick={() => handleCancelClick()}>
+                          <IconButton
+                            onClick={() => handleCancelClick()}
+                            color="error"
+                            size="small"
+                          >
                             <X />
                           </IconButton>
                         </>
                       ) : (
                         <>
-                          <IconButton onClick={() => handleEditClick(category)}>
+                          <IconButton
+                            onClick={() => handleEditClick(category)}
+                            color="primary"
+                            size="small"
+                          >
                             <Pencil />
                           </IconButton>
                           <IconButton
                             onClick={() => handleDeleteConfirmation(category)}
+                            color="error"
+                            size="small"
                           >
                             <Trash />
                           </IconButton>
