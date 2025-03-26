@@ -1,27 +1,18 @@
 "use client";
 
 import React, { useContext, useEffect, useState } from "react";
-import {
-  Bell,
-  Sparkles,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from "next/navigation";
-import LineChart from "@/components/charts/ThresholdChart"; // Import the new LineChart component
 import ParentSize from "@visx/responsive/lib/components/ParentSize"; // Import ParentSize
 import { useTransactions } from "@/contexts/TransactionsContext";
-import { StackedDataPoint } from "./charts/common";
-import { CategoryValue } from "./charts/common";
-import { ChartTransaction } from "./charts/common";
-import * as d3 from "d3";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { useCurrentBudget } from "@/contexts/CurrentBudgetContext";
 import { useBudgets } from "@/contexts/BudgetContext";
 import { RingChart } from "./charts/RingChart";
+import ThresholdChart, { DataPoint } from "@/components/charts/ThresholdChart";
+import { expenseColors } from "@/lib/colors";
+import { fetchAndComputeData } from "@/lib/data-fetcher"; // Import the new function
 
 export function MainPage() {
   const [jwt, setAndStoreJwt] = useContext(JwtContext);
@@ -41,99 +32,22 @@ export function MainPage() {
   }, [jwt, isLoading, router]);
 
   const { transactionGroups } = useTransactions();
+  const { budgets } = useBudgets();
 
-  const spendingCategories = [
-    { name: "Housing", percentage: 40, color: "#4CAF50" },
-    { name: "Food", percentage: 20, color: "#FFC107" },
-    { name: "Transportation", percentage: 15, color: "#2196F3" },
-    { name: "Entertainment", percentage: 10, color: "#9C27B0" },
-    { name: "Others", percentage: 15, color: "#FF5722" },
-  ];
-
-  const [savingsData, setSavingsData] = useState<StackedDataPoint[]>([]);
+  const [savingsData, setSavingsData] = useState<DataPoint[]>([]);
+  const [cumulativeExpenseEndIndex, setCumulativeExpenseEndIndex] =
+    useState<number>(0);
 
   useEffect(() => {
-    async function fetchSavingsData() {
-      try {
-        const response = await fetch("/api/user-data/expenses");
-
-        type RawData = {
-          date: string;
-          amount: number;
-          // ISO 8601 date-time string
-          category: string;
-        };
-
-        const rawData: RawData[] = await response.json();
-
-        const transactions2: ChartTransaction[] = rawData
-          .map((tx) => ({
-            ...tx,
-            date: d3.isoParse(tx.date) as Date,
-          }))
-          .sort((a, b) => d3.ascending(a.date, b.date));
-
-        const categories: string[] = Array.from(
-          new Set(transactions2.map((tx) => tx.category)),
-        );
-
-        // Group transactions first by week, then by category, summing the amounts if
-        // there is multiple of the same category in the same week
-        const rawGroupedTransactionsByWeek = d3.rollup(
-          transactions2,
-          (v) => d3.sum(v, (d) => d.amount),
-          (d) => d3.timeWeek(d.date),
-          (d) => d.category,
-        );
-
-        const groupedTransactionsByWeek: StackedDataPoint[] = Array.from(
-          rawGroupedTransactionsByWeek.entries(),
-        )
-          .map(([date, categoryMap]): StackedDataPoint => {
-            return {
-              date: date as Date,
-              categories: Array.from(
-                categoryMap,
-                ([category, value]): CategoryValue => ({
-                  category,
-                  value: value,
-                }),
-              ),
-            };
-          })
-          .sort((a: StackedDataPoint, b: StackedDataPoint) =>
-            d3.ascending(a.date, b.date),
-          );
-
-        const groupedCumulativeTransactionsByWeek: StackedDataPoint[] = [];
-        let cumulativeSums: { [key: string]: number } = categories
-          .map((cat) => ({ [cat]: 0 }))
-          .reduce((acc, val) => ({ ...acc, ...val }), {});
-        for (const dataPoint of groupedTransactionsByWeek) {
-          dataPoint.categories.forEach(
-            (cat) =>
-              // TODO: REMOVE THE NEGATIVE SIGN
-              (cumulativeSums[cat.category] += -cat.value),
-          );
-          groupedCumulativeTransactionsByWeek.push({
-            date: dataPoint.date,
-            categories: Object.entries(cumulativeSums).map(
-              ([category, value]) => ({
-                category,
-                value,
-              }),
-            ),
-          });
-        }
-
-        setSavingsData(groupedCumulativeTransactionsByWeek);
-      } catch (error) {
-        console.error("Failed to fetch savings data:", error);
-      }
+    async function fetchData() {
+      const { savingsData, cumulativeExpenseEndIndex } =
+        await fetchAndComputeData(transactionGroups.results, budgets);
+      setSavingsData(savingsData);
+      setCumulativeExpenseEndIndex(cumulativeExpenseEndIndex);
     }
 
-    fetchSavingsData();
-  }, []);
+    fetchData();
+  }, [transactionGroups, budgets]);
 
   const { currentBudgetUUID } = useCurrentBudget();
   const {
@@ -151,7 +65,6 @@ export function MainPage() {
     ((selectedBudget?.total_used ?? 0) /
       (selectedBudget?.total_allocation ?? 1)) *
     100;
-  console.log(currentBudgetUUID, selectedBudget);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -174,19 +87,25 @@ export function MainPage() {
                     Savings Graph
                   </CardTitle>
                 </CardHeader>
-                {/* <CardContent>
-                  <div className="w-full h-64">
+                <CardContent>
+                  <div className="w-full h-96">
                     <ParentSize>
-                      {({ width, height }) => (
-                        <LineChart
-                          width={width}
-                          height={height}
-                          data={savingsData}
-                        />
-                      )}
+                      {({ width, height }) =>
+                        savingsData.length > 0 &&
+                        width > 0 &&
+                        height > 0 && (
+                          <ThresholdChart
+                            width={width}
+                            height={height}
+                            data={savingsData}
+                            projectionDateIdx={cumulativeExpenseEndIndex}
+                            colorPalette={expenseColors}
+                          />
+                        )
+                      }
                     </ParentSize>
                   </div>
-                </CardContent> */}
+                </CardContent>
               </Card>
 
               {/* Spending Summary */}

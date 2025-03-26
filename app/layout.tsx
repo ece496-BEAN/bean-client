@@ -6,8 +6,8 @@ import LayoutClient from "@/components/LayoutClient"; // Import LayoutClient
 import JwtProvider from "./lib/jwt-provider";
 
 export const metadata: Metadata = {
-  title: "My Awesome App" as string,
-  description: "This is my awesome app" as string,
+  title: "BEAN" as string,
+  description: "Budgeting and Expenses App for Newbies" as string,
 };
 
 export default function RootLayout({
