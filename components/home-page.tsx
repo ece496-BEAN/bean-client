@@ -115,10 +115,10 @@ export function MainPage() {
                 <CardContent>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-2xl font-bold text-indigo-600">
-                      ${selectedBudget?.total_used?.toFixed(2)}
+                      ${(selectedBudget?.total_used ?? 0).toFixed(2)}
                     </span>
                     <span className="text-2xl font-bold text-indigo-600">
-                      ${selectedBudget?.total_allocation?.toFixed(2)}
+                      ${(selectedBudget?.total_allocation ?? 0).toFixed(2)}
                     </span>
                   </div>
                   <Progress value={spendingPercentage} className="h-2 mb-1" />
@@ -126,7 +126,7 @@ export function MainPage() {
                     <span className="text-sm font-medium text-gray-500">
                       Used
                     </span>
-                    <span>{spendingPercentage.toFixed(1)}%</span>
+                    <span>{spendingPercentage.toFixed(1) || 0}%</span>
                     <span className="text-sm font-medium text-gray-500">
                       Allocated
                     </span>
@@ -142,8 +142,13 @@ export function MainPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap justify-center gap-4">
-                    {selectedBudget?.budget_items?.map((budget_item) => (
+                  {!selectedBudget?.budget_items?.length ? (
+                    <div className="flex justify-center items-center h-48 text-gray-600 font-medium">
+                      {/* You can adjust h-48 as needed to match the expected height of RingCharts */}
+                      No budget items set. Consider adding some.
+                    </div>
+                  ) : (
+                    selectedBudget?.budget_items?.map((budget_item) => (
                       <div
                         key={budget_item.id}
                         className="flex flex-col items-center"
@@ -160,8 +165,8 @@ export function MainPage() {
                           {budget_item.category.name}
                         </span>
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  )}
                 </CardContent>
               </Card>
 

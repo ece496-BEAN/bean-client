@@ -125,7 +125,7 @@ function BudgetOverview() {
       <main className="p-4 overflow-y-auto">
         <Card variant="outlined" sx={{ p: 2, width: "100%", marginBottom: 2 }}>
           <Grid2 container spacing={2}>
-            <Grid2 size="grow">
+            <Grid2 size={{ xs: 12, sm: "grow" }}>
               <DatePicker
                 label="Month"
                 views={["month", "year"]}

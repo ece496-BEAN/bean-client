@@ -196,7 +196,7 @@ export const AddOrEditBudgetPage = ({
       if (onSubmit) {
         onSubmit();
       }
-      router.push(`/budget/${new_budget.id}/`);
+      router.push(`/budget`);
     }
   };
   useEffect(() => {
