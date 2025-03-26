@@ -86,7 +86,7 @@ const PlaidLinkButton = () => {
                 ...transaction,
                 amount:
                   transaction.amount *
-                  (category_string_to_obj[category].is_income_type ? 1 : -1),
+                  (category_string_to_obj[category].is_income_type ? -1 : 1),
                 category_uuid: category_string_to_obj[category].id,
               };
             },
