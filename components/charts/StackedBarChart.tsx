@@ -108,8 +108,8 @@ export default function StackedBarChart({
                   key={`bar-stack-${barStack.index}-${bar.index}`}
                   x={bar.x}
                   y={bar.y}
-                  height={bar.height}
-                  width={bar.width}
+                  height={bar.height < 0 ? 0 : bar.height}
+                  width={bar.width < 0 ? 0 : bar.width}
                   fill={bar.color}
                   onMouseLeave={() => {
                     hideTooltip();
