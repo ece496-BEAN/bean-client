@@ -183,7 +183,13 @@ export default function ThresholdChart({
           <div>
             <strong>{tooltipData.date.toLocaleDateString()}</strong>
             <br />
-            {`\$${tooltipData.value.toFixed(2)}`}
+            <span
+              style={{
+                color: tooltipData.value >= 0 ? "darkgreen" : "darkred",
+              }}
+            >
+              {`\$${tooltipData.value.toFixed(2)}`}
+            </span>
           </div>
         </TooltipWithBounds>
       )}

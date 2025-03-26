@@ -18,13 +18,13 @@ import {
 } from "./charts/common";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useBudgets } from "@/contexts/BudgetContext";
-import { ReadOnlyBudgetItem } from "@/lib/types";
+import { fetchAndComputeData } from "@/lib/data-fetcher"; // Import the new function
 
 const TODO = -1;
 
 export function ExpenseChart() {
   const router = useRouter(); // Add this line
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const [jwt] = useContext(JwtContext);
 
   useEffect(() => {
     if (!jwt) {
@@ -32,13 +32,12 @@ export function ExpenseChart() {
     }
   }, [jwt, router]);
 
-  const { transactionGroups, getTransactionGroups } = useTransactions();
+  const { transactionGroups } = useTransactions();
 
   const { budgets } = useBudgets();
 
   const [expenseData, setExpenseData] = useState<StackedDataPoint[]>([]);
   const [incomeData, setIncomeData] = useState<StackedDataPoint[]>([]);
-
   const [cumulativeExpenseData, setCumulativeExpenseData] = useState<
     StackedDataPoint[]
   >([]);
@@ -54,156 +53,26 @@ export function ExpenseChart() {
   const [savingsData, setSavingsData] = useState<DataPoint[]>([]);
 
   useEffect(() => {
-    function fetchTransactionData(
-      expenses: boolean = true,
-    ): ChartTransaction[] {
-      const parsedTransactions: ChartTransaction[] = transactionGroups.results
-        .flatMap((tx) =>
-          tx.transactions
-            .filter((t) =>
-              expenses ? !t.category.is_income_type : t.category.is_income_type,
-            )
-            .map((t) => ({
-              date: new Date(tx.date),
-              amount: expenses ? -t.amount : t.amount,
-              category: t.category.name,
-            })),
-        )
-        .sort((a, b) => d3.ascending(a.date, b.date));
-
-      return parsedTransactions;
-    }
-    async function fetchProjectionData(
-      expense: boolean,
-      transactionsEndDate: Date,
-    ): Promise<ChartTransaction[]> {
-      // First, find the right budget. We'll use the budget that includes the current date.
-      const budget = budgets.find(
-        (b) =>
-          new Date(b.start_date) <= new Date() &&
-          new Date(b.end_date) >= new Date(),
-      );
-      if (!budget) {
-        return [];
-      }
-      type RawData = {
-        category: string;
-        budget: number;
-      };
-      const rawData: RawData[] = (budget.budget_items as ReadOnlyBudgetItem[])
-        .filter((item) =>
-          expense
-            ? !item.category.is_income_type
-            : item.category.is_income_type,
-        )
-        .map((item) => ({
-          category: item.category.name,
-          budget: expense ? -item.allocation : item.allocation,
-        }));
-
-      // the first of the next month after the last savings data point
-      const startDate = new Date(transactionsEndDate);
-      startDate.setDate(1);
-      startDate.setMonth(startDate.getMonth() + 1);
-
-      // Project the next 6 months of data
-      const projectedData: ChartTransaction[] = [];
-      for (let i = 0; i < 6; i++) {
-        const date = new Date(startDate);
-        date.setMonth(date.getMonth() + i);
-
-        const transactions: ChartTransaction[] = rawData.map((d) => ({
-          date: date,
-          amount: d.budget,
-          category: d.category,
-        }));
-
-        projectedData.push(...transactions);
-      }
-      return projectedData;
-    }
-    async function fetchExpenseData(): Promise<ChartTransaction[]> {
-      return fetchTransactionData();
+    async function fetchData() {
+      const {
+        expenseData,
+        incomeData,
+        cumulativeExpenseData,
+        cumulativeExpenseEndIndex,
+        cumulativeIncomeData,
+        cumulativeIncomeEndIndex,
+        savingsData,
+      } = await fetchAndComputeData(transactionGroups.results, budgets);
+      setExpenseData(expenseData);
+      setIncomeData(incomeData);
+      setCumulativeExpenseData(cumulativeExpenseData);
+      setCumulativeExpenseEndIndex(cumulativeExpenseEndIndex);
+      setCumulativeIncomeData(cumulativeIncomeData);
+      setCumulativeIncomeEndIndex(cumulativeIncomeEndIndex);
+      setSavingsData(savingsData);
     }
 
-    async function fetchBudgetData(
-      expenseEndDate: Date,
-    ): Promise<ChartTransaction[]> {
-      return fetchProjectionData(true, expenseEndDate);
-    }
-
-    async function fetchIncomeData(): Promise<ChartTransaction[]> {
-      return fetchTransactionData(false);
-    }
-
-    async function fetchIncomeProjectionData(
-      incomeEndDate: Date,
-    ): Promise<ChartTransaction[]> {
-      return fetchProjectionData(false, incomeEndDate);
-    }
-
-    const expenseDataProm = fetchExpenseData();
-    const incomeDataProm = fetchIncomeData();
-
-    expenseDataProm.then((expenseData) => {
-      const expenseEndDate = expenseData[expenseData.length - 1].date;
-      fetchBudgetData(expenseEndDate).then((budgetData) => {
-        const [data, index] = mergeData(expenseData, budgetData, -1);
-        setCumulativeExpenseData(data);
-        setCumulativeExpenseEndIndex(index);
-      });
-    });
-
-    expenseDataProm.then((expenseData) => {
-      setExpenseData(
-        groupTransactionsByPeriod(expenseData, d3.timeMonth).map((d) => ({
-          date: d.date,
-          categories: d.categories.map((c) => ({
-            category: c.category,
-            value: -c.value,
-          })),
-        })),
-      );
-    });
-
-    incomeDataProm.then((incomeData) => {
-      setIncomeData(groupTransactionsByPeriod(incomeData, d3.timeMonth));
-    });
-
-    incomeDataProm.then((incomeData) => {
-      const incomeEndDate = incomeData[incomeData.length - 1].date;
-      fetchIncomeProjectionData(incomeEndDate).then((incomeProjectionData) => {
-        const [data, index] = mergeData(incomeData, incomeProjectionData, 1);
-        setCumulativeIncomeData(data);
-        setCumulativeIncomeEndIndex(index);
-      });
-    });
-
-    expenseDataProm.then((expenseData) => {
-      incomeDataProm.then((incomeData) => {
-        const combinedSavingsData = d3
-          .rollups(
-            [
-              ...incomeData,
-              ...expenseData.map((d) => ({ ...d, amount: d.amount })),
-            ],
-            (v) => d3.sum(v, (d) => d.amount),
-            (d) => d.date,
-          )
-          .map(([date, value]) => ({ date, value }));
-
-        combinedSavingsData.sort((a, b) => d3.ascending(a.date, b.date));
-        const cumulativeSavingsData = combinedSavingsData.reduce((acc, d) => {
-          acc.push({
-            date: d.date,
-            value:
-              acc.length === 0 ? d.value : acc[acc.length - 1].value + d.value,
-          });
-          return acc;
-        }, [] as DataPoint[]);
-        setSavingsData(cumulativeSavingsData);
-      });
-    });
+    fetchData();
   }, [transactionGroups, budgets]);
 
   return (
@@ -223,7 +92,9 @@ export function ExpenseChart() {
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) =>
-                  savingsData.length > 0 && (
+                  savingsData.length > 0 &&
+                  width > 0 &&
+                  height > 0 && (
                     <ThresholdChart
                       width={width}
                       height={height}
@@ -247,7 +118,9 @@ export function ExpenseChart() {
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) =>
-                  cumulativeExpenseData.length > 0 && (
+                  cumulativeExpenseData.length > 0 &&
+                  width > 0 &&
+                  height > 0 && (
                     <StackedAreaChart
                       width={width}
                       height={height}
@@ -271,7 +144,9 @@ export function ExpenseChart() {
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) =>
-                  cumulativeIncomeData.length > 0 && (
+                  cumulativeIncomeData.length > 0 &&
+                  width > 0 &&
+                  height > 0 && (
                     <StackedAreaChart
                       width={width}
                       height={height}
@@ -296,7 +171,9 @@ export function ExpenseChart() {
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) =>
-                  incomeData.length > 0 && (
+                  incomeData.length > 0 &&
+                  width > 0 &&
+                  height > 0 && (
                     <StackedBarChart
                       width={width}
                       height={height}
@@ -320,7 +197,9 @@ export function ExpenseChart() {
             <div className="w-full h-96">
               <ParentSize>
                 {({ width, height }) =>
-                  expenseData.length > 0 && (
+                  expenseData.length > 0 &&
+                  width > 0 &&
+                  height > 0 && (
                     <StackedBarChart
                       width={width}
                       height={height}
