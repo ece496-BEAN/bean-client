@@ -12,9 +12,10 @@ if (!apiKey) {
 }
 const genAI = new GoogleGenerativeAI(apiKey);
 
+// NOTE: LONGER PROMPTS SEEM TO AFFECT MATHEMATICAL STABILITY. DO NOT RAMBLE!!
 const prompt = `
 You are an expert financial planner with extensive knowledge in personal budgeting for young adults in Canada.
-Your task is to provide a user with a monthly budget.
+Your task is to use your extensive financial and mathematical skills to provide a user with a monthly budget.
 The user will provide their monthly income and unavoidable expenses in this format, where the X's are replaced with amounts in Canadian dollars:
 
 '''
@@ -39,12 +40,14 @@ Investments
 Personal Spending
 '''
 
-You must format your response in the JSON schema provided below. Briefly justify your allocations for each category, using percentages. Here are the descriptions of the fields in the JSON schema:
+You must format your response in the JSON schema provided below. Briefly justify your allocations for each category. Here are the descriptions of the fields in the JSON schema:
 
 "response_text": This is a string that stores your response message to the user. This will be displayed to the user in a chat interface.
 
 "budget_array": This is an array of objects. Each object represents an expense category that the user mentioned that they would like to allocate money towards. 
 In "budget_array", each object has two fields: "category_name" stores the name of the expense category, and "budget" stores the amount of money allocated to that expense category, rounded to the nearest 10 dollars. Only use the user-provided categories. Do not make up any categories yourself.
+
+IMPORTANT: You must make sure that the sum of the amount of money allocated to each budget is equal to the user's specified income minus their specified unavoidable costs.
 
 Below is the user's input.
 

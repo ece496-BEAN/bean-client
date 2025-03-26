@@ -482,12 +482,24 @@ export default function SurveyPage() {
                     AI budget analysis:
                   </p>
                 )}
+                {showAiResponse && (
+                  <div style={{ whiteSpace: "pre-line" }}>
+                    <p className="mt-2 text-gray-600">
+                      {aiResponse}
+                      <br />
+                    </p>
+                  </div>
+                )}
                 <p className="mt-2 text-gray-600">
-                  {aiResponse}
-                  <br />
                   Here's the budget that you can start out with. Please review
                   it and make changes as needed, then hit Submit!
                 </p>
+                {showAiResponse && (
+                  <p className="text-purple-600 font-semibold">
+                    As a LLM, all of my suggested budget allocations are
+                    approximations. Please double-check that the math adds up.
+                  </p>
+                )}
                 <AddOrEditBudgetPage
                   editMode={editMode}
                   initial_budget={{
