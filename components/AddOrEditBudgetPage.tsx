@@ -212,7 +212,7 @@ export const AddOrEditBudgetPage = ({
   }, [categoriesQueryError]);
   return (
     <div>
-      <Box className="flex flex-col h-auto bg-gray-50 p-2">
+      <Box className="flex flex-col h-auto p-2">
         <Card variant="outlined" sx={{ mb: 2, p: 2 }}>
           <Typography
             variant="h4"
@@ -268,7 +268,7 @@ export const AddOrEditBudgetPage = ({
                     <CardContent>
                       <Grid2 container spacing={2}>
                         <Grid2
-                          size={{ xs: 7.5, sm: 8, md: 8.5, lg: 9.5, xl: 9.5 }}
+                          size={{ xs: 7, sm: 8, md: 8.5, lg: 9.5, xl: 9.5 }}
                         >
                           <CategorySelector
                             value={item.category || null}
@@ -281,7 +281,7 @@ export const AddOrEditBudgetPage = ({
                             }
                           />
                         </Grid2>
-                        <Grid2 size={{ xs: 3.5, sm: 3, md: 3, lg: 2, xl: 2 }}>
+                        <Grid2 size={{ xs: 4, sm: 3, md: 3, lg: 2, xl: 2 }}>
                           <TextField
                             fullWidth
                             label="Allocation"
@@ -305,7 +305,6 @@ export const AddOrEditBudgetPage = ({
                           }}
                         >
                           <IconButton
-                            size="large"
                             color="error"
                             onClick={() => handleRemoveBudgetItem(index)}
                           >
