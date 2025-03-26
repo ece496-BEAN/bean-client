@@ -153,10 +153,10 @@ function BudgetOverview() {
                 <Button
                   variant="outlined"
                   onClick={() => setEditMode(!editMode)}
-                  startIcon={editMode ? <Check /> : <Pencil />}
+                  startIcon={editMode ? <ArrowBack /> : <Pencil />}
                   sx={{ height: "100%" }}
                 >
-                  {editMode ? "Done" : "Edit"}
+                  {editMode ? "Return" : "Edit"}
                 </Button>
               </Grid2>
             )}
