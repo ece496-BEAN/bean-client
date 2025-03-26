@@ -225,11 +225,7 @@ function CategoriesContent(props: CategoriesContentProps) {
   const { results: categories, count: totalCount } = paginatedCategories;
   return (
     <>
-      <Grid2
-        container
-        spacing={1}
-        className="flex flex-col h-auto bg-gray-50 p-4"
-      >
+      <Grid2 container spacing={1} className="flex flex-col h-auto p-4">
         <Popover
           open={filterMenuOpen}
           anchorEl={anchorEl}
@@ -405,7 +401,7 @@ const CategoriesTable = ({
     );
   }
   return (
-    <Box className="flex flex-col h-auto bg-gray-50">
+    <Box className="flex flex-col h-auto border-t">
       <TableContainer component={Paper}>
         <Table>
           <TableHead>

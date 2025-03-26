@@ -128,7 +128,7 @@ export const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
     );
   }
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 mt-2">
       {transactionGroups.map((group) => (
         <StyledAccordion key={group.id} disableGutters>
           <StyledAccordionSummary expandIcon={<ExpandMore />}>
@@ -469,7 +469,7 @@ export function RecentTransactionsPage() {
 
         <Stack
           direction="row"
-          className="mb-6"
+          className="mb-2"
           justifyContent="space-between"
           sx={{ width: "100%" }}
         >
@@ -657,11 +657,7 @@ function TransactionListHeader({
     applyFilters();
   };
   return (
-    <Grid2
-      container
-      spacing={1}
-      className="flex flex-col h-auto bg-gray-50 p-4"
-    >
+    <Grid2 container spacing={1} className="flex flex-col h-auto p-4">
       <Popover
         open={filterMenuOpen}
         anchorEl={anchorEl}
