@@ -158,9 +158,9 @@ export default function CategoryAutocomplete({
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Box
                     sx={{
-                      width: 16, // Adjust size as needed
+                      width: 16,
                       height: 16,
-                      bgcolor: option.color || "transparent", // Use category color or transparent if not available
+                      bgcolor: option.color || "transparent",
                       borderRadius: "50%", // Make it a circle
                     }}
                   />

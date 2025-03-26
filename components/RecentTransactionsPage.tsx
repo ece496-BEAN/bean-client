@@ -8,8 +8,6 @@ import {
   TrendingDown,
   TrendingUp,
   Trash,
-  ChevronRight,
-  ChevronDown,
   Pencil,
 } from "lucide-react";
 import { Resizable } from "re-resizable";
@@ -39,12 +37,21 @@ import {
   Tooltip,
   Stack,
   Typography,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemText,
+  styled,
+  Box,
 } from "@mui/material";
 import {
   ArrowUpward,
   ArrowDownward,
   FilterList,
   Search,
+  ExpandMore,
 } from "@mui/icons-material";
 import { ToastContainer, toast } from "react-toastify";
 import { AddOrEditTransactionGroupModal } from "@/components/AddOrEditTransactionModal";
@@ -55,6 +62,43 @@ import CategorySelector from "@/components/CategorySelector";
 import { HeaderBanner } from "@/components/HeaderBanner";
 import CategoriesContent from "@/components/CategoriesContent";
 
+const StyledAccordion = styled(Accordion)(({ theme }) => ({
+  marginBottom: theme.spacing(1),
+  borderRadius: theme.shape.borderRadius,
+  border: "1px solid rgba(0, 0, 0, .125)",
+  boxShadow: "none",
+  "&:before": {
+    display: "none",
+  },
+  "&:hover": {
+    backgroundColor: "transparent",
+  },
+
+  "&.Mui-expanded": {
+    margin: 0,
+    backgroundColor: "transparent",
+  },
+  "&.Mui-disabled": {
+    opacity: 1,
+    backgroundColor: "transparent",
+    color: "grey-500",
+  },
+}));
+
+const StyledAccordionSummary = styled(AccordionSummary)(({ theme }) => ({
+  flexDirection: "row-reverse",
+  "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
+    transform: "rotate(0deg)",
+  },
+  "& .MuiAccordionSummary-expandIconWrapper": {
+    transform: "rotate(-90deg)",
+  },
+  "& .MuiAccordionSummary-content": {
+    marginLeft: theme.spacing(1),
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+}));
 interface TransactionSummaryProps {
   totalIncome: number;
   totalExpenses: number;
@@ -90,70 +134,107 @@ export const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
       </Typography>
     );
   }
-
   return (
-    <div className="space-y-4">
-      {transactionGroups.map((group) => {
-        const groupId = group.id || "temp-key";
-        const isOpen = openGroups[groupId];
+    <div className="space-y-2">
+      {transactionGroups.map((group) => (
+        <StyledAccordion key={group.id} disableGutters>
+          <StyledAccordionSummary expandIcon={<ExpandMore />}>
+            <div className="flex justify-between w-full">
+              <Stack direction="row" spacing={1}>
+                <Stack direction="column" alignItems="flex-start">
+                  <Typography variant="h6" className="font-bold">
+                    {group.name}
+                  </Typography>
 
-        return (
-          <div key={groupId} className="border rounded-lg p-4 relative">
-            <div className="flex justify-between items-start">
-              <div className="flex">
-                <button onClick={() => toggleGroup(groupId)} className="mr-2">
-                  {isOpen ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  )}
-                </button>
-                <div>
-                  <h3 className="text-lg font-semibold">{group.name}</h3>
-                  <p className="text-sm text-gray-500">{group.description}</p>
-                </div>
-              </div>
+                  <Typography variant="caption" color="text.secondary">
+                    {group.description}
+                  </Typography>
+                </Stack>
+              </Stack>
+
               <div>
-                <p className="text-sm text-gray-500">
-                  {format(new Date(group.date), "MM/dd/yyyy")}{" "}
-                  {/* Formatted date */}
-                </p>
+                <Typography color="text.secondary">
+                  {format(new Date(group.date), "MM/dd/yyyy")}
+                </Typography>
+
                 {!readOnly && (
-                  <>
-                    <button
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <IconButton
                       onClick={() => onEdit?.(group)}
-                      className="text-blue-500 ml-2 hover:text-blue-700"
+                      color="primary"
+                      size="small"
                     >
-                      <Pencil size={16} />
-                    </button>
-                    <button
+                      <Pencil />
+                    </IconButton>
+                    <IconButton
                       onClick={() => handleDeleteConfirmation?.(group)}
-                      className="text-red-500 ml-2 hover:text-red-700"
+                      color="error"
+                      size="small"
                     >
-                      <Trash size={16} />
-                    </button>
-                  </>
+                      <Trash />
+                    </IconButton>
+                  </Stack>
                 )}
               </div>
             </div>
-
-            {isOpen && (
-              <ul className="mt-4 border-t pt-4">
+          </StyledAccordionSummary>
+          <AccordionDetails>
+            {group.transactions.length > 0 ? (
+              <List className="mt-4 border-t pt-4">
                 {group.transactions.map((transaction) => (
-                  <li
+                  <ListItem
                     key={(transaction as ReadOnlyTransaction).id}
                     className="p-2 border rounded mb-2"
                   >
-                    <div className="flex justify-between items-center">
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      sx={{
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        width: "100%",
+                      }}
+                    >
                       <div>
-                        <p className="font-medium">{transaction.name}</p>
-                        <p className="text-sm text-gray-500">
-                          {transaction.description}
-                        </p>
+                        <Typography variant="body1" noWrap>
+                          {transaction.name}
+                        </Typography>
+                        {transaction.description && ( // Display only if present
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ whiteSpace: "normal" }}
+                          >
+                            {transaction.description}
+                          </Typography>
+                        )}
                         {"category" in transaction && (
-                          <p className="text-sm text-gray-500">
-                            Category: {transaction.category.name}
-                          </p>
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            sx={{
+                              alignItems: "center",
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                width: 16,
+                                height: 16,
+                                bgcolor:
+                                  transaction.category.color || "transparent",
+                                borderRadius: "50%", // Make it a circle
+                              }}
+                            />
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                verticalAlign: "middle",
+                              }}
+                            >
+                              Category: {transaction.category.name}
+                            </Typography>
+                          </Stack>
                         )}
                       </div>
                       <span
@@ -163,14 +244,29 @@ export const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                           ? `${transaction.amount.toFixed(2)}`
                           : `${transaction.amount.toFixed(2)}`}
                       </span>
-                    </div>
-                  </li>
+                    </Stack>
+                  </ListItem>
                 ))}
-              </ul>
+              </List>
+            ) : (
+              <List className="mt-4 border-t pt-4">
+                <ListItem className="p-2 border rounded mb-2">
+                  <ListItemText
+                    primary="No transactions found for this group."
+                    slotProps={{
+                      primary: {
+                        variant: "body2",
+                        color: "text.secondary",
+                        align: "center",
+                      },
+                    }}
+                  />
+                </ListItem>
+              </List>
             )}
-          </div>
-        );
-      })}
+          </AccordionDetails>
+        </StyledAccordion>
+      ))}
     </div>
   );
 };
