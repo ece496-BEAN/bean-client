@@ -113,8 +113,24 @@ export const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                   <p className="text-sm text-gray-500">{group.description}</p>
                 </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">
+              <div className="flex items-center">
+                {
+                  <span
+                    className={`font-semibold ${group.transactions.reduce((acc, transaction) => acc + transaction.amount * (transaction.category.is_income_type ? 1 : -1), 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    $
+                    {group.transactions
+                      .reduce(
+                        (acc, transaction) =>
+                          acc +
+                          transaction.amount *
+                            (transaction.category.is_income_type ? 1 : -1),
+                        0,
+                      )
+                      .toFixed(2)}
+                  </span>
+                }
+                <p className="text-sm text-gray-500 ml-4">
                   {format(new Date(group.date), "MM/dd/yyyy")}{" "}
                   {/* Formatted date */}
                 </p>
