@@ -19,6 +19,7 @@ import {
 import { Grid } from "@visx/grid";
 import DollarAxisLeft from "./DollarAxisLeft";
 import LegendToggle from "./LegendToggle";
+import DateRangeSlider from "./DateRangeSlider";
 
 export default function StackedBarChart({
   width,
@@ -29,8 +30,14 @@ export default function StackedBarChart({
 }: StackedAreasProps) {
   const { tooltipData, tooltipLeft, tooltipTop, showTooltip, hideTooltip } =
     useTooltip<StackedDataPoint>();
-  const dimensions = new ChartDimensions(width, height);
   const [isLegendVisible, setIsLegendVisible] = useState(false);
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([
+    0,
+    data.length - 1,
+  ]);
+
+  const chartRegionHeight = height - 30;
+  const dimensions = new ChartDimensions(width, chartRegionHeight);
 
   const {
     axisLeftWidth,
@@ -42,23 +49,50 @@ export default function StackedBarChart({
     legendButtonTop,
   } = dimensions;
 
-  // scales
+  // Sort data by date to ensure chronological order
+  const sortedData = [...data].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+
+  // Get the selected date range based on slider indices
+  const selectedMinIndex = Math.min(...selectedIndices);
+  const selectedMaxIndex = Math.max(...selectedIndices);
+  const selectedMinDate = new Date(
+    sortedData[selectedMinIndex]?.date ?? new Date(),
+  );
+  const selectedMaxDate = new Date(
+    sortedData[selectedMaxIndex]?.date ?? new Date(),
+  );
+
+  // Filter visible data based on selected date range
+  const visibleData = sortedData.filter(
+    (d) =>
+      new Date(d.date) >= selectedMinDate &&
+      new Date(d.date) <= selectedMaxDate,
+  );
+
+  // Scales
   const xScale = scaleBand<Date>({
     range: [chartLeft, chartLeft + chartWidth],
-    domain: data.map((d) => d.date),
+    domain: visibleData.map((d) => d.date),
     padding: 0.2,
   });
-  const yScale = getYDollarScale(chartHeight, chartTop, data);
-  const colorScale = getColorScale(data, colorPalette);
+  const yScale = getYDollarScale(chartHeight, chartTop, visibleData);
+  const colorScale = getColorScale(visibleData, colorPalette);
+
+  // Handle slider changes
+  const handleSliderChange = (selectedIndices: number[]) => {
+    setSelectedIndices(selectedIndices);
+  };
 
   return (
     // relative is important for the tooltip to be positioned correctly
     // https://airbnb.io/visx/docs/tooltip#:~:text=If%20you%20would,the%20useTooltip()%20hook.
     <div style={{ position: "relative" }}>
-      <svg width={width} height={height}>
+      <svg width={width} height={chartRegionHeight}>
         <BarStack<StackedDataPoint, string>
-          data={data}
-          keys={data.length != 0 ? keys(data) : []}
+          data={visibleData}
+          keys={visibleData.length != 0 ? keys(visibleData) : []}
           value={(d, key) =>
             d.categories.find((e) => e.category === key)?.value ?? 0
           }
@@ -113,6 +147,9 @@ export default function StackedBarChart({
         />
         {tooltipData && <Tooltip />}
       </svg>
+      <div style={{ width: chartWidth - 10, marginLeft: chartLeft }}>
+        <DateRangeSlider data={sortedData} onChange={handleSliderChange} />
+      </div>
       {tooltipData && tooltipTop && tooltipLeft && (
         <TooltipWithBounds top={tooltipTop} left={tooltipLeft + 12}>
           <div>
