@@ -252,7 +252,7 @@ export default function CategoryAutocomplete({
               }
             />
             <Grid2 container className="mt-2 mb-2">
-              {/* TODO: Fix to not cause as many re-renders since this triggers alot of times when using the picker */}
+              {/* TODO: Fix to not cause as many re-renders since this triggers a lot of times when using the picker */}
               {/* Maybe consider using a [react-hook-form](https://viclafouch.github.io/mui-color-input/docs/react-hook-form/) */}
               <Grid2 size={{ xs: 12, sm: 6 }}>
                 <MuiColorInput

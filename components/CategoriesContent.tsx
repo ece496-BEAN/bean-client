@@ -260,7 +260,6 @@ function CategoriesContent(props: CategoriesContentProps) {
   const { results: categories, count: totalCount } = paginatedCategories;
   return (
     <>
-      {" "}
       <Grid2
         container
         spacing={1}
