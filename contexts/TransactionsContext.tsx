@@ -260,7 +260,10 @@ export default function TransactionProvider({
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
-        queryKey: ["transaction-groups", "budgets"],
+        queryKey: ["transaction-groups"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["budgets"],
       });
     },
   });
@@ -309,7 +312,10 @@ export default function TransactionProvider({
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
-        queryKey: ["transaction-groups", "budgets"],
+        queryKey: ["transaction-groups"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["budgets"],
       });
     },
   });
@@ -335,18 +341,15 @@ export default function TransactionProvider({
     },
 
     onSuccess: (groupId) => {
-      console.log(
-        `selectedTransactionGroupUUID: ${selectedTransactionGroupUUID}`,
-      );
-
       if (selectedTransactionGroupUUID === groupId) {
-        console.log(`Selected Transaction Group ${groupId} Deleted`);
-        console.log(`It matches ${selectedTransactionGroupUUID}`);
         setSelectedTransactionGroupUUID(undefined);
       }
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
-        queryKey: ["transaction-groups", "budgets"],
+        queryKey: ["transaction-groups"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["budgets"],
       });
     },
   });
