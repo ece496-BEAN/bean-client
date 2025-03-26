@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useJwt } from "@/app/lib/jwt-provider";
 import { fetchApiSingle, jwtObtainPairEndpoint } from "@/app/lib/api";
 import { useRouter } from "next/navigation";
+import { HeaderBanner } from "./HeaderBanner";
 
 export function LoginPage() {
   const router = useRouter();
@@ -49,9 +50,7 @@ export function LoginPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
-        <h1 className="text-2xl font-bold">Login</h1>
-      </header>
+      <HeaderBanner headerText="Login" />
 
       <main className="flex-grow p-4 flex items-center justify-center">
         <Card className="w-full max-w-md bg-white shadow-lg">
@@ -83,12 +82,6 @@ export function LoginPage() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="text-sm text-indigo-600 hover:underline"
-                  >
-                    Forgot password?
-                  </a>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -114,12 +107,7 @@ export function LoginPage() {
                   </button>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="remember" />
-                <Label htmlFor="remember" className="text-sm font-normal">
-                  Remember me
-                </Label>
-              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"

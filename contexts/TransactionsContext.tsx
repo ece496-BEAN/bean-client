@@ -8,7 +8,7 @@ import {
   useQueryClient,
   keepPreviousData,
 } from "@tanstack/react-query";
-import { JwtContext } from "@/app/lib/jwt-provider";
+import { useJwt } from "@/app/lib/jwt-provider";
 import { fetchApi } from "@/app/lib/api";
 import {
   TransactionGroup,
@@ -86,7 +86,7 @@ export default function TransactionProvider({
 }) {
   const queryClient = useQueryClient();
 
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const [jwt, setAndStoreJwt] = useJwt();
   const [mutationError, setMutationError] = useState<Error | null>(null); // State to hold the mutation error
   const [queryOptions, setQueryOptions] = useState<Record<string, any>>({
     no_page: true,
@@ -260,7 +260,7 @@ export default function TransactionProvider({
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
-        queryKey: ["transaction-groups"],
+        queryKey: ["transaction-groups", "budgets"],
       });
     },
   });
@@ -309,7 +309,7 @@ export default function TransactionProvider({
     onSuccess: () => {
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
-        queryKey: ["transaction-groups"],
+        queryKey: ["transaction-groups", "budgets"],
       });
     },
   });
@@ -346,7 +346,7 @@ export default function TransactionProvider({
       }
       // Invalidate the transaction groups query and it will trigger an update
       queryClient.invalidateQueries({
-        queryKey: ["transaction-groups"],
+        queryKey: ["transaction-groups", "budgets"],
       });
     },
   });

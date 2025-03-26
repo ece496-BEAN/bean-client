@@ -20,13 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { HeaderBanner } from "./HeaderBanner";
 
 export function SettingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
-        <h1 className="text-2xl font-bold">Settings</h1>
-      </header>
+      <HeaderBanner headerText="Settings" showAccountMenu />
 
       <main className="flex-grow p-4 overflow-y-auto">
         <div className="grid gap-6 md:grid-cols-2">

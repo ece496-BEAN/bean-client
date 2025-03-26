@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { useJwt } from "@/app/lib/jwt-provider";
 import { fetchApiSingle } from "@/app/lib/api";
+import { HeaderBanner } from "./HeaderBanner";
 
 export function SignupPage() {
   const router = useRouter();
@@ -56,9 +57,7 @@ export function SignupPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4">
-        <h1 className="text-2xl font-bold">Sign Up</h1>
-      </header>
+      <HeaderBanner headerText="Sign Up" />
 
       <main className="flex-grow p-4 flex items-center justify-center">
         <Card className="w-full max-w-md bg-white shadow-lg">
@@ -134,20 +133,6 @@ export function SignupPage() {
                     required
                   />
                 </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox id="terms" />
-                <Label htmlFor="terms" className="text-sm font-normal">
-                  I agree to the{" "}
-                  <a href="#" className="text-indigo-600 hover:underline">
-                    Terms of Service
-                  </a>{" "}
-                  and{" "}
-                  <a href="#" className="text-indigo-600 hover:underline">
-                    Privacy Policy
-                  </a>
-                </Label>
               </div>
 
               <Button

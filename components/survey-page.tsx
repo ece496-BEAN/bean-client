@@ -3,19 +3,19 @@
 import { useState, useRef, useEffect, useContext } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { Budget, ReadOnlyBudgetItem, Category } from "@/lib/types";
+import { ReadOnlyBudgetItem, Category } from "@/lib/types";
 import { endOfMonth, format, startOfMonth } from "date-fns";
-import CategoryProvider, { useCategories } from "@/contexts/CategoriesContext";
+import { useCategories } from "@/contexts/CategoriesContext";
 import { JwtContext } from "@/app/lib/jwt-provider";
 import { AddOrEditBudgetPage } from "@/components/AddOrEditBudgetPage";
 import { UUID } from "crypto";
 
 type QuestionType = "single" | "multiple" | "singleWithOther" | "number";
+import { HeaderBanner } from "./HeaderBanner";
 
 type Question = {
   text: string;
@@ -160,96 +160,7 @@ export default function SurveyPage() {
   const [finalNumBudgets, setFinalNumBudgets] = useState<number>(
     initialCategories.length,
   );
-  const { categories, addCategory, isCategoriesLoading } = useCategories();
-
-  // const generateQuestion = async (user_response: string) => {
-  //   console.log("generateQuestion called!");
-  //   // const response = await fetch("/api/budget-chat/chatbot", {
-  //   //   method: "POST",
-  //   //   headers: {
-  //   //     "Content-Type": "application/json",
-  //   //   },
-  //   //   body: user_response,
-  //   // });
-  //   // const respJSON = await response.json()
-
-  //   // DEBUG
-  //   const respJSON = {
-  //     done: 1,
-  //     aiResponse: "Survey completed!",
-  //     questionFormat: "single" as QuestionType,
-  //     possibleResponses: [],
-  //     groceries_budget_limit: 54321,
-  //   };
-  //   console.log("DEBUG response: ", respJSON);
-
-  //   // check if survey is done
-  //   if (respJSON.done === 1) {
-  //     console.log("Survey is done!");
-  //     setFinishedSurvey(true);
-  //     const temp: Question = {
-  //       text: "Survey completed!",
-  //       type: "single",
-  //       options: [],
-  //     };
-
-  //     // create categories for budget items
-  //     const newCategories: Category[] = [
-  //       {
-  //         id: "" as UUID,
-  //         name: "Food",
-  //         description: "Food and groceries",
-  //         legacy: false,
-  //         is_income_type: false,
-  //         color: "#0062ff",
-  //       },
-  //       {
-  //         id: "" as UUID,
-  //         name: "Transportation",
-  //         description: "Gas, public transit fares",
-  //         legacy: false,
-  //         is_income_type: false,
-  //         color: "#0062ff",
-  //       },
-  //     ];
-
-  //     const retCategories = (await addCategory(newCategories)) as Category[];
-  //     // console.log("DEBUG retCategories: ", retCategories);
-
-  //     // create budget_item for each budget category, update state accordingly
-  //     // const budgetItems : ReadOnlyBudgetItem[] = [];
-  //     const budgetItems: ReadOnlyBudgetItem[] = retCategories.map(
-  //       (category) => ({
-  //         id: "" as UUID,
-  //         budget_id: "" as UUID,
-  //         allocation: 1234,
-  //         category: category,
-  //         allocation_used: 0,
-  //       }),
-  //     );
-  //     // const foodBudgetItem : ReadOnlyBudgetItem = {
-  //     //   id: "",
-  //     //   budget_id: "",
-  //     //   allocation: respJSON.groceries_budget_limit,
-  //     //   category: retCategories.find((category) => category.name === "Food") as Category,
-  //     // };
-  //     // budgetItems.push(foodBudgetItem);
-  //     console.log("DEBUG: budgetItems: ", budgetItems);
-  //     setBudgetItemArrayState((prev) => [...prev, ...budgetItems]);
-  //     return temp;
-  //   }
-
-  //   const retQuestion: Question = {
-  //     text: respJSON.aiResponse,
-  //     type: respJSON.questionFormat,
-  //     options: respJSON.possibleResponses,
-  //   };
-
-  //   // reset selected answer index for new question
-  //   setSelectedAnswerIndex(-1);
-
-  //   return retQuestion;
-  // };
+  const { addCategory, isCategoriesLoading } = useCategories();
 
   const handleNumberInput = async () => {
     const action = actionStack[0];
@@ -313,15 +224,6 @@ export default function SurveyPage() {
       setBudgetItemArrayState(newBudgetItemArrayState);
     }
   };
-
-  // const handleSingleChoice = async (option: string, optionIndex: number) => {
-  //   setSelectedAnswerIndex(optionIndex);
-
-  //   const new_question = await generateQuestion(option);
-
-  //   setQuestions((prev) => [...prev, new_question]);
-  //   setQuestionCount((prev) => prev + 1);
-  // };
 
   const confirmMultipleChoice = async () => {
     console.log("DEBUG multipleChoiceSelections: ", multipleChoiceSelections);
@@ -425,9 +327,7 @@ export default function SurveyPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4 sticky top-0 z-10">
-        <h1 className="text-2xl font-bold">Financial Survey v2</h1>
-      </header>
+      <HeaderBanner headerText="Financial Survey" showAccountMenu />
 
       <main className="flex-grow p-4 overflow-y-auto">
         <div className="max-w-lg mx-auto space-y-6">
@@ -486,34 +386,7 @@ export default function SurveyPage() {
                 <h2 className="text-xl font-bold mb-6">
                   {questions[questions.length - 1].text}
                 </h2>
-                {/* {["singleWithOther", "single"].includes(
-                  questions[questions.length - 1].type,
-                ) && (
-                  <div className="space-y-4">
-                    {questions[questions.length - 1].options?.map(
-                      (option, optionIndex) => (
-                        <Button
-                          key={optionIndex}
-                          variant={
-                            selectedAnswerIndex === optionIndex
-                              ? "default"
-                              : "outline"
-                          }
-                          className={`w-full justify-start text-left h-auto py-3 px-4 rounded-lg ${
-                            selectedAnswerIndex === optionIndex
-                              ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
-                              : ""
-                          }`}
-                          onClick={() =>
-                            handleSingleChoice(option, optionIndex)
-                          }
-                        >
-                          {option}
-                        </Button>
-                      ),
-                    )}
-                  </div>
-                )} */}
+
                 {questions[questions.length - 1].type === "multiple" && (
                   <div className="space-y-4">
                     {questions[questions.length - 1].options?.map(

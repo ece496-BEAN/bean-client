@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import { useCurrentBudget } from "@/contexts/CurrentBudgetContext";
+import { HeaderBanner } from "./HeaderBanner";
 
 interface BudgetAndCategoryPageProps {
   children?: React.ReactNode;
@@ -15,10 +16,8 @@ interface BudgetAndCategoryPageProps {
 export function BudgetAndCategoryPage({
   children,
 }: BudgetAndCategoryPageProps) {
-  const [jwt, _] = useContext(JwtContext);
   const { currentBudgetUUID } = useCurrentBudget();
 
-  const router = useRouter();
   const path = usePathname();
 
   const routes = {
@@ -41,12 +40,6 @@ export function BudgetAndCategoryPage({
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
   };
-
-  useEffect(() => {
-    if (!jwt) {
-      router.push("/login"); // Redirect to login if JWT is not set
-    }
-  }, [jwt, router]);
 
   useEffect(() => {
     // Sync selectedTab with router.pathname when it changes
@@ -77,14 +70,12 @@ export function BudgetAndCategoryPage({
       case 3:
         return "Categories";
       default:
-        return null;
+        return "Invalid Tab";
     }
   };
   return (
     <div>
-      <header className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">{currentPage()}</h1>
-      </header>
+      <HeaderBanner headerText={currentPage()} showAccountMenu />
       <Grid container justifyContent="left">
         <Box sx={{ width: "100%", bgcolor: "background.paper" }}>
           <Tabs

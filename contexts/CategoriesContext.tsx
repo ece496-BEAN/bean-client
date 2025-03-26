@@ -2,7 +2,7 @@
 
 import React from "react";
 import { fetchApi } from "@/app/lib/api";
-import { JwtContext } from "@/app/lib/jwt-provider";
+import { useJwt } from "@/app/lib/jwt-provider";
 import {
   Category,
   NonPaginatedServerResponse,
@@ -77,7 +77,7 @@ export default function CategoryProvider({
 }) {
   const queryClient = useQueryClient();
 
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const [jwt, setAndStoreJwt] = useJwt();
   const [mutationError, setMutationError] = useState<Error | null>(null);
   const [categoriesQueryOptions, setCategoriesQueryOptions] = useState<
     Record<string, any>

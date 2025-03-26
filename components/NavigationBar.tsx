@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Home,
   PieChart,
@@ -22,8 +22,6 @@ import {
   Transaction,
   TransactionGroup,
 } from "@/lib/types";
-import { JwtContext } from "@/app/lib/jwt-provider";
-import { fetchApi, fetchApiFormData } from "@/app/lib/api";
 import { toast, ToastContainer } from "react-toastify";
 import { useDocumentScans } from "@/contexts/DocumentScansContext";
 import { useDocumentScansImage } from "@/contexts/DocumentScansImageContext";
@@ -31,7 +29,6 @@ import imageCompression from "browser-image-compression";
 
 export const NavigationBar: React.FC = () => {
   const router = useRouter();
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
   const [image, setImage] = useState<string | null>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [ocrResult, setOcrResult] = useState<string>("");
