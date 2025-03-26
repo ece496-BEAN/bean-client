@@ -18,14 +18,14 @@ import { StackedDataPoint } from "./charts/common";
 import { CategoryValue } from "./charts/common";
 import { ChartTransaction } from "./charts/common";
 import * as d3 from "d3";
-import { JwtContext } from "@/app/lib/jwt-provider";
+import { useJwt } from "@/app/lib/jwt-provider";
 import { useCurrentBudget } from "@/contexts/CurrentBudgetContext";
 import { useBudgets } from "@/contexts/BudgetContext";
 import { RingChart } from "./charts/RingChart";
 import { HeaderBanner } from "@/components/HeaderBanner";
 
 export function MainPage() {
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
+  const [jwt, _] = useJwt();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
 

@@ -6,17 +6,16 @@ import MenuItem from "@mui/material/MenuItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
 import Tooltip from "@mui/material/Tooltip";
-import PersonAdd from "@mui/icons-material/PersonAdd";
 import Settings from "@mui/icons-material/Settings";
 import Logout from "@mui/icons-material/Logout";
-import { JwtContext } from "@/app/lib/jwt-provider";
-import { useContext } from "react";
+import { useJwt } from "@/app/lib/jwt-provider";
+import { useRouter } from "next/navigation";
 
 export default function AccountMenu() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [_, setAndStoreJwt] = useContext(JwtContext);
+  const [_, setAndStoreJwt] = useJwt();
+  const router = useRouter();
 
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -25,6 +24,14 @@ export default function AccountMenu() {
   const handleLogout = () => {
     handleClose();
     setAndStoreJwt(undefined);
+  };
+  const handleSettings = () => {
+    handleClose();
+    router.push("/settings");
+  };
+  const handleProfile = () => {
+    handleClose();
+    router.push("/profile");
   };
   const handleClose = () => {
     setAnchorEl(null);
@@ -82,11 +89,11 @@ export default function AccountMenu() {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <MenuItem onClick={handleClose}>
+        <MenuItem onClick={handleProfile}>
           <Avatar /> Profile
         </MenuItem>
         <Divider />
-        <MenuItem onClick={handleClose}>
+        <MenuItem onClick={handleSettings}>
           <ListItemIcon>
             <Settings fontSize="small" />
           </ListItemIcon>

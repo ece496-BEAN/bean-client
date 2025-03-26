@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import NavigationBar from "@/components/NavigationBar";
 import { ReactNode } from "react";
@@ -11,7 +11,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 import CategoryProvider from "@/contexts/CategoriesContext";
 import DocumentScansProvider from "@/contexts/DocumentScansContext";
 import DocumentScansImageProvider from "@/contexts/DocumentScansImageContext";
-import { JwtContext } from "@/app/lib/jwt-provider";
+import { useJwt } from "@/app/lib/jwt-provider";
 
 function LayoutClient({ children }: { children: ReactNode }) {
   // login & survey page -> no navigation bar
@@ -19,7 +19,7 @@ function LayoutClient({ children }: { children: ReactNode }) {
   const router = useRouter();
   const excludedPaths = ["/login", "/survey", "/signup"];
   const showNavigationBar = !excludedPaths.includes(pathname);
-  const [jwt, _] = useContext(JwtContext);
+  const [jwt, _] = useJwt();
 
   useEffect(() => {
     if (!jwt) {

@@ -116,6 +116,17 @@ export type PaginatedServerResponse<T> = {
   ? { totals: { income: number; expense: number } }
   : { totals?: undefined });
 
+export type User = {
+  id: UUID; // UUID
+  name: string;
+  email: string;
+};
+
+export type PasswordReset = {
+  old_password: string;
+  new_password: string;
+  confirm_new_password: string;
+};
 export function isArrayType<T>(value: T | T[]): value is T[] {
   return Array.isArray(value);
 }

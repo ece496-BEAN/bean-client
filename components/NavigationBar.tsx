@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Home,
   PieChart,
@@ -22,15 +22,12 @@ import {
   Transaction,
   TransactionGroup,
 } from "@/lib/types";
-import { JwtContext } from "@/app/lib/jwt-provider";
-import { fetchApi, fetchApiFormData } from "@/app/lib/api";
 import { toast, ToastContainer } from "react-toastify";
 import { useDocumentScans } from "@/contexts/DocumentScansContext";
 import { useDocumentScansImage } from "@/contexts/DocumentScansImageContext";
 
 export const NavigationBar: React.FC = () => {
   const router = useRouter();
-  const [jwt, setAndStoreJwt] = useContext(JwtContext);
   const [image, setImage] = useState<string | null>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [ocrResult, setOcrResult] = useState<string>("");
@@ -114,8 +111,6 @@ export const NavigationBar: React.FC = () => {
       setOcrResult(JSON.stringify(data, null, 2));
       console.log(data);
 
-      // TODO: Definitely need to display the dialog modal, as well as allow for the creation of DocumentScans instances (with image upload)
-      // addTransactionGroup(data);
       // Need to remap the categories of the data object since the category fields are only strings from the OCR API
       data.transactions = data.transactions.map((transaction: any) => {
         const { category, ...rest } = transaction; // Strip away the `category` string field
