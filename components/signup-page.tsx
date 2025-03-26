@@ -44,7 +44,8 @@ export function SignupPage() {
       const data = await response.json();
       if (response.ok) {
         setAndStoreJwt(data);
-        router.push("/");
+        // router.push("/");
+        router.push("/survey"); // direct new users to survey page now
       } else {
         setError(data.detail || "Signup failed");
       }
