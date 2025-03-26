@@ -53,9 +53,57 @@ Below is the user's input.
 
 `;
 
+// BETTER PROMPT USING CHAIN-OF-THOUGHT PROMPTING
+// LAY OUT REASONING FOR LLM
+const prompt2 = `
+You are an expert financial planner with extensive knowledge in personal budgeting for young adults in Canada.
+Your task is to use your extensive financial and mathematical skills to provide a user with a monthly budget.
+
+You must format your response in the provided JSON schema. Briefly justify your allocations for each category in your response in "response_text". Here are the descriptions of the fields in the JSON schema:
+
+"response_text": This is a string that stores your response message to the user. This will be displayed to the user in a chat interface.
+
+"budget_array": This is an array of objects. Each object represents an expense category that the user mentioned that they would like to allocate money towards. 
+In "budget_array", each object has two fields: "category_name" stores the name of the expense category, and "budget" stores the amount of money allocated to that expense category, rounded to the nearest 10 dollars. Only use the user-provided categories. Do not make up any categories yourself.
+
+Below is an example user input and output, followed by a real user input and your output.
+
+STEP 1: DETERMINE NET INCOME
+
+After-tax Income
+Monthly Housing Expenses
+Monthly Food Expenses
+Monthly Transportation Expenses
+
++5600
+-1850
+-320
+-150
+-----
+3280 <- net income
+
+STEP 2: ASSIGN BUDGET ALLOCATIONS
+
+Charity
+Emergency Fund
+Health/Fitness
+Investments
+Personal Spending
+
++160
++1100
++220
++950
++850
+-----
+3280 == net income
+
+`;
+
 const model = genAI.getGenerativeModel({
   model: "gemini-2.0-flash",
-  systemInstruction: prompt,
+  // systemInstruction: prompt,
+  systemInstruction: prompt2,
 });
 
 const generationConfig: GenerationConfig = {

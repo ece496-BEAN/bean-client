@@ -238,12 +238,35 @@ export default function SurveyPage() {
       const unavoidableExpenses = budgetItemArrayState.map((budgetItem) => ({
         name: budgetItem.category.name,
         allocation: budgetItem.allocation,
+        isIncome: budgetItem.category.is_income_type,
       }));
-      let prompt = "Here's my monthly financial data:\n";
+      // let prompt = "Here's my monthly financial data:\n";
+      // for (const item of unavoidableExpenses) {
+      //   prompt += `${item.name}: $${item.allocation}\n`;
+      // }
+      // prompt += `\nPlease give me recommendations on how I should spend/save the remaining funds in these categories:\n${multiChoiceCategories}`;
+
+      let netIncome = 0;
+      let prompt = `
+      STEP 1: DETERMINE NET INCOME
+
+      `;
       for (const item of unavoidableExpenses) {
-        prompt += `${item.name}: $${item.allocation}\n`;
+        prompt += `${item.name}\n`;
       }
-      prompt += `\nPlease give me recommendations on how I should spend/save the remaining funds in these categories:\n${multiChoiceCategories}`;
+      prompt += "\n";
+      for (const item of unavoidableExpenses) {
+        if (item.isIncome) {
+          netIncome += item.allocation;
+          prompt += "+";
+        } else {
+          netIncome -= item.allocation;
+          prompt += "-";
+        }
+        prompt += `${item.allocation}\n`;
+      }
+      prompt += `-----\n`;
+      prompt += `${netIncome} <- net income\n\nSTEP 2: ASSIGN BUDGET ALLOCATIONS\n\n${multiChoiceCategories}\n\n`;
 
       console.log("DEBUG budgetItemArrayState: ", budgetItemArrayState);
       console.log("DEBUG: prompt:\n", prompt);
@@ -494,12 +517,11 @@ export default function SurveyPage() {
                   Here's the budget that you can start out with. Please review
                   it and make changes as needed, then hit Submit!
                 </p>
-                {showAiResponse && (
+                {/* {showAiResponse && (
                   <p className="text-purple-600 font-semibold">
-                    As a LLM, all of my suggested budget allocations are
-                    approximations. Please double-check that the math adds up.
+                    As a LLM, my budget estimations may be prone to error. Please double-check that the math adds up.
                   </p>
-                )}
+                )} */}
                 <AddOrEditBudgetPage
                   editMode={editMode}
                   initial_budget={{
