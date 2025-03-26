@@ -339,19 +339,14 @@ export function AddOrEditTransactionGroupModal({
                         value={(transaction as ReadOnlyTransaction).category}
                         onChange={(value) => {
                           if (value) {
+                            console.log(newTransactionGroup);
                             const updatedTransactions = [
                               ...newTransactionGroup.transactions,
                             ];
-                            if (
-                              mode === "edit" &&
-                              "category" in updatedTransactions[index]
-                            ) {
+                            if ("category" in updatedTransactions[index]) {
                               updatedTransactions[index] = {
                                 ...updatedTransactions[index],
-                                category: {
-                                  ...updatedTransactions[index].category,
-                                  id: value.id,
-                                },
+                                category: value,
                               };
                             } else {
                               updatedTransactions[index] = {
