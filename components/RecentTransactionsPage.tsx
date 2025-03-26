@@ -151,31 +151,53 @@ export const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                   </Typography>
                 </Stack>
               </Stack>
-
-              <div>
-                <Typography color="text.secondary">
-                  {format(new Date(group.date), "MM/dd/yyyy")}
-                </Typography>
-
-                {!readOnly && (
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <IconButton
-                      onClick={() => onEdit?.(group)}
-                      color="primary"
-                      size="small"
-                    >
-                      <Pencil />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => handleDeleteConfirmation?.(group)}
-                      color="error"
-                      size="small"
-                    >
-                      <Trash />
-                    </IconButton>
-                  </Stack>
-                )}
-              </div>
+            </div>
+            <div className="flex items-center">
+              <span
+                className={`pr-4 font-semibold ${group.transactions.reduce((acc, transaction) => acc + (transaction.category.is_income_type ? transaction.amount : -transaction.amount), 0) >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
+                {group.transactions.reduce(
+                  (acc, transaction) =>
+                    acc +
+                    (transaction.category.is_income_type
+                      ? transaction.amount
+                      : -transaction.amount),
+                  0,
+                ) >= 0
+                  ? "$"
+                  : "-$"}
+                {Math.abs(
+                  group.transactions.reduce(
+                    (acc, transaction) =>
+                      acc +
+                      (transaction.category.is_income_type
+                        ? transaction.amount
+                        : -transaction.amount),
+                    0,
+                  ),
+                ).toFixed(2)}
+              </span>
+              <Typography color="text.secondary" className="ml-4">
+                {format(new Date(group.date), "MM/dd/yyyy")}
+              </Typography>
+              {!readOnly && (
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <IconButton
+                    onClick={() => onEdit?.(group)}
+                    color="primary"
+                    size="small"
+                  >
+                    <Pencil />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => handleDeleteConfirmation?.(group)}
+                    color="error"
+                    size="small"
+                  >
+                    <Trash />
+                  </IconButton>
+                </Stack>
+              )}
             </div>
           </StyledAccordionSummary>
           <AccordionDetails>
