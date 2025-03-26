@@ -120,13 +120,6 @@ export const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
   handleDeleteConfirmation,
   readOnly,
 }) => {
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-  const toggleGroup = (groupId: string) => {
-    setOpenGroups((prevState) => ({
-      ...prevState,
-      [groupId]: !prevState[groupId],
-    }));
-  };
   if (!transactionGroups || transactionGroups.length === 0) {
     return (
       <Typography variant="h6" align="center">
