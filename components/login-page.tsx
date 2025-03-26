@@ -82,12 +82,6 @@ export function LoginPage() {
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="text-sm text-indigo-600 hover:underline"
-                  >
-                    Forgot password?
-                  </a>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -113,12 +107,7 @@ export function LoginPage() {
                   </button>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox id="remember" />
-                <Label htmlFor="remember" className="text-sm font-normal">
-                  Remember me
-                </Label>
-              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"

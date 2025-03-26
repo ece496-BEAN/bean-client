@@ -135,20 +135,6 @@ export function SignupPage() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox id="terms" />
-                <Label htmlFor="terms" className="text-sm font-normal">
-                  I agree to the{" "}
-                  <a href="#" className="text-indigo-600 hover:underline">
-                    Terms of Service
-                  </a>{" "}
-                  and{" "}
-                  <a href="#" className="text-indigo-600 hover:underline">
-                    Privacy Policy
-                  </a>
-                </Label>
-              </div>
-
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
