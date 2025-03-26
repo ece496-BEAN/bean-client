@@ -23,7 +23,7 @@ import {
   CardHeader,
   Link,
 } from "@mui/material";
-import { Check, DollarSign, Pencil } from "lucide-react";
+import { Check, DollarSign, Eye, Pencil, StepBack } from "lucide-react";
 import { CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@mui/x-date-pickers";
 import { BudgetAllocation } from "./BudgetAllocation";
@@ -33,6 +33,8 @@ import { useQuery } from "@tanstack/react-query";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { fetchApi } from "@/app/lib/api";
 import CategoriesContent from "./CategoriesContent";
+import AllBudgetsPage from "./AllBudgetsPage";
+import { ArrowBack, KeyboardReturn } from "@mui/icons-material";
 
 function BudgetOverview() {
   const router = useRouter();
@@ -54,10 +56,12 @@ function BudgetOverview() {
     [month],
   );
 
-  // Exit edit mode when changing month
+  // Reset view when changing month
+  const [viewAll, setViewAll] = useState(false);
   const [editMode, setEditMode] = useState(false);
   useEffect(() => {
     setEditMode(false);
+    setViewAll(false);
   }, [month]);
 
   // Query for the budget corresponding to the selected month
@@ -96,7 +100,7 @@ function BudgetOverview() {
     () => {
       if (!isCreating) return;
       addBudget({
-        name: `${monthStart}-${monthEnd}`,
+        name: `${format(month!, "MMMM yyyy")}`,
         start_date: monthStart!,
         end_date: monthEnd!,
         budget_items: [],
@@ -125,22 +129,39 @@ function BudgetOverview() {
       </header>
       <main className="p-4 overflow-y-auto">
         <Card variant="outlined" sx={{ p: 2, width: "100%", marginBottom: 2 }}>
-          <Stack direction="row" spacing={2}>
-            <DatePicker
-              label="Month"
-              views={["month", "year"]}
-              value={month}
-              onChange={(date) => setMonth(date)}
-              sx={{ width: "100%" }}
-            />
-            <Button
-              variant="outlined"
-              onClick={() => setEditMode(!editMode)}
-              startIcon={editMode ? <Check /> : <Pencil />}
-            >
-              {editMode ? "Done" : "Edit"}
-            </Button>
-          </Stack>
+          <Grid2 container spacing={2}>
+            <Grid2 size="grow">
+              <DatePicker
+                label="Month"
+                views={["month", "year"]}
+                value={month}
+                onChange={(date) => setMonth(date)}
+                sx={{ width: "100%" }}
+              />
+            </Grid2>
+            <Grid2 size="auto">
+              <Button
+                variant="outlined"
+                onClick={() => setViewAll(!viewAll)}
+                startIcon={viewAll ? <ArrowBack /> : <Eye />}
+                sx={{ height: "100%" }}
+              >
+                {viewAll ? "Return" : "View All"}
+              </Button>
+            </Grid2>
+            {!viewAll && (
+              <Grid2 size="auto">
+                <Button
+                  variant="outlined"
+                  onClick={() => setEditMode(!editMode)}
+                  startIcon={editMode ? <Check /> : <Pencil />}
+                  sx={{ height: "100%" }}
+                >
+                  {editMode ? "Done" : "Edit"}
+                </Button>
+              </Grid2>
+            )}
+          </Grid2>
         </Card>
         {isErrorState ? (
           <Box className="flex flex-col h-auto bg-gray-50 p-2">
@@ -170,6 +191,13 @@ function BudgetOverview() {
           >
             <CircularProgress />
           </div>
+        ) : viewAll ? (
+          <AllBudgetsPage
+            chooseMonth={(month) => {
+              setMonth(month);
+              setViewAll(false);
+            }}
+          />
         ) : !selectedBudget.budget_items.length && !editMode ? (
           <Stack
             direction="row"

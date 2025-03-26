@@ -39,6 +39,7 @@ import {
   InputAdornment,
   Grid2,
   Tooltip,
+  Stack,
 } from "@mui/material";
 import {
   ArrowUpward,
@@ -52,6 +53,7 @@ import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
 import "react-toastify/dist/ReactToastify.css";
 import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 import CategorySelector from "@/components/CategorySelector";
+import CategoriesContent from "./CategoriesContent";
 
 interface TransactionSummaryProps {
   totalIncome: number;
@@ -325,6 +327,7 @@ export function RecentTransactionsPage() {
   }, [transactionMutationError]);
 
   const [isEditing, setIsEditing] = useState(false); // State for edit mode
+  const [showCategories, setShowCategories] = useState(false);
   const [transactionToEdit, setTransactionToEdit] =
     useState<TransactionGroup<ReadOnlyTransaction>>();
 
@@ -428,50 +431,71 @@ export function RecentTransactionsPage() {
           netBalance={netBalance}
         />
 
-        <div className="mb-6">
+        <Stack
+          direction="row"
+          className="mb-6"
+          justifyContent="space-between"
+          sx={{ width: "100%" }}
+        >
           <PlaidLinkButton />
-        </div>
+          <Button
+            variant="contained"
+            onClick={() => setShowCategories(!showCategories)}
+            sx={{
+              backgroundColor: "#7b25cd",
+              ":hover": { backgroundColor: "#6366f1" },
+            }}
+          >
+            {showCategories ? "Hide Categories" : "View Categories"}
+          </Button>
+        </Stack>
 
         <Card className="bg-white shadow-lg">
-          <TransactionListHeader
-            applyFilters={applyFilters}
-            resetFilters={resetFilters}
-            isLoading={isTransactionGroupLoading}
-            refetch={refetchData}
-            setOrdering={setOrdering}
-            setSearchTerm={setSearchTerm}
-            setCategoryFilter={setCategoryFilter}
-            categoryFilter={categoryFilter}
-            setStartDate={setStartDate}
-            setEndDate={setEndDate}
-            ordering={ordering}
-            searchTerm={searchTerm}
-            startDate={startDate}
-            endDate={endDate}
-            handleOpenAddModal={handleOpenAddModal}
-          />
-
-          <CardContent>
-            {isTransactionGroupLoading ? (
-              <CircularProgress />
-            ) : (
-              <TransactionGroupList
-                transactionGroups={transactionGroups.results}
-                onEdit={handleOpenEditModal}
-                onDelete={deleteTransactionGroup}
-                totalCount={transactionGroups.count}
-                pageNumber={currentPage}
-                pageSize={pageSize}
-                onPageChange={(page) => {
-                  setCurrentPage((_) => page);
-                }}
-                onRowsPerPageChange={(pageRows) => {
-                  setPageSize((_) => pageRows);
-                  setCurrentPage((_) => 0);
-                }}
+          {showCategories ? (
+            <CategoriesContent />
+          ) : (
+            <>
+              <TransactionListHeader
+                applyFilters={applyFilters}
+                resetFilters={resetFilters}
+                isLoading={isTransactionGroupLoading}
+                refetch={refetchData}
+                setOrdering={setOrdering}
+                setSearchTerm={setSearchTerm}
+                setCategoryFilter={setCategoryFilter}
+                categoryFilter={categoryFilter}
+                setStartDate={setStartDate}
+                setEndDate={setEndDate}
+                ordering={ordering}
+                searchTerm={searchTerm}
+                startDate={startDate}
+                endDate={endDate}
+                handleOpenAddModal={handleOpenAddModal}
               />
-            )}
-          </CardContent>
+
+              <CardContent>
+                {isTransactionGroupLoading ? (
+                  <CircularProgress />
+                ) : (
+                  <TransactionGroupList
+                    transactionGroups={transactionGroups.results}
+                    onEdit={handleOpenEditModal}
+                    onDelete={deleteTransactionGroup}
+                    totalCount={transactionGroups.count}
+                    pageNumber={currentPage}
+                    pageSize={pageSize}
+                    onPageChange={(page) => {
+                      setCurrentPage((_) => page);
+                    }}
+                    onRowsPerPageChange={(pageRows) => {
+                      setPageSize((_) => pageRows);
+                      setCurrentPage((_) => 0);
+                    }}
+                  />
+                )}
+              </CardContent>
+            </>
+          )}
         </Card>
       </main>
       <AddOrEditTransactionGroupModal
@@ -541,6 +565,7 @@ function TransactionListHeader({
   const handleSearchClick = () => {
     applyFilters();
   };
+
   return (
     <Grid2
       container
@@ -603,7 +628,7 @@ function TransactionListHeader({
           {ordering === "date" ? <ArrowUpward /> : <ArrowDownward />}
         </IconButton>
       </Grid2>
-      <Grid2 size={{ xs: 10, sm: 10, md: 8, lg: 8 }}>
+      <Grid2 size={{ xs: 8, sm: 8, md: 6, lg: 6 }}>
         <TextField
           label="Search"
           variant="outlined"
