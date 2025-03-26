@@ -65,7 +65,7 @@ export function ExpenseChart() {
             )
             .map((t) => ({
               date: new Date(tx.date),
-              amount: -t.amount,
+              amount: expenses ? -t.amount : t.amount,
               category: t.category.name,
             })),
         )

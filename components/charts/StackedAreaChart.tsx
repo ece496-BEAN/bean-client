@@ -1,11 +1,11 @@
 import React, { useCallback, useState } from "react";
-import { AreaStack, Bar, Line } from "@visx/shape";
+import { AreaStack, Bar } from "@visx/shape";
 import { scaleTime } from "@visx/scale";
 import { capitalizeWords } from "./common";
 import { StackedDataPoint } from "./common";
 import { SeriesPoint } from "@visx/shape/lib/types";
 import { AxisBottom } from "@visx/axis";
-import { Tooltip, TooltipWithBounds, useTooltip } from "@visx/tooltip";
+import { TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { localPoint } from "@visx/event";
 import { bisector } from "@visx/vendor/d3-array";
 import { generateColorByIndex, colorShade } from "@/lib/colors";
@@ -19,6 +19,7 @@ import {
 } from "./common";
 import DollarAxisLeft from "./DollarAxisLeft";
 import LegendToggle from "./LegendToggle";
+import TooltipLine from "./TooltipLine";
 
 const getDate = (d: StackedDataPoint) => new Date(d.date).valueOf();
 const getY0 = (d: SeriesPoint<StackedDataPoint>) => d[0];
@@ -175,15 +176,11 @@ export default function StackedAreaChart({
           stroke={"#0000000F"}
         />
         {tooltipData && tooltipLeft && (
-          <g>
-            <Line
-              from={{ x: tooltipLeft, y: chartTop }}
-              to={{ x: tooltipLeft, y: chartHeight }}
-              stroke={"#0000005E"}
-              strokeWidth={1}
-              pointerEvents="none"
-            />
-          </g>
+          <TooltipLine
+            tooltipLeft={tooltipLeft}
+            chartTop={chartTop}
+            chartHeight={chartHeight}
+          />
         )}
 
         <DollarAxisLeft left={axisLeftWidth} scale={yScale} numTicks={5} />

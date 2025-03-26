@@ -1,16 +1,24 @@
 import React, { useCallback } from "react";
-import { Bar, Line } from "@visx/shape";
-import { scaleTime, scaleLinear } from "@visx/scale";
-import { AxisBottom, AxisLeft } from "@visx/axis";
-import { Group } from "@visx/group";
+import { Bar } from "@visx/shape";
+import { scaleTime } from "@visx/scale";
+import { AxisBottom } from "@visx/axis";
 import { Tooltip, TooltipWithBounds, useTooltip } from "@visx/tooltip";
 import { localPoint } from "@visx/event";
 import { bisector } from "@visx/vendor/d3-array";
 import { Threshold } from "@visx/threshold";
-import { curveBasis, curveNatural } from "@visx/curve";
 import { ChartDimensions, getYDollarScale } from "./common";
 import DollarAxisLeft from "./DollarAxisLeft";
 import { Grid } from "@visx/grid";
+import { curveCardinal, curveCardinalClosed, curveMonotoneX } from "d3";
+import TooltipLine from "./TooltipLine";
+import { Brush } from "@visx/brush";
+import BaseBrush, {
+  BaseBrushState,
+  UpdateBrush,
+} from "@visx/brush/lib/BaseBrush";
+import { Group } from "@visx/group";
+import { BrushHandleRenderProps } from "@visx/brush/lib/BrushHandle";
+// import BrushHandle from "@visx/brush/lib/BrushHandle";
 
 export type DataPoint = {
   date: Date;
@@ -106,16 +114,16 @@ export default function ThresholdChart({
           y1={() => yScale(0)}
           clipAboveTo={0}
           clipBelowTo={chartHeight + chartTop}
-          curve={curveBasis}
+          curve={curveMonotoneX}
           belowAreaProps={{
             fill: "violet",
-            fillOpacity: 0.4,
+            fillOpacity: 0.7,
           }}
           aboveAreaProps={{
             fill: "green",
-            fillOpacity: 0.4,
+            fillOpacity: 0.6,
           }}
-          id={""}
+          id={"threshold"}
         />
         <DollarAxisLeft left={axisLeftWidth} scale={yScale} numTicks={5} />
         <AxisBottom
@@ -147,19 +155,11 @@ export default function ThresholdChart({
           stroke={"#0000000F"}
         />
         {tooltipData && tooltipLeft && (
-          <g>
-            <Line
-              from={{ x: tooltipLeft, y: chartTop }} // Position relative to the Group
-              to={{
-                x: tooltipLeft,
-                y: chartHeight,
-              }} // Position relative to the Group
-              stroke={"#0000005E"}
-              strokeWidth={1}
-              pointerEvents="none"
-              // strokeDasharray="5,2"
-            />
-          </g>
+          <TooltipLine
+            tooltipLeft={tooltipLeft}
+            chartTop={chartTop}
+            chartHeight={chartHeight}
+          />
         )}
       </svg>
       {tooltipData && tooltipLeft && (
