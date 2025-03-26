@@ -120,13 +120,6 @@ export const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
   handleDeleteConfirmation,
   readOnly,
 }) => {
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
-  const toggleGroup = (groupId: string) => {
-    setOpenGroups((prevState) => ({
-      ...prevState,
-      [groupId]: !prevState[groupId],
-    }));
-  };
   if (!transactionGroups || transactionGroups.length === 0) {
     return (
       <Typography variant="h6" align="center">
@@ -152,7 +145,7 @@ export const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                 </Stack>
               </Stack>
             </div>
-            <div className="flex items-center">
+            <div>
               <span
                 className={`pr-4 font-semibold ${group.transactions.reduce((acc, transaction) => acc + (transaction.category.is_income_type ? transaction.amount : -transaction.amount), 0) >= 0 ? "text-green-600" : "text-red-600"}`}
               >
@@ -262,9 +255,10 @@ export const TransactionGroupList: React.FC<TransactionGroupListProps> = ({
                       <span
                         className={`font-semibold ${transaction.category.is_income_type ? "text-green-600" : "text-red-600"}`}
                       >
+                        {transaction.amount >= 0 ? "$" : "-$"}
                         {transaction.category.is_income_type
-                          ? `${transaction.amount.toFixed(2)}`
-                          : `${transaction.amount.toFixed(2)}`}
+                          ? `${Math.abs(transaction.amount).toFixed(2)}`
+                          : `${Math.abs(transaction.amount).toFixed(2)}`}
                       </span>
                     </Stack>
                   </ListItem>
