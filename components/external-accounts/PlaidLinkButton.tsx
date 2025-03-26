@@ -4,9 +4,12 @@
 import { usePlaidLink } from "react-plaid-link";
 import { usePlaidContext } from "@/contexts/PlaidContext";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTransactions } from "@/contexts/TransactionsContext";
 import { useCategories } from "@/contexts/CategoriesContext";
+import { Category, TransactionGroup, WriteOnlyTransaction } from "@/lib/types";
+import { UUID } from "crypto";
+import { Snackbar, Alert } from "@mui/material";
 
 const PlaidLinkButton = () => {
   const {
@@ -17,26 +20,96 @@ const PlaidLinkButton = () => {
     fetchTransactions,
   } = usePlaidContext();
 
-  const { categories } = useCategories();
+  const { categories, addCategory } = useCategories();
 
   const { addTransactionGroup } = useTransactions();
+
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const handleCloseSnackbar = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string,
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
 
   const onSuccess = async (public_token: string, metadata: any) => {
     console.log("PlaidLink onSuccess called"); // Debugging log
     await exchangePublicToken(public_token);
-
-    const string_categories = categories
-      // .filter((category) => !category.legacy && !category.is_income_type)
-      .map((category) => category.name);
-    console.log(string_categories);
+    const category_string_to_obj: Record<string, Category> = categories
+      .filter((category) => !category.legacy)
+      .reduce(
+        (acc, category) => {
+          acc[category.name] = category;
+          return acc;
+        },
+        {} as Record<string, Category>,
+      );
     // Fetch transactions after successful exchange
-    const newTransactions = await fetchTransactions(string_categories);
-    for (const transactionGroup of newTransactions) {
-      console.log("Fetched transaction group:", transactionGroup); // Debugging log
-      console.log("FRANK: PLEASE INTEGRATE THIS!!!");
-    }
-  };
+    const newTransactions: any = await fetchTransactions(
+      Object.keys(category_string_to_obj),
+    );
 
+    for (const transactionGroup of newTransactions) {
+      for (const transaction of transactionGroup.transactions) {
+        const category = transaction.category;
+        if (!category_string_to_obj[category]) {
+          const newCategory = (await addCategory({
+            name: category,
+            is_income_type: false, // or determine based on your logic
+            color: "#000000",
+          })) as Category;
+          category_string_to_obj[category] = newCategory;
+        }
+      }
+    }
+
+    const newTransactionsWithCategoryUUID: TransactionGroup<WriteOnlyTransaction>[] =
+      newTransactions.map((transactionGroup: any) => {
+        return {
+          ...transactionGroup,
+          source: null,
+          transactions: transactionGroup.transactions.map(
+            (transaction: any) => {
+              const category = transaction.category;
+              if (!category_string_to_obj[category]) {
+                console.error(
+                  "Category not found for transaction:",
+                  transaction,
+                );
+              }
+              delete transaction.category;
+              return {
+                ...transaction,
+                amount:
+                  transaction.amount *
+                  (category_string_to_obj[category].is_income_type ? 1 : -1),
+                category_uuid: category_string_to_obj[category].id,
+              };
+            },
+          ),
+        };
+      });
+
+    console.log(
+      "New transactions with category UUIDs:",
+      newTransactionsWithCategoryUUID,
+    ); // Debugging log
+
+    for (const transactionGroup of newTransactionsWithCategoryUUID) {
+      try {
+        await addTransactionGroup(transactionGroup);
+      } catch (error) {
+        console.error("Error adding transaction group:", error);
+        console.error("Transaction group:", transactionGroup);
+        return;
+      }
+    }
+    setOpenSnackbar(true); // Show snackbar on success
+  };
   const config = {
     token: linkToken,
     onSuccess,
@@ -60,9 +133,24 @@ const PlaidLinkButton = () => {
   }, [linkToken, generateLinkToken, userId]);
 
   return (
-    <Button onClick={() => open()} disabled={!ready}>
-      Connect a bank account
-    </Button>
+    <>
+      <Button onClick={() => open()} disabled={!ready}>
+        Connect a bank account
+      </Button>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          Importing completed successfully!
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 
