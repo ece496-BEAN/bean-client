@@ -37,16 +37,15 @@ import { getLocalMidnightDate } from "@/lib/utils";
 interface EditBudgetAllocationProps {
   budget: Budget;
   refetch: () => void;
+  setEditMode: (editMode: boolean) => void;
 }
 
 export const EditBudgetAllocation = (props: EditBudgetAllocationProps) => {
   const { categoriesQueryError } = useCategories();
   const { editBudget } = useBudgets();
-  const router = useRouter();
   const [budget, setBudget] = useState<Budget>(props.budget);
 
   const [errors, setErrors] = useState<Record<string, string>>({}); // Store errors by field name
-  const [duplicateCategoryError, setDuplicateCategoryError] = useState(false);
   const [openClearConfirmation, setOpenClearConfirmation] = useState(false);
 
   const handleBudgetItemCategoryChange = (
@@ -87,7 +86,6 @@ export const EditBudgetAllocation = (props: EditBudgetAllocationProps) => {
       budget_items: [],
     });
     setErrors({});
-    setDuplicateCategoryError(false);
     setOpenClearConfirmation(false);
   };
   const handleAddBudgetItem = () => {
@@ -109,14 +107,23 @@ export const EditBudgetAllocation = (props: EditBudgetAllocationProps) => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     const categoryCounts: Record<string, number> = {};
+    const duplicateCategoryIndices: number[] = []; // To store indices with duplicate categories
+    const firstOccurrence: Record<string, number> = {}; // Track first occurrence of each category
+
     (budget.budget_items || []).forEach((item, index) => {
       if ("category" in item) {
         const categoryID = item.category.id;
 
-        categoryCounts[categoryID] = (categoryCounts[categoryID] || 0) + 1;
-
-        if (categoryCounts[categoryID] > 1) {
-          setDuplicateCategoryError(true);
+        if (categoryID in categoryCounts) {
+          categoryCounts[categoryID]++;
+          duplicateCategoryIndices.push(index); // Mark current as duplicate
+          if (categoryCounts[categoryID] === 2) {
+            // This is the second occurrence, mark the first one as duplicate too
+            duplicateCategoryIndices.push(firstOccurrence[categoryID]);
+          }
+        } else {
+          categoryCounts[categoryID] = 1;
+          firstOccurrence[categoryID] = index; // Store the index of the first occurrence
         }
       }
       if ("category_uuid" in item && !item.category_uuid) {
@@ -131,11 +138,12 @@ export const EditBudgetAllocation = (props: EditBudgetAllocationProps) => {
           "Allocation must be greater than or equal to 0.";
       }
     });
+    duplicateCategoryIndices.forEach((index) => {
+      newErrors[`items[${index}].category`] = "Duplicate category selected.";
+    });
 
     setErrors(newErrors);
-    return (
-      Object.keys(newErrors).length === 0 && duplicateCategoryError === false
-    );
+    return Object.keys(newErrors).length === 0;
   };
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -149,6 +157,7 @@ export const EditBudgetAllocation = (props: EditBudgetAllocationProps) => {
             position: "bottom-left",
           });
           props.refetch();
+          props.setEditMode(false);
         },
         (err) =>
           toast.error(`Failed to save: ${err}`, {

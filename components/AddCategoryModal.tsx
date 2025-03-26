@@ -23,6 +23,7 @@ import { Button } from "@mui/material";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { MuiColorInput, matchIsValidColor } from "mui-color-input";
+import { defaultColor } from "@/lib/colors";
 
 interface AddCategoryModalProps {
   isOpen: boolean;
@@ -38,7 +39,7 @@ const defaultCategory: PartialByKeys<Category, "id" | "legacy"> = {
   name: "",
   description: "",
   is_income_type: false,
-  color: "#0062ff",
+  color: defaultColor,
 };
 
 export function AddCategoryModal({

@@ -57,7 +57,6 @@ export const AddOrEditBudgetPage = ({
   );
 
   const [errors, setErrors] = useState<Record<string, string>>({}); // Store errors by field name
-  const [duplicateCategoryError, setDuplicateCategoryError] = useState(false);
   const [openClearConfirmation, setOpenClearConfirmation] = useState(false);
   const handleBudgetChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -110,7 +109,6 @@ export const AddOrEditBudgetPage = ({
       budget_items: [],
     });
     setErrors({});
-    setDuplicateCategoryError(false);
     setOpenClearConfirmation(false);
   };
   const handleDateChange = (start: boolean, date: Date | null) => {
@@ -158,14 +156,22 @@ export const AddOrEditBudgetPage = ({
     }
 
     const categoryCounts: Record<string, number> = {};
+    const duplicateCategoryIndices: number[] = []; // To store indices with duplicate categories
+    const firstOccurrence: Record<string, number> = {}; // Track first occurrence of each category
     (budget.budget_items || []).forEach((item, index) => {
       if ("category" in item) {
         const categoryID = item.category.id;
 
-        categoryCounts[categoryID] = (categoryCounts[categoryID] || 0) + 1;
-
-        if (categoryCounts[categoryID] > 1) {
-          setDuplicateCategoryError(true);
+        if (categoryID in categoryCounts) {
+          categoryCounts[categoryID]++;
+          duplicateCategoryIndices.push(index); // Mark current as duplicate
+          if (categoryCounts[categoryID] === 2) {
+            // This is the second occurrence, mark the first one as duplicate too
+            duplicateCategoryIndices.push(firstOccurrence[categoryID]);
+          }
+        } else {
+          categoryCounts[categoryID] = 1;
+          firstOccurrence[categoryID] = index; // Store the index of the first occurrence
         }
       }
       if ("category_uuid" in item && !item.category_uuid) {
@@ -182,9 +188,7 @@ export const AddOrEditBudgetPage = ({
     });
 
     setErrors(newErrors);
-    return (
-      Object.keys(newErrors).length === 0 && duplicateCategoryError === false
-    );
+    return Object.keys(newErrors).length === 0;
   };
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

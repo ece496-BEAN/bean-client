@@ -42,6 +42,7 @@
     "framer-motion": "^12.4.7",
     "fs": "^0.0.1-security",
     "jwt-decode": "^4.0.0",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.475.0",
     "memfs": "^4.17.0",
     "mui-color-input": "^6.0.0",

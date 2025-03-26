@@ -1,10 +1,6 @@
-import { ReadOnlyBudget, ReadOnlyBudgetItem } from "@/lib/types";
+import { ReadOnlyBudget } from "@/lib/types";
 import { Card, Stack, Typography, Button, Grid2 } from "@mui/material";
-import { PieChart } from "@mui/x-charts/PieChart";
 import { Check, DollarSign, Pencil } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useCategories } from "@/contexts/CategoriesContext";
-import CategoriesContent from "./CategoriesContent";
 
 export interface BudgetUsageProps {
   budget: ReadOnlyBudget;
@@ -20,7 +16,7 @@ export const BudgetUsage: React.FC<BudgetUsageProps> = ({ budget }) => {
       </Stack>
       <div>
         {budget.budget_items.map((item) => {
-          const percentage = (item.allocation / budget.total_allocation) * 100;
+          // const percentage = (item.allocation / budget.total_allocation) * 100;
           const usageColour =
             item.allocation_used > item.allocation
               ? "text-red-500"

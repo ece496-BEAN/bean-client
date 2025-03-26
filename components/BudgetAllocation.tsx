@@ -1,20 +1,20 @@
 import { ReadOnlyBudget } from "@/lib/types";
-import { Box, Card, Stack, Typography, Button } from "@mui/material";
+import { Card, Stack, Typography } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
-import { Check, Pencil } from "lucide-react";
-import { useMemo, useState } from "react";
-import { AddOrEditBudgetPage } from "./AddOrEditBudgetPage";
+import { useCallback, useMemo } from "react";
 import { EditBudgetAllocation } from "./EditBudgetAllocation";
 
 export interface BudgetAllocationProps {
   budget: ReadOnlyBudget;
   editMode: boolean;
+  setEditMode: (editMode: boolean) => void;
   refetch: () => void;
 }
 
 export const BudgetAllocation: React.FC<BudgetAllocationProps> = ({
   budget,
   editMode,
+  setEditMode,
   refetch,
 }) => {
   const pieChartData = useMemo(() => {
@@ -35,7 +35,16 @@ export const BudgetAllocation: React.FC<BudgetAllocationProps> = ({
       };
     });
   }, [budget]);
-
+  const pieChartBottomMargin = useCallback((items: number) => {
+    if (items < 5) return 50;
+    if (items < 8) return 100;
+    return 150;
+  }, []);
+  const pieChartHeight = useCallback((items: number) => {
+    if (items < 5) return 300;
+    if (items < 8) return 350;
+    return 400;
+  }, []);
   return (
     <Card variant="outlined" sx={{ p: 2 }}>
       <Stack direction="row" justifyContent="space-between">
@@ -44,7 +53,11 @@ export const BudgetAllocation: React.FC<BudgetAllocationProps> = ({
         </Typography>
       </Stack>
       {editMode ? (
-        <EditBudgetAllocation budget={budget} refetch={refetch} />
+        <EditBudgetAllocation
+          budget={budget}
+          refetch={refetch}
+          setEditMode={setEditMode}
+        />
       ) : (
         <PieChart
           series={[
@@ -54,7 +67,20 @@ export const BudgetAllocation: React.FC<BudgetAllocationProps> = ({
               faded: { innerRadius: 30, additionalRadius: -30, color: "gray" },
             },
           ]}
-          height={200}
+          margin={{
+            top: 0,
+            right: 50,
+            bottom: pieChartBottomMargin(pieChartData.length),
+            left: 50,
+          }}
+          height={pieChartHeight(pieChartData.length)}
+          slotProps={{
+            legend: {
+              direction: "row",
+              padding: 0,
+              position: { vertical: "bottom", horizontal: "middle" }, // or 'right'
+            },
+          }}
         />
       )}
     </Card>

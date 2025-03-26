@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import { MuiColorInput, matchIsValidColor } from "mui-color-input";
 import { useState } from "react";
+import { defaultColor } from "@/lib/colors";
 type CategoryOption = Category & { inputValue?: string };
 
 interface CategoryAutocompleteProps {
@@ -45,7 +46,7 @@ export default function CategoryAutocomplete({
     name: "",
     description: "",
     is_income_type: false,
-    color: "#0062ff",
+    color: defaultColor,
   });
 
   const loading = open && isCategoriesLoading;
@@ -63,7 +64,7 @@ export default function CategoryAutocomplete({
       name: "",
       description: "",
       is_income_type: false,
-      color: "#0062ff",
+      color: defaultColor,
     });
     setFormErrors({});
     toggleOpen(false);
@@ -107,7 +108,7 @@ export default function CategoryAutocomplete({
               name: newValue.inputValue,
               description: "",
               is_income_type: false,
-              color: "#0062ff",
+              color: defaultColor,
             });
           } else {
             onChange(newValue);
@@ -125,7 +126,7 @@ export default function CategoryAutocomplete({
               id: "0-0-0-0-0",
               legacy: false,
               is_income_type: false,
-              color: "#0062ff",
+              color: defaultColor,
             });
           }
 
@@ -251,7 +252,7 @@ export default function CategoryAutocomplete({
               }
             />
             <Grid2 container className="mt-2 mb-2">
-              {/* TODO: Fix to not cause as many re-renders since this triggers alot of times when using the picker */}
+              {/* TODO: Fix to not cause as many re-renders since this triggers a lot of times when using the picker */}
               {/* Maybe consider using a [react-hook-form](https://viclafouch.github.io/mui-color-input/docs/react-hook-form/) */}
               <Grid2 size={{ xs: 12, sm: 6 }}>
                 <MuiColorInput

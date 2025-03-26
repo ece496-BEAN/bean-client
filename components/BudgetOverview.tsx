@@ -12,19 +12,14 @@ import {
 import {
   Box,
   Typography,
-  LinearProgress,
   Stack,
   Button,
   CircularProgress,
-  Chip,
   Grid2,
   Card,
-  CardContent,
-  CardHeader,
   Link,
 } from "@mui/material";
-import { Check, DollarSign, Eye, Pencil, StepBack } from "lucide-react";
-import { CardTitle } from "@/components/ui/card";
+import { Eye, Pencil } from "lucide-react";
 import { DatePicker } from "@mui/x-date-pickers";
 import { BudgetAllocation } from "./BudgetAllocation";
 import { BudgetUsage } from "./BudgetUsage";
@@ -34,7 +29,7 @@ import { endOfMonth, format, startOfMonth } from "date-fns";
 import { fetchApi } from "@/app/lib/api";
 import CategoriesContent from "./CategoriesContent";
 import AllBudgetsPage from "./AllBudgetsPage";
-import { ArrowBack, KeyboardReturn } from "@mui/icons-material";
+import { ArrowBack } from "@mui/icons-material";
 
 function BudgetOverview() {
   const router = useRouter();
@@ -224,6 +219,7 @@ function BudgetOverview() {
               <BudgetAllocation
                 budget={selectedBudget}
                 editMode={editMode}
+                setEditMode={setEditMode}
                 refetch={refetch}
               />
             </Grid2>

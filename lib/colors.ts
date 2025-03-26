@@ -35,6 +35,7 @@ export function generateColorByIndex(
   return colorPalette[wrappedIndex];
 }
 
+export const defaultColor = "#0062FF";
 export const expenseColors = [
   "#E9573A",
   "#F2715D",
